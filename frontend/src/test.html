@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Canceled</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+    </style>
+    <![endif]-->
+</head>
+<body style="margin:0; padding:0; width:100%; height:100%; background-color:#f5f7fa; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#2d2d2d; line-height:1.6;">
+
+    <!-- OUTER WRAPPER TABLE: Ensures full-screen background -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f5f7fa; min-height:100vh;">
+        <tr>
+            <td align="center" valign="top" style="padding:20px 0;">
+                
+                <!-- MAIN CONTENT CARD -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden;">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="background:#6b7280; background:linear-gradient(135deg, #6b7280 0%, #4b5563 100%); padding:24px 24px; text-align:center;">
+                            <h1 style="margin:0; font-size:20px; font-weight:700; color:#ffffff; letter-spacing:0.5px;">
+                                🚫 Booking Canceled
+                            </h1>
+                            <p style="margin:8px 0 0; font-size:14px; color:#f3f4f6; opacity:0.9;">
+                                Order #%booking_data|order_id||%
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content Body -->
+                    <tr>
+                        <td style="padding:30px 24px;">
+                            
+                            <!-- Message -->
+                            <p style="margin:0 0 20px; font-size:16px; color:#333333;">
+                                Hello,<br><br>
+                                Your booking for <strong>%title%</strong> has been canceled as requested. 
+                                We're sorry to see you go, but we hope to welcome you to Ethiopia in the future.
+                            </p>
+                            
+                            <!-- Booking Summary Table -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
+                                <!-- Order ID -->
+                                <tr>
+                                    <td style="padding:10px 0; font-size:14px; color:#555555;"><strong>Order ID:</strong></td>
+                                    <td style="padding:10px 0; font-size:14px; color:#2d2d2d; text-align:right;">%booking_data|ID||%</td>
+                                </tr>
+                                <!-- Tour Name -->
+                                <tr>
+                                    <td style="padding:10px 0; font-size:14px; color:#555555; border-top:1px solid #eeeeee;"><strong>Tour:</strong></td>
+                                    <td style="padding:10px 0; font-size:14px; color:#2d2d2d; text-align:right; border-top:1px solid #eeeeee;">%title%</td>
+                                </tr>
+                                <!-- Check-in -->
+                                <tr>
+                                    <td style="padding:10px 0; font-size:14px; color:#555555; border-top:1px solid #eeeeee;"><strong>Check-in:</strong></td>
+                                    <td style="padding:10px 0; font-size:14px; color:#2d2d2d; text-align:right; border-top:1px solid #eeeeee;">%booking_data|check_in_date|plain|%</td>
+                                </tr>
+                                
+                                <!-- NEW FIELDS ADDED BELOW -->
+                                
+                                <!-- Service -->
+                                <tr>
+                                    <td style="padding:10px 0; font-size:14px; color:#555555; border-top:1px solid #eeeeee;"><strong>Service:</strong></td>
+                                    <td style="padding:10px 0; font-size:14px; color:#2d2d2d; text-align:right; border-top:1px solid #eeeeee;">%booking_column|order_service%</td>
+                                </tr>
+                                
+                                <!-- Country -->
+                                <tr>
+                                    <td style="padding:10px 0; font-size:14px; color:#555555; border-top:1px solid #eeeeee;"><strong>Country:</strong></td>
+                                    <td style="padding:10px 0; font-size:14px; color:#2d2d2d; text-align:right; border-top:1px solid #eeeeee;">%booking_column|order_country%</td>
+                                </tr>
+                                
+                                <!-- Language -->
+                                <tr>
+                                    <td style="padding:10px 0; font-size:14px; color:#555555; border-top:1px solid #eeeeee;"><strong>Language:</strong></td>
+                                    <td style="padding:10px 0; font-size:14px; color:#2d2d2d; text-align:right; border-top:1px solid #eeeeee;">%booking_column|order_language%</td>
+                                </tr>
+                                
+                                <!-- Refund Info -->
+                                <tr>
+                                    <td style="padding:12px 0 0; font-size:14px; color:#555555; border-top:2px solid #eeeeee;"><strong>Refund Status:</strong></td>
+                                    <td style="padding:12px 0 0; font-size:14px; color:#2d2d2d; text-align:right; border-top:2px solid #eeeeee;">If applicable, processed within 5–7 business days</td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Re-engagement Box -->
+                            <div style="background-color:#f3f4f6; border-left:4px solid #6b7280; padding:16px; border-radius:4px; margin-top:10px;">
+                                <p style="margin:0; font-size:14px; color:#374151; line-height:1.5;">
+                                    <strong>💙 Still Planning to Visit?</strong><br>
+                                    We'd love to help you book again anytime. Reply to this email for personalized assistance or to reschedule your trip.
+                                </p>
+                            </div>
+                            
+                            <!-- Contact Info -->
+                            <p style="margin:24px 0 0; font-size:14px; color:#555555;">
+                                <strong>Questions about your refund?</strong><br>
+                                <a href="mailto:tour@dejenehodes.com" style="color:#6b7280; text-decoration:none; font-weight:600;">tour@dejenehodes.com</a>
+                            </p>
+                            
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color:#f9fafb; padding:20px 24px; text-align:center; border-top:1px solid #eeeeee;">
+                            <p style="margin:0; font-size:12px; color:#6b7280;">
+                                &copy; 2026 Dejene Ethiopia Tour • Authentic Experiences<br>
+                                Addis Ababa, Ethiopia
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+                <!-- END MAIN CONTENT CARD -->
+                
+                <!-- Bottom Spacer -->
+                <div style="height:20px; line-height:20px; font-size:20px;">&nbsp;</div>
+                
+            </td>
+        </tr>
+    </table>
+    <!-- END OUTER WRAPPER TABLE -->
+
+</body>
+</html>
