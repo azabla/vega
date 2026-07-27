@@ -31,7 +31,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+backend/lib/
 lib64/
 parts/
 sdist/
@@ -140,8 +140,7 @@ ENV/
 env.bak/
 venv.bak/
 
-backend/.env
-frontend/.env.production
+
 # Spyder project settings
 .spyderproject
 .spyproject
