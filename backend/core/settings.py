@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from doctest import debug
 from pathlib import Path
 import environ
 
@@ -160,4 +161,4 @@ MEDIA_URL = "/media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", [])
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", debug=[])
