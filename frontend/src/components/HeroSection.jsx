@@ -1,6 +1,41 @@
 import { ArrowDown } from "lucide-react";
 
+// import { getProfile } from "@/services/profileService";
+import { portfolioAPI } from "@/services/portfolioAPI";
+import { useEffect, useState } from "react";
+
 export const HeroSection = () => {
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+
+    const fetchProfile = async () => {
+
+      try {
+        const response = await portfolioAPI.getProfile();
+        // console.log(response.data);
+
+        setProfile(response.data);
+
+      } catch(error) {
+        console.log(error);
+      }
+
+    };
+
+    fetchProfile();
+
+  }, []);
+
+
+  if (!profile) {
+    return (
+      <section>
+        Loading...
+      </section>
+    );
+  }
+
   return (
     <section
       id="hero"
@@ -12,11 +47,11 @@ export const HeroSection = () => {
             <span className="opacity-0 animate-fade-in"> Hi, I'm</span>
             <span className="text-primary opacity-0 animate-fade-in-delay-1">
               {" "}
-              Pedro
+              {profile.name.split(" ")[0]}
             </span>
             <span className="text-gradient ml-2 opacity-0 animate-fade-in-delay-2">
               {" "}
-              Machado
+              {profile.name.split(" ").slice(1).join(" ")}
             </span>
           </h1>
 
