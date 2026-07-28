@@ -4,6 +4,7 @@ import api from "@/api/axios";
 
 export const portfolioAPI =  {
     getProfile: () => api.get('/profile/main/'),
+    getAboutMe: () => api.get('/about/'),
 
     getSkills: () => api.get('/skills/'),
     getSkillsByCategory: () => api.get('/skills/by_category/'),

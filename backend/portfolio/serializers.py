@@ -36,7 +36,7 @@ class ServiceSerializer(serializers.ModelSerializer):
 
 
 class AboutSerializer(serializers.ModelSerializer):
-    services = serializers.SerializerMethodField()
+    services = ServiceSerializer(many=True, read_only=True)
 
     class Meta:
         model = About
