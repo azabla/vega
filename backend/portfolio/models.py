@@ -22,6 +22,45 @@ class Portfolio(models.Model):
         return self.name
 
 
+class About(models.Model):
+
+    heading = models.CharField(max_length=200)
+    title = models.CharField(max_length=255)
+
+    experience_years = models.PositiveIntegerField(default=0)
+
+    description = models.TextField()
+    description_2 = models.TextField(blank=True)
+
+    cv_file = models.FileField(upload_to="portfolio/cv/", blank=True, null=True)
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return self.title
+
+
+class Service(models.Model):
+    about = models.ForeignKey(About, on_delete=models.CASCADE, related_name="services")
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    display_order = models.PositiveIntegerField(default=0)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["display_order", "id"]
+
+    def __str__(self):
+        return self.title
+
+
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
 

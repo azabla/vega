@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from .models import (
+    About,
     Portfolio,
     Projects,
+    Service,
     Skill,
     Contact,
     Experience,
@@ -20,6 +22,34 @@ class PortfolioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Portfolio
         fields = "__all__"
+
+
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = [
+            "id",
+            "title",
+            "description",
+            "display_order",
+        ]
+
+
+class AboutSerializer(serializers.ModelSerializer):
+    services = serializers.SerializerMethodField()
+
+    class Meta:
+        model = About
+        fields = [
+            "id",
+            "heading",
+            "title",
+            "experience_years",
+            "description",
+            "description_2",
+            "cv_file",
+            "services",
+        ]
 
 
 class SkillSerializer(serializers.ModelSerializer):

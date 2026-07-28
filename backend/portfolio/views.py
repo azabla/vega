@@ -1,14 +1,18 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
+
+from .services import AboutService
 from .models import Portfolio, Projects, Skill, Contact, Experience
 from .serializers import (
+    AboutSerializer,
     ProjectsSerializer,
     SkillSerializer,
     PortfolioSerializer,
     ContactSerializer,
     ExperienceSerializer,
 )
+from rest_framework.generics import RetrieveAPIView
 
 
 class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
@@ -24,6 +28,14 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(
             {"detail": "No profile found"}, status=status.HTTP_404_NOT_FOUND
         )
+
+
+class AboutAPIView(RetrieveAPIView):
+
+    serializer_class = AboutSerializer
+
+    def get_object(self):
+        return AboutService.get_about()
 
 
 class SkillViewSet(viewsets.ReadOnlyModelViewSet):
