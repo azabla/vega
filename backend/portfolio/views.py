@@ -1,16 +1,22 @@
+import typing
 from rest_framework import viewsets, status
+import rest_framework
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
+from typing import Type
+from rest_framework.serializers import BaseSerializer
 
-from .services import AboutService
-from .models import Portfolio, Projects, Skill, Contact, Experience
+from .services import AboutService, ProjectService
+from .models import Portfolio, Project, Skill, Contact, Experience, Category
 from .serializers import (
     AboutSerializer,
-    ProjectsSerializer,
+    CategorySerializer,
     SkillSerializer,
     PortfolioSerializer,
     ContactSerializer,
     ExperienceSerializer,
+    ProjectCardSerializer,
+    ProjectDetailSerializer,
 )
 from rest_framework.generics import RetrieveAPIView
 
@@ -39,37 +45,59 @@ class AboutAPIView(RetrieveAPIView):
 
 
 class SkillViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Skill.objects.all()
+
     serializer_class = SkillSerializer
 
-    @action(detail=False, methods=["get"])  # Explicitly set GET
-    def by_category(self, request):
-        skills = self.get_queryset()  # Better practice than self.queryset.all()
-        categories = {}
-        for skill in skills:  # type: ignore
-            # Use the name of the category as the key, not the object itself
-            cat_name = skill.category.name if skill.category else "Uncategorized"
-
-            if cat_name not in categories:
-                categories[cat_name] = []
-
-            categories[cat_name].append(self.get_serializer(skill).data)
-
-        return Response(categories)
+    queryset = (
+        Skill.objects.select_related("category")
+        .filter(is_active=True)
+        .order_by("category__display_order", "display_order")
+    )
 
 
-class ProjectsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Projects.objects.all()
-    serializer_class = ProjectsSerializer
+class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = CategorySerializer
 
-    @action(detail=False, methods=["get"])  # Explicitly set GET
+    queryset = Category.objects.filter(is_active=True).order_by("display_order")
+
+
+class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
+
+    lookup_field = "slug"
+
+    def get_queryset(self):
+
+        return ProjectService.get_all_projects()
+
+    def get_serializer_class(self):
+
+        if self.action == "retrieve":
+            return ProjectDetailSerializer
+
+        return ProjectCardSerializer
+
+    @action(
+        detail=False,
+        methods=["get"],
+    )
     def featured(self, request):
-        featured_project = self.queryset.filter(
-            featured=True
-        )  # Better practice than self.queryset.all()
-        serializer = self.get_serializer(featured_project, many=True).data
 
-        return Response(serializer)
+        projects = ProjectService.get_featured_projects()
+
+        serializer = ProjectCardSerializer(projects, many=True)
+
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def search(self, request):
+
+        query = request.GET.get("q")
+
+        projects = ProjectService.search_project(query)
+
+        serializer = ProjectCardSerializer(projects, many=True)
+
+        return Response(serializer.data)
 
 
 class ExperienceViewSet(viewsets.ReadOnlyModelViewSet):

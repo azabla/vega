@@ -1,21 +1,27 @@
+from unicodedata import category
 from rest_framework import serializers
 from .models import (
     About,
     Portfolio,
-    Projects,
     Service,
     Skill,
     Contact,
     Experience,
     Category,
     Technology,
+    Project,
+    ProjectImage,
+    ProjectFeature,
+    ProjectChallenge,
+    LessonLearned,
+    ProjectArchitecture,
 )
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ["id", "name"]
+        fields = ["id", "name", "slug"]
 
 
 class PortfolioSerializer(serializers.ModelSerializer):
@@ -53,9 +59,17 @@ class AboutSerializer(serializers.ModelSerializer):
 
 
 class SkillSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+
     class Meta:
         model = Skill
-        fields = "__all__"
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "icon",
+            "category",
+        ]
 
 
 class TechnologySerializer(serializers.ModelSerializer):
@@ -64,31 +78,157 @@ class TechnologySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Technology
-        fields = ["id", "name", "category_name"]
+        fields = ["id", "name", "slug", "icon", "category_name"]
 
 
-class ProjectsSerializer(serializers.ModelSerializer):
-    # This will list all technologies assigned to the project
-    technologies = TechnologySerializer(many=True, read_only=True)
-
-    # This allows you to send a list of IDs when creating/updating
-    technology_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Technology.objects.all(),
-        source="technologies",
-        many=True,
-        write_only=True,
-    )
+class ProjectImageSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Projects
-        fields = [
+
+        model = ProjectImage
+
+        fields = (
+            "id",
+            "image",
+            "caption",
+        )
+
+
+class ProjectFeatureSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = ProjectFeature
+
+        fields = (
             "id",
             "title",
             "description",
             "image",
+            "demo_url",
+            "documentation_url",
+        )
+
+
+class ProjectChallengeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = ProjectChallenge
+
+        fields = (
+            "id",
+            "problem",
+            "solution",
+        )
+
+
+class ProjectLessonSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = LessonLearned
+
+        fields = (
+            "id",
+            "title",
+            "description",
+        )
+
+
+class ProjectArchitectureSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = ProjectArchitecture
+
+        fields = (
+            "description",
+            "diagram",
+        )
+
+
+class ProjectCardSerializer(serializers.ModelSerializer):
+
+    technologies = TechnologySerializer(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+
+        model = Project
+
+        fields = (
+            "id",
+            "title",
+            "slug",
+            "summary",
+            "thumbnail",
             "technologies",
-            "technology_ids",
-        ]
+            "featured",
+            "github_url",
+            "live_url",
+        )
+
+
+class ProjectListSerializer(ProjectCardSerializer):
+    pass
+
+
+class ProjectDetailSerializer(serializers.ModelSerializer):
+
+    technologies = TechnologySerializer(
+        many=True,
+        read_only=True,
+    )
+
+    gallery = ProjectImageSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    features = ProjectFeatureSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    challenges = ProjectChallengeSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    lessons = ProjectLessonSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    architecture = ProjectArchitectureSerializer(
+        read_only=True,
+    )
+
+    class Meta:
+
+        model = Project
+
+        fields = (
+            "id",
+            "title",
+            "slug",
+            "summary",
+            "overview",
+            "thumbnail",
+            "github_url",
+            "live_url",
+            "technologies",
+            "featured",
+            "gallery",
+            "features",
+            "challenges",
+            "created_at",
+            "lessons",
+            "architecture",
+        )
 
 
 class ExperienceSerializer(serializers.ModelSerializer):

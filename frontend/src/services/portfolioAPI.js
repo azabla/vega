@@ -6,7 +6,10 @@ export const portfolioAPI =  {
     getProfile: () => api.get('/profile/main/'),
     getAboutMe: () => api.get('/about/'),
 
-    getSkills: () => api.get('/skills/'),
+    getSkills: () => api.get("/skills/"),
+
+    getCategories: () => api.get("/categories/"),
+
     getSkillsByCategory: () => api.get('/skills/by_category/'),
 
     getProjects: () => api.get('/projects/'),

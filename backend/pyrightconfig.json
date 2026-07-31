@@ -1,0 +1,17 @@
+{
+    "venvPath": ".",
+    "venv": "env",
+
+    "typeCheckingMode": "basic",
+
+    "reportMissingTypeStubs": false,
+
+    "reportIncompatibleVariableOverride": "none",
+
+    "djangoSettingsModule": "core.settings",
+
+    "exclude": [
+        "**/migrations/**",
+        "**/__pycache__/**"
+    ]
+}

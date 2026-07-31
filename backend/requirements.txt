@@ -2,10 +2,15 @@ asgiref==3.11.1
 Django==6.0.3
 django-cors-headers==4.9.0
 django-environ==0.14.0
+django-stubs==6.0.7
+django-stubs-ext==6.0.7
 djangorestframework==3.16.1
+djangorestframework-stubs==3.17.1
 gunicorn==26.0.0
 packaging==26.2
 pillow==12.1.1
 psycopg2-binary==2.9.12
 sqlparse==0.5.5
+types-PyYAML==6.0.12.20260724
+typing_extensions==4.16.0
 whitenoise==6.12.0
