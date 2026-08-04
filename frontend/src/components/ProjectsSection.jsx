@@ -1,112 +1,171 @@
-import { ArrowRight, ExternalLink} from "lucide-react";
-
+import { ArrowRight, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
 import { FaGithub } from "react-icons/fa";
+import { portfolioAPI } from "../services/portfolioAPI";
 
-const projects = [
-  {
-    id: 1,
-    title: "SaaS Landing Page",
-    description: "A beautiful landing page app using React and Tailwind.",
-    image: "/projects/project1.png",
-    tags: ["React", "TailwindCSS", "Supabase"],
-    demoUrl: "#",
-    githubUrl: "#",
-  },
-  {
-    id: 2,
-    title: "Orbit Analytics Dashboard",
-    description:
-      "Interactive analytics dashboard with data visualization and filtering capabilities.",
-    image: "/projects/project2.png",
-    tags: ["TypeScript", "D3.js", "Next.js"],
-    demoUrl: "#",
-    githubUrl: "#",
-  },
-  {
-    id: 3,
-    title: "E-commerce Platform",
-    description:
-      "Full-featured e-commerce platform with user authentication and payment processing.",
-    image: "/projects/project3.png",
-    tags: ["React", "Node.js", "Stripe"],
-    demoUrl: "#",
-    githubUrl: "#",
-  },
-];
+
 
 export const ProjectsSection = () => {
+
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+
+  useEffect(()=>{
+    const fetchProjects = async () => {
+      try {
+        const response = await portfolioAPI.getFeaturedProjects();
+        setProjects(response.data);
+      }catch(error){
+        console.error("Failed to load featured projects: ", error);
+      }finally{
+        setLoading(false);
+      }
+    }
+
+    fetchProjects();
+  }, [])
+
+  if (loading) {
+    return (
+      <section id="projects" className="py-24 px-4">
+        <div className="container max-w-6xl">
+          <div className="text-center">
+            <h2 className="text-4xl font-bold mb-4">
+              Featured Projects
+            </h2>
+            <p className="text-muted-foreground">
+              Loading projects...
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  {
+    projects.length === 0 && (
+      <p className="text-center text-muted-foreground">
+        No featured projects available.
+      </p>
+    );
+  }
+  
   return (
     <section id="projects" className="py-24 px-4 relative">
-      <div className="container mx-auto max-w-5xl">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center">
-          {" "}
-          Featured <span className="text-primary"> Projects </span>
-        </h2>
+      <div className="container max-w-6xl">
 
-        <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-          Here are some of my recent projects. Each project was carefully
-          crafted with attention to detail, performance, and user experience.
-        </p>
+        <div className="max-w-3xl mx-auto text-center mb-16">
+          <p className="text-primary font-medium mb-3">
+            Selected Work
+          </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project, key) => (
-            <div
-              key={key}
-              className="group bg-card rounded-lg overflow-hidden shadow-xs card-hover"
-            >
-              <div className="h-48 overflow-hidden">
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
+          <h2 className="text-4xl font-bold">
+            Featured Projects
+          </h2>
+
+          <p className="mt-5 text-muted-foreground leading-7">
+            A selection of projects that demonstrate my experience building
+            scalable backend systems, APIs, SaaS platforms, and modern web
+            applications.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+
+        {projects.map((project) => (
+        <article
+          key={project.id}
+          className="group gradient-border overflow-hidden bg-card card-hover flex flex-col"
+        >
+          <div className="relative overflow-hidden">
+            <img
+              src={
+                project.thumbnail ||
+                "https://via.placeholder.com/800x500?text=Project"
+              }
+              alt={project.title}
+              className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+
+            {project.featured && (
+              <div className="absolute left-4 top-4 rounded-full bg-primary/90 text-primary-foreground text-xs font-medium px-3 py-1">
+                Featured
               </div>
+            )}
+          </div>
 
-              <div className="p-6">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.tags.map((tag, index) => (
-                    <span key={index} className="px-2 py-1 text-xs font-medium border rounded-full bg-secondary text-secondary-foreground">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+          <div className="flex flex-col flex-1 p-6">
+            <h3 className="text-xl font-semibold mb-3">
+              {project.title}
+            </h3>
 
-                <h3 className="text-xl font-semibold mb-1"> {project.title}</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  {project.description}
-                </p>
-                <div className="flex justify-between items-center">
-                  <div className="flex space-x-3">
-                    <a
-                      href={project.demoUrl}
-                      target="_blank"
-                      className="text-foreground/80 hover:text-primary transition-colors duration-300"
-                    >
-                      <ExternalLink size={20} />
-                    </a>
-                    <a
-                      href={project.githubUrl}
-                      target="_blank"
-                      className="text-foreground/80 hover:text-primary transition-colors duration-300"
-                    >
-                      <FaGithub size={20} />
-                    </a>
-                  </div>
-                </div>
+            <p className="text-muted-foreground text-sm leading-6 flex-1">
+              {project.summary}
+            </p>
+
+            <div className="flex flex-wrap gap-2 mt-6">
+              {project.technologies.map((tech) => (
+                <span
+                  key={tech.id}
+                  className="rounded-full border border-border bg-background px-3 py-1 text-xs font-medium"
+                >
+                  {tech.name}
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-8 flex items-center justify-between">
+              <button className="flex items-center gap-2 text-primary font-medium group/link">
+                View Case Study
+                <ArrowRight
+                  size={16}
+                  className="transition-transform duration-300 group-hover/link:translate-x-1"
+                />
+              </button>
+
+              <div className="flex gap-4">
+                {project.github_url && (
+                  <a
+                    href={project.github_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <FaGithub size={18} />
+                  </a>
+                )}
+
+                {project.live_url && (
+                  <a
+                    href={project.live_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <ExternalLink size={18} />
+                  </a>
+                )}
               </div>
             </div>
-          ))}
+          </div>
+        </article>
+      ))}
+
         </div>
 
-        <div className="text-center mt-12">
-          <a
-            className="cosmic-button w-fit flex items-center mx-auto gap-2"
-            target="_blank"
-            href="https://github.com/machadop1407"
-          >
-            Check My Github <ArrowRight size={16} />
-          </a>
+        <div className="mt-16 flex justify-center">
+
+          <button className="cosmic-button flex items-center gap-2">
+
+            View Project Archive
+
+            <ArrowRight size={16} />
+
+          </button>
+
         </div>
+
       </div>
     </section>
   );

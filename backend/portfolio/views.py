@@ -84,7 +84,7 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
 
         projects = ProjectService.get_featured_projects()
 
-        serializer = ProjectCardSerializer(projects, many=True)
+        serializer = self.get_serializer(projects, many=True)
 
         return Response(serializer.data)
 
