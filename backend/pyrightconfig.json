@@ -1,6 +1,6 @@
 {
     "venvPath": ".",
-    "venv": "env",
+    "venv": "venv",
 
     "typeCheckingMode": "basic",
 

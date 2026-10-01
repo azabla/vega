@@ -121,7 +121,7 @@ The custom user model needs a **fresh database**. The current production databas
 #    (commit 610c527 = before owner fields were added)
 git worktree add ../vega-export 610c527
 cd ../vega-export/backend
-DATABASE_URL='<old render url>' ../../vega/backend/env/bin/python manage.py \
+DATABASE_URL='<old render url>' ../../vega/backend/venv/bin/python manage.py \
   dumpdata portfolio --indent 2 -o ../../vega/backend/backups/portfolio-prod.json
 cd ../../vega && git worktree remove ../vega-export
 

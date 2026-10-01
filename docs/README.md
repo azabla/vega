@@ -26,11 +26,11 @@ The system Python has no `ensurepip`, so create the venv with [uv](https://docs.
 ```bash
 # backend — uses DATABASE_URL=sqlite:///dev.sqlite3 from backend/.env
 cd backend
-uv venv --seed -p 3.13 env
-uv pip install -p env/bin/python -r requirements.txt
-env/bin/python manage.py migrate
-env/bin/python manage.py createsuperuser
-env/bin/python manage.py runserver 127.0.0.1:8001   # 8000 is used by another project
+uv venv --seed -p 3.13 venv
+uv pip install -p venv/bin/python -r requirements.txt
+venv/bin/python manage.py migrate
+venv/bin/python manage.py createsuperuser
+venv/bin/python manage.py runserver 127.0.0.1:8001   # 8000 is used by another project
 
 # frontend (new terminal)
 cd frontend

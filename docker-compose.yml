@@ -32,7 +32,7 @@ services:
       DATABASE_URL: postgres://vega:vega@db:5432/vega
     volumes:
       - ./backend:/app
-      - /app/env  # hide the host virtualenv from the container
+      - /app/venv  # hide the host virtualenv from the container
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:
