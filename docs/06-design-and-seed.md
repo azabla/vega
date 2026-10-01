@@ -2,7 +2,7 @@
 
 ## Seed data: `seed_portfolio`
 
-`backend/portfolio/seed/vega.json` describes my real projects. It was written from each repo's code, dependencies and git history (start dates come from the first commit). It covers the profile, the about section and services, skills grouped by category, and 9 projects with features, architecture, challenges and lessons.
+`backend/portfolio/seed/vega.json` is generated from **my resume**: profile (including website and phone), summary → about and services, the core-skills list → 10 skill categories, 3 jobs (bullets become a list on the timeline), education (CGPA and exit-exam score), languages, and 10 projects. The projects are the resume's selected projects, the main systems from my jobs, and two personal projects (Vega Grading System and this platform). Project details come only from resume statements, plus code I could verify for my own repos.
 
 ```bash
 cd backend
@@ -15,13 +15,15 @@ venv/bin/python manage.py seed_portfolio portfolio/seed/vega.json --owner vega -
 | `profile`, `about` | Updated in place (fields not in the file are left alone, e.g. phone) |
 | `categories[].skills` | Matched by name, case-insensitive; created if missing |
 | `projects` | Matched by `slug`. Features, challenges, lessons and architecture are **replaced** with the file's version. Projects not in the file are kept. |
-| `experience`, `education`, `certificates` | Replaced only when the file contains the key |
+| `experience`, `education`, `certificates`, `languages` | Replaced only when the file contains the key |
 
 Running it twice gives the same result (tested in `SeedPortfolioTests`). To change the content, edit the JSON and re-run.
 
 New project fields used by the seed and the UI: **`status`** (completed / in progress / archived), **`role`** and **`started_on`**. Projects are ordered featured first, then by `order`.
 
-> Experience and education are not in the seed because I don't have reliable data for them. Add them in the admin (or in the JSON) and they appear automatically.
+Resume dates are years only, so they are stored as 1 January (start) / 31 December (end), and the UI shows **years** for experience, education and project start dates.
+
+Also added for the resume: `Portfolio.website` (shown with the social links) and a `Language` model (name + proficiency: native, fluent, professional, intermediate, basic) with public `/api/u/<username>/languages/` and owner `/api/me/languages/` endpoints. Languages appear in the Education section.
 
 ## Design system
 
