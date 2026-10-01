@@ -11,3 +11,5 @@ export const formatDateRange = (start, end, current) => {
 };
 
 export const pluralize = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
+
+export const yearOf = (value) => (value ? new Date(value).getFullYear() : null);

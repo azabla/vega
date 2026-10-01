@@ -1,100 +1,105 @@
-import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useProfile } from "@/hooks/useProfile";
+import { Link } from "react-router-dom";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useActiveSection } from "@/hooks/useActiveSection";
 import { usePortfolioPath } from "@/hooks/usePortfolioPath";
+import { useProfile } from "@/hooks/useProfile";
+import { cn } from "@/lib/utils";
 
-const sections = [
-  { name: "Home", id: "hero" },
+const SECTIONS = [
   { name: "About", id: "about" },
   { name: "Skills", id: "skills" },
   { name: "Experience", id: "experience" },
   { name: "Projects", id: "projects" },
   { name: "Contact", id: "contact" },
 ];
+const SECTION_IDS = SECTIONS.map((s) => s.id);
+
+const initialsOf = (name = "") =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("");
 
 export const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { profile } = useProfile();
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { profile, loading } = useProfile();
   const base = usePortfolioPath();
-
-  // works from sub-pages too (e.g. a project page links back to /#about)
-  const navItems = sections.map((s) => ({ name: s.name, href: `${base || "/"}#${s.id}` }));
-  const [firstName, ...rest] = (profile?.name || "").split(" ");
+  const active = useActiveSection(SECTION_IDS);
+  const home = base || "/";
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
   return (
-    <nav
+    <header
       className={cn(
-        "fixed w-full z-40 transition-all duration-300",
-        isScrolled ? "py-3 bg-background/80 backdrop-blur-md shadow-xs" : "py-5"
+        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+        scrolled || open ? "border-b bg-background/75 backdrop-blur-xl" : "border-b border-transparent"
       )}
     >
-      <div className="container flex items-center justify-between md:pr-16">
-        <a
-          className="text-xl font-bold text-primary flex items-center"
-          href={`${base || "/"}#hero`}
-        >
-          <span className="relative z-10">
-            <span className="text-glow text-foreground">{firstName}</span>{" "}
-            {rest.join(" ")}
+      <nav className="container flex h-16 items-center justify-between gap-6">
+        <Link to={home} className="flex items-center gap-2.5 font-semibold" onClick={() => setOpen(false)}>
+          <span className="flex size-8 items-center justify-center rounded-lg bg-primary font-mono text-xs text-primary-foreground">
+            {loading ? "" : initialsOf(profile?.name)}
           </span>
-        </a>
+          {loading ? <Skeleton className="h-4 w-28" /> : <span className="hidden sm:inline">{profile?.name}</span>}
+        </Link>
 
-        {/* desktop nav */}
-        <div className="hidden md:flex space-x-8">
-          {navItems.map((item, key) => (
+        <div className="hidden items-center gap-1 md:flex">
+          {SECTIONS.map((s) => (
             <a
-              key={key}
-              href={item.href}
-              className="text-foreground/80 hover:text-primary transition-colors duration-300"
+              key={s.id}
+              href={`${home}#${s.id}`}
+              className={cn(
+                "rounded-full px-3.5 py-1.5 text-sm transition-colors",
+                active === s.id ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
             >
-              {item.name}
+              {s.name}
             </a>
           ))}
         </div>
 
-        {/* mobile nav */}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            type="button"
+            className="inline-flex size-9 items-center justify-center rounded-full border bg-card md:hidden"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+          >
+            {open ? <X className="size-4" /> : <Menu className="size-4" />}
+          </button>
+        </div>
+      </nav>
 
-        <button
-          onClick={() => setIsMenuOpen((prev) => !prev)}
-          className="md:hidden p-2 text-foreground z-50"
-          aria-label={isMenuOpen ? "Close Menu" : "Open Menu"}
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}{" "}
-        </button>
-
-        <div
-          className={cn(
-            "fixed inset-0 bg-background/95 backdrop-blur-md z-40 flex flex-col items-center justify-center",
-            "transition-all duration-300 md:hidden",
-            isMenuOpen
-              ? "opacity-100 pointer-events-auto"
-              : "opacity-0 pointer-events-none"
-          )}
-        >
-          <div className="flex flex-col space-y-8 text-xl">
-            {navItems.map((item, key) => (
+      {open && (
+        <div className="container pb-6 md:hidden">
+          <div className="flex flex-col gap-1 border-t pt-4">
+            {SECTIONS.map((s) => (
               <a
-                key={key}
-                href={item.href}
-                className="text-foreground/80 hover:text-primary transition-colors duration-300"
-                onClick={() => setIsMenuOpen(false)}
+                key={s.id}
+                href={`${home}#${s.id}`}
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-2.5 text-base text-muted-foreground hover:bg-secondary hover:text-foreground"
               >
-                {item.name}
+                {s.name}
               </a>
             ))}
           </div>
         </div>
-      </div>
-    </nav>
+      )}
+    </header>
   );
 };

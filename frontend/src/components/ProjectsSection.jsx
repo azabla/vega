@@ -1,48 +1,47 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ProjectCard, ProjectCardSkeleton } from "@/components/ProjectCard";
+import { Reveal } from "@/components/ui/Reveal";
+import { Section, SectionHeader } from "@/components/ui/Section";
 import { portfolioAPI } from "@/services/portfolioAPI";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { usePortfolioPath } from "@/hooks/usePortfolioPath";
-import { ProjectCard } from "@/components/ProjectCard";
 
 export const ProjectsSection = () => {
   const base = usePortfolioPath();
-  const { data: projects, loading } = usePortfolioData(portfolioAPI.getFeaturedProjects);
+  const { data: featured, loading } = usePortfolioData(portfolioAPI.getFeaturedProjects);
+  const { data: all } = usePortfolioData(portfolioAPI.getProjects);
+
+  if (!loading && !featured?.length && !all?.length) return null;
+  // fall back to the newest projects when none are marked featured
+  const projects = featured?.length ? featured : (all ?? []).slice(0, 3);
 
   return (
-    <section id="projects" className="py-24 px-4 relative">
-      <div className="container max-w-6xl">
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <p className="text-primary font-medium mb-3">Selected Work</p>
-
-          <h2 className="text-4xl font-bold">Featured Projects</h2>
-
-          <p className="mt-5 text-muted-foreground leading-7">
-            A selection of projects that demonstrate my experience building
-            scalable backend systems, APIs, SaaS platforms, and modern web
-            applications.
-          </p>
-        </div>
-
-        {loading ? (
-          <p className="text-center text-muted-foreground">Loading projects...</p>
-        ) : projects?.length ? (
-          <div className="grid lg:grid-cols-3 gap-8">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground">No featured projects yet.</p>
-        )}
-
-        <div className="mt-16 flex justify-center">
-          <Link to={`${base}/projects`} className="cosmic-button flex items-center gap-2">
-            View Project Archive
-            <ArrowRight size={16} />
+    <Section id="projects">
+      <SectionHeader
+        eyebrow="Selected work"
+        title="Featured projects"
+        description="Products I've designed and built end to end. Open a project for the full case study: architecture, challenges and what I learned."
+        action={
+          <Link
+            to={`${base}/projects`}
+            className="group inline-flex shrink-0 items-center gap-2 text-sm font-medium text-primary"
+          >
+            All {all?.length ? `${all.length} ` : ""}projects
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
-        </div>
+        }
+      />
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {loading
+          ? Array.from({ length: 3 }).map((_, i) => <ProjectCardSkeleton key={i} />)
+          : projects.map((project, i) => (
+              <Reveal key={project.id} delay={i * 80} className="flex">
+                <ProjectCard project={project} />
+              </Reveal>
+            ))}
       </div>
-    </section>
+    </Section>
   );
 };

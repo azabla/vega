@@ -1,105 +1,67 @@
-import { Code } from "lucide-react";
-
+import { Boxes, Code, Layers, Plug, Server } from "lucide-react";
+import { Reveal } from "@/components/ui/Reveal";
+import { Section, SectionHeader } from "@/components/ui/Section";
+import { Skeleton } from "@/components/ui/skeleton";
 import { portfolioAPI } from "@/services/portfolioAPI";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 
-export const AboutSection = () => {
-  const { data: aboutme } = usePortfolioData(portfolioAPI.getAboutMe);
+const ICONS = [Server, Layers, Plug, Boxes, Code];
 
-  // hidden while loading, and when the owner hasn't written an about section
-  if (!aboutme) return null;
+export const AboutSection = () => {
+  const { data: about, loading } = usePortfolioData(portfolioAPI.getAboutMe);
+
+  // hidden when the owner hasn't written an about section
+  if (!loading && !about) return null;
 
   return (
-    <section id="about" className="py-24 px-4 relative">
-      {" "}
-      <div className="container mx-auto max-w-5xl">
-        <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">
-          About <span className="text-primary"> Me</span>
-        </h2>
+    <Section id="about">
+      <SectionHeader eyebrow="About" title={loading ? <Skeleton className="h-9 w-80" /> : about.title} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <h3 className="text-2xl font-semibold">
-              {aboutme.title}
-            </h3>
+      <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
+        <Reveal className="space-y-5 text-[17px] leading-8 text-muted-foreground">
+          {loading ? (
+            <>
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-11/12" />
+              <Skeleton className="h-5 w-4/5" />
+              <Skeleton className="mt-6 h-5 w-full" />
+              <Skeleton className="h-5 w-3/4" />
+            </>
+          ) : (
+            <>
+              <p>{about.description}</p>
+              {about.description_2 && <p>{about.description_2}</p>}
+              {about.cv_file && (
+                <a
+                  href={about.cv_file}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-10 items-center rounded-full border bg-card px-5 text-sm font-medium text-foreground transition hover:bg-secondary"
+                >
+                  Download CV
+                </a>
+              )}
+            </>
+          )}
+        </Reveal>
 
-            <p className="text-muted-foreground">
-              {aboutme.description}
-            </p>
-
-            {aboutme.description_2 && (
-              <p className="text-muted-foreground">
-                {aboutme.description_2}
-              </p>
-            )}
-
-            <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center">
-              <a href="#contact" className="cosmic-button">
-                {" "}
-                Get In Touch
-              </a>
-            {aboutme.cv_file && (
-              <a
-                href={aboutme.cv_file}
-                download
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-2 rounded-full border border-primary text-primary hover:bg-primary/10 transition-colors duration-300"
-              >
-                Download CV
-              </a>
-            )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6">
-            {aboutme.services.map((service) => (
-            <div key={service.id} className="gradient-border p-6 card-hover">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Code className="h-6 w-6 text-primary" />
-                </div>
-                <div className="text-left">
-                  <h4 className="font-semibold text-lg"> {service.title}</h4>
-                  <p className="text-muted-foreground">
-                    {service.description}
-                  </p>
-                </div>
-              </div>
-            </div>
-            ))}
-            {/* <div className="gradient-border p-6 card-hover">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <User className="h-6 w-6 text-primary" />
-                </div>
-                <div className="text-left">
-                  <h4 className="font-semibold text-lg">UI/UX Design</h4>
-                  <p className="text-muted-foreground">
-                    Designing intuitive user interfaces and seamless user
-                    experiences.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="gradient-border p-6 card-hover">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Briefcase className="h-6 w-6 text-primary" />
-                </div>
-
-                <div className="text-left">
-                  <h4 className="font-semibold text-lg">Project Management</h4>
-                  <p className="text-muted-foreground">
-                    Leading projects from conception to completion with agile
-                    methodologies.
-                  </p>
-                </div>
-              </div>
-            </div> */}
-          </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-2xl" />)
+            : about.services.map((service, i) => {
+                const Icon = ICONS[i % ICONS.length];
+                return (
+                  <Reveal key={service.id} delay={i * 80} className="surface surface-hover p-6">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+                      <Icon className="size-5" />
+                    </span>
+                    <h3 className="mt-5 font-semibold">{service.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{service.description}</p>
+                  </Reveal>
+                );
+              })}
         </div>
       </div>
-    </section>
+    </Section>
   );
 };
