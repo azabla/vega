@@ -34,6 +34,7 @@ IMPORT_ORDER = [
     "portfolio.experience",
     "portfolio.education",
     "portfolio.certificate",
+    "portfolio.language",
     "portfolio.contact",
 ]
 

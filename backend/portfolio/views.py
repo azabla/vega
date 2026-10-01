@@ -12,7 +12,7 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import Category, Certificate, Contact, Education, Experience, Portfolio, Skill
+from .models import Category, Certificate, Contact, Education, Experience, Language, Portfolio, Skill
 from .serializers import (
     AboutSerializer,
     CategorySerializer,
@@ -20,6 +20,7 @@ from .serializers import (
     ContactSerializer,
     EducationSerializer,
     ExperienceSerializer,
+    LanguageSerializer,
     PortfolioSerializer,
     ProjectCardSerializer,
     ProjectDetailSerializer,
@@ -119,6 +120,13 @@ class EducationViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return Education.objects.filter(owner=self.get_owner())
+
+
+class LanguageViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):
+    serializer_class = LanguageSerializer
+
+    def get_queryset(self):
+        return Language.objects.filter(owner=self.get_owner())
 
 
 class CertificateViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):

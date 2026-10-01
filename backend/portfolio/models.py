@@ -28,6 +28,7 @@ class Portfolio(models.Model):
     github = models.URLField(blank=True)
     linkedin = models.URLField(blank=True)
     telegram = models.URLField(blank=True)
+    website = models.URLField(blank=True)
     resume = models.FileField(upload_to=OwnerUploadTo("resume"), blank=True, null=True)
     profile_image = models.ImageField(upload_to=OwnerUploadTo("profile"), blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -339,6 +340,29 @@ class Education(models.Model):
 
     def __str__(self):
         return f"{self.get_level_display()} — {self.institution}"
+
+
+class Language(models.Model):
+    class Proficiency(models.TextChoices):
+        NATIVE = "native", "Native"
+        FLUENT = "fluent", "Fluent"
+        PROFESSIONAL = "professional", "Professional working proficiency"
+        INTERMEDIATE = "intermediate", "Intermediate"
+        BASIC = "basic", "Basic"
+
+    owner = owner_field("languages")
+    name = models.CharField(max_length=60)
+    proficiency = models.CharField(max_length=20, choices=Proficiency.choices, default=Proficiency.PROFESSIONAL)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "name"]
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "name"], name="unique_language_per_owner"),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.get_proficiency_display()})"
 
 
 class Certificate(models.Model):

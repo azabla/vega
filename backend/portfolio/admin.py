@@ -9,6 +9,7 @@ from .models import (
     Category,
     Certificate,
     Education,
+    Language,
     Project,
     ProjectImage,
     ProjectFeature,
@@ -57,6 +58,11 @@ class ExperienceAdmin(OwnedAdmin):
 @admin.register(Education)
 class EducationAdmin(OwnedAdmin):
     list_display = ["institution", "level", "field_of_study", "owner", "start_date", "end_date"]
+
+
+@admin.register(Language)
+class LanguageAdmin(OwnedAdmin):
+    list_display = ["name", "proficiency", "owner", "order"]
 
 
 @admin.register(Certificate)

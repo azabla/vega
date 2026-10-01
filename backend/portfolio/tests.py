@@ -284,4 +284,10 @@ class SeedPortfolioTests(APITestCase):
         Experience.objects.create(owner=user, company="Old", position="Old", start_date="2020-01-01")
         call_command("seed_portfolio", "portfolio/seed/vega.json", owner="vega", reset=True,
                      stdout=open("/dev/null", "w"))
-        self.assertFalse(Experience.objects.filter(owner=user).exists())
+        self.assertFalse(Experience.objects.filter(owner=user, company="Old").exists())
+        # resume sections from the seed
+        self.assertTrue(Experience.objects.filter(owner=user, current=True).exists())
+        langs = self.client.get("/api/u/vega/languages/").data
+        self.assertEqual([l["name"] for l in langs], ["Amharic", "English"])
+        self.assertEqual(langs[0]["proficiency_display"], "Native")
+        self.assertTrue(self.client.get("/api/u/vega/profile/").data["website"])

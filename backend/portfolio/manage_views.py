@@ -16,6 +16,7 @@ from .models import (
     Contact,
     Education,
     Experience,
+    Language,
     LessonLearned,
     Portfolio,
     Project,
@@ -147,6 +148,11 @@ class MyExperienceViewSet(OwnedViewSet):
 class MyEducationViewSet(OwnedViewSet):
     model = Education
     serializer_class = s.MyEducationSerializer
+
+
+class MyLanguageViewSet(OwnedViewSet):
+    model = Language
+    serializer_class = s.MyLanguageSerializer
 
 
 class MyCertificateViewSet(OwnedViewSet):

@@ -15,6 +15,7 @@ from .models import (
     Education,
     Contact,
     Experience,
+    Language,
     LessonLearned,
     Portfolio,
     Project,
@@ -197,6 +198,12 @@ class MyEducationSerializer(OwnedModelSerializer):
             "description",
             "order",
         ]
+
+
+class MyLanguageSerializer(OwnedModelSerializer):
+    class Meta:
+        model = Language
+        fields = ["id", "owner", "name", "proficiency", "order"]
 
 
 class MyCertificateSerializer(OwnedModelSerializer):

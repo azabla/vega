@@ -3,6 +3,7 @@ from .models import (
     About,
     Certificate,
     Education,
+    Language,
     Portfolio,
     Service,
     Skill,
@@ -271,6 +272,14 @@ class EducationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Education
         exclude = ["owner"]
+
+
+class LanguageSerializer(serializers.ModelSerializer):
+    proficiency_display = serializers.CharField(source="get_proficiency_display", read_only=True)
+
+    class Meta:
+        model = Language
+        fields = ["id", "name", "proficiency", "proficiency_display"]
 
 
 class CertificateSerializer(serializers.ModelSerializer):

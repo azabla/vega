@@ -8,6 +8,7 @@ from .views import (
     CertificateViewSet,
     ContactViewSet,
     EducationViewSet,
+    LanguageViewSet,
     ExperienceViewSet,
     ProfileAPIView,
     ProjectViewSet,
@@ -22,6 +23,7 @@ public_router.register(r"skills", SkillViewSet, basename="skills")
 public_router.register(r"experience", ExperienceViewSet, basename="experience")
 public_router.register(r"education", EducationViewSet, basename="education")
 public_router.register(r"certificates", CertificateViewSet, basename="certificates")
+public_router.register(r"languages", LanguageViewSet, basename="languages")
 public_router.register(r"contact", ContactViewSet, basename="contact")
 public_router.register(r"projects", ProjectViewSet, basename="projects")
 
@@ -41,6 +43,7 @@ me_router.register(
 me_router.register(r"experience", me.MyExperienceViewSet, basename="my-experience")
 me_router.register(r"education", me.MyEducationViewSet, basename="my-education")
 me_router.register(r"certificates", me.MyCertificateViewSet, basename="my-certificates")
+me_router.register(r"languages", me.MyLanguageViewSet, basename="my-languages")
 me_router.register(r"messages", me.MyMessageViewSet, basename="my-messages")
 
 urlpatterns = [

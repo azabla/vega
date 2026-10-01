@@ -26,6 +26,7 @@ from portfolio.models import (
     Certificate,
     Education,
     Experience,
+    Language,
     LessonLearned,
     Portfolio,
     Project,
@@ -72,7 +73,12 @@ class Command(BaseCommand):
                 self.seed_about(user, data["about"])
             for i, category in enumerate(data.get("categories", [])):
                 self.seed_category(user, category, i)
-            for key, model in (("experience", Experience), ("education", Education), ("certificates", Certificate)):
+            for key, model in (
+                ("experience", Experience),
+                ("education", Education),
+                ("certificates", Certificate),
+                ("languages", Language),
+            ):
                 if key in data:
                     self.seed_list(user, model, data[key])
             for project in data.get("projects", []):
@@ -84,7 +90,7 @@ class Command(BaseCommand):
         ))
 
     def reset(self, user):
-        for model in (Project, Skill, Category, Experience, Education, Certificate, About):
+        for model in (Project, Skill, Category, Experience, Education, Certificate, Language, About):
             model.objects.filter(owner=user).delete()
 
     # -- sections ---------------------------------------------------------
@@ -134,8 +140,10 @@ class Command(BaseCommand):
 
     def seed_list(self, user, model, items):
         model.objects.filter(owner=user).delete()
-        for item in items:
+        for i, item in enumerate(items):
             item = dict(item)
+            if any(f.name == "order" for f in model._meta.fields):
+                item.setdefault("order", i)
             skill_names = item.pop("skills", [])
             obj = model.objects.create(owner=user, **item)
             if skill_names:
