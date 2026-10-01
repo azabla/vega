@@ -10,6 +10,7 @@ One document per piece of work, in the order it was done.
 | 03 | [Custom user & auth API](03-auth.md) | `accounts.User` model and the JWT auth endpoints |
 | 04 | [Multi-tenancy](04-multi-tenancy.md) | One portfolio per user: owner fields, public `/api/u/<username>/` and owner `/api/me/` APIs, importing data |
 | 05 | [Master profile v1](05-master-profile.md) | Skills with evidence, education, certificates, project pages |
+| 06 | [Redesign & seed data](06-design-and-seed.md) | Design system, components and skeletons; `seed_portfolio` with my real projects |
 
 ## Quick start
 
@@ -32,6 +33,7 @@ uv venv --seed -p 3.13 venv
 uv pip install -p venv/bin/python -r requirements.txt
 venv/bin/python manage.py migrate
 venv/bin/python manage.py createsuperuser
+venv/bin/python manage.py seed_portfolio portfolio/seed/vega.json --owner <username>  # optional sample content
 venv/bin/python manage.py runserver 127.0.0.1:8001   # 8000 is used by another project
 
 # frontend (new terminal)
