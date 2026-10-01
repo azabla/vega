@@ -129,11 +129,6 @@ class ProjectAdmin(admin.ModelAdmin):
         "order",
     )
 
-    ordering = (
-        "-featured",
-        "order",
-    )
-
     filter_horizontal = ("technologies",)
 
     prepopulated_fields = {

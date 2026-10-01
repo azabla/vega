@@ -2,3 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
+# local dev database
+dev.sqlite3
+staticfiles/

@@ -1,4 +1,3 @@
-from turtle import title
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.db.models import QuerySet
@@ -75,7 +74,7 @@ class ProjectService:
     def get_projects_by_technology(
         slug: str,
     ) -> QuerySet[Project]:
-        return ProjectService._base_queryset().filter(technologies_slug=slug).distinct()
+        return ProjectService._base_queryset().filter(technologies__slug=slug).distinct()
 
     # Search using keyword
     @staticmethod

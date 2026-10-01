@@ -1,10 +1,7 @@
-import typing
 from rest_framework import viewsets, status
-import rest_framework
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from typing import Type
-from rest_framework.serializers import BaseSerializer
 
 from .services import AboutService, ProjectService
 from .models import Portfolio, Project, Skill, Contact, Experience, Category
@@ -22,6 +19,7 @@ from rest_framework.generics import RetrieveAPIView
 
 
 class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
     queryset = Portfolio.objects.all()
     serializer_class = PortfolioSerializer
 
@@ -37,6 +35,7 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class AboutAPIView(RetrieveAPIView):
+    permission_classes = [AllowAny]
 
     serializer_class = AboutSerializer
 
@@ -45,6 +44,7 @@ class AboutAPIView(RetrieveAPIView):
 
 
 class SkillViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
 
     serializer_class = SkillSerializer
 
@@ -56,12 +56,14 @@ class SkillViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
     serializer_class = CategorySerializer
 
     queryset = Category.objects.filter(is_active=True).order_by("display_order")
 
 
 class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
 
     lookup_field = "slug"
 
@@ -91,7 +93,9 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=["get"])
     def search(self, request):
 
-        query = request.GET.get("q")
+        query = request.GET.get("q", "").strip()
+        if not query:
+            return Response([])
 
         projects = ProjectService.search_project(query)
 
@@ -101,11 +105,13 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class ExperienceViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
 
 
 class ContactViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
     http_method_names = ["post"]
@@ -117,9 +123,10 @@ class ContactViewSet(viewsets.ModelViewSet):
             return Response(
                 {"message": "You succesfully sent"}, status=status.HTTP_201_CREATED
             )
-        return Response(serializer.errrors, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def TestView(request):
     return Response("test")

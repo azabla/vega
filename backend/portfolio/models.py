@@ -1,6 +1,4 @@
-from ast import mod
 from django.db import models
-from django.forms import ImageField
 from .utils import generate_unique_slug
 
 # Create your models here.
@@ -172,7 +170,7 @@ class ProjectImage(models.Model):
     project = models.ForeignKey(
         "Project", related_name="gallery", on_delete=models.CASCADE
     )
-    image = models.ImageField(upload_to="porjects/gallery/")
+    image = models.ImageField(upload_to="projects/gallery/")
 
     caption = models.CharField(max_length=200, blank=True)
     order = models.PositiveBigIntegerField(default=0)
@@ -277,7 +275,7 @@ class Experience(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     current = models.BooleanField(default=False)
-    comap_logo = models.ImageField(upload_to="comapnies/", blank=True, null=True)
+    comap_logo = models.ImageField(upload_to="companies/", blank=True, null=True)
 
     def __str__(self):
         return f"{self.position} at {self.company}"
