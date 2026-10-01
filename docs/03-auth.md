@@ -60,7 +60,7 @@ Send the access token as a header: `Authorization: Bearer <access>`.
 
 ### Permissions
 
-The default is now **`IsAuthenticated`** (secure by default). The existing public portfolio endpoints (`profile`, `about`, `skills`, `categories`, `projects`, `experience`, `contact`, `testview`) explicitly use `AllowAny`, so the current site works unchanged. New endpoints are private unless marked public.
+The default is now **`IsAuthenticated`** (secure by default). The public portfolio endpoints under `/api/u/<username>/` explicitly use `AllowAny` (see [04](04-multi-tenancy.md)). New endpoints are private unless marked public.
 
 ### Errors
 
@@ -75,7 +75,7 @@ Bad credentials, or a missing, expired, or blacklisted token, return `401`. Thro
 
 ## Tests
 
-`accounts/tests.py` covers registration (lowercasing, duplicates, reserved names, weak passwords), case-insensitive login, `me` GET/PATCH, refresh rotation, logout blacklisting, password change, throttling, and the public endpoints and bug fixes from [01](01-bug-fixes.md).
+`accounts/tests.py` covers registration (lowercasing, duplicates, reserved names, weak passwords), case-insensitive login, `me` GET/PATCH, refresh rotation, logout blacklisting, password change and throttling. Portfolio and isolation tests are in `portfolio/tests.py` (see [04](04-multi-tenancy.md)).
 
 ```bash
 docker compose exec backend python manage.py test
@@ -114,17 +114,27 @@ Not built yet. The plan:
 
 ## Existing databases
 
-The custom user model needs a **fresh database**. The local Docker database is fresh. The current production database on Render was migrated with the default `auth.User`, so running `migrate` there fails with `InconsistentMigrationHistory`. To move production:
+The custom user model needs a **fresh database**. The current production database on Render was migrated with the default `auth.User`, so running `migrate` there fails with `InconsistentMigrationHistory`. To move production:
 
 ```bash
-# 1. export portfolio content from the old DB
-python manage.py dumpdata portfolio --indent 2 > portfolio.json
-# 2. point DATABASE_URL at a new, empty database
+# 1. Export from the OLD database using code that matches its schema
+#    (commit 610c527 = before owner fields were added)
+git worktree add ../vega-export 610c527
+cd ../vega-export/backend
+DATABASE_URL='<old render url>' ../../vega/backend/env/bin/python manage.py \
+  dumpdata portfolio --indent 2 -o ../../vega/backend/backups/portfolio-prod.json
+cd ../../vega && git worktree remove ../vega-export
+
+# 2. Create a NEW empty Postgres database on Render, point DATABASE_URL at it
+cd backend
 python manage.py migrate
 python manage.py createsuperuser
-# 3. import content
-python manage.py loaddata portfolio.json
+
+# 3. Import the content into your account (see 04-multi-tenancy.md)
+python manage.py import_portfolio backups/portfolio-prod.json --owner <your username>
 ```
+
+`backups/` is in `.gitignore`. Exports contain contact-form messages (visitors' emails).
 
 ## Not included yet
 

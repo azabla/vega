@@ -22,9 +22,14 @@ Fixed while reviewing the project before turning it into a SaaS.
 | `src/services/api.js` | Unused duplicate of `src/api/axios.js`. It was also broken: `import axios from axios` without quotes, and `baseUrl` instead of `baseURL`. | Deleted |
 | `src/services/portfolioAPI.js` | `api.post('contact', …)` has no trailing slash, and Django can't redirect a POST to add one, so the contact form failed. `'/projects/featured'` cost an extra 301 redirect. | `'/contact/'` and `'/projects/featured/'` |
 
+## Repository hygiene
+
+- `backend/data.json` and `backend/db.sqlite3` are no longer tracked (they contained password hashes). They are still in git **history**. Purging that needs a history rewrite and a force-push, so it hasn't been done.
+
 ## Known issues not yet fixed
 
-- `getSkillsByCategory` calls `/skills/by_category/`, which doesn't exist in the backend.
+- `AboutSection.jsx`: an unused `item` variable fails `npm run lint`.
+- The navbar brand ("PedroTech Portfolio") is hard-coded and should come from the profile.
 - `Experience.comap_logo` is a typo in the field name. Renaming it changes the API field, so it should be done together with a frontend update.
 - `Experience.description` is a `TextField(max_length=220)`. The limit only applies in forms and the API, not in the database. Use `CharField` if 220 is intended.
 - `Project.Meta.ordering = ["-featured", "-created_at", "order"]`: `order` never takes effect because `created_at` is always unique.
