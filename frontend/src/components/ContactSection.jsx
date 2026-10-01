@@ -8,23 +8,40 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { portfolioAPI } from "@/services/portfolioAPI";
+import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
 
 export const ContactSection = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const username = usePortfolioUsername();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const form = e.currentTarget;
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      await portfolioAPI.sendMessage(username, Object.fromEntries(new FormData(form)));
       toast({
         title: "Message sent!",
         description: "Thank you for your message. I'll get back to you soon.",
       });
+      form.reset();
+    } catch (error) {
+      const errors = error.response?.data;
+      toast({
+        title: "Message not sent",
+        description: errors
+          ? Object.values(errors).flat().join(" ")
+          : "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
   return (
     <section id="contact" className="py-24 px-4 relative bg-secondary/30">

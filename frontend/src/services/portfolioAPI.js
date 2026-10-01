@@ -1,25 +1,23 @@
 import api from "@/api/axios";
 
+// Public portfolio endpoints: /api/u/<username>/...
+const u = (username) => `/u/${encodeURIComponent(username)}`;
 
+export const portfolioAPI = {
+    getProfile: (username) => api.get(`${u(username)}/profile/`),
+    getAboutMe: (username) => api.get(`${u(username)}/about/`),
 
-export const portfolioAPI =  {
-    getProfile: () => api.get('/profile/main/'),
-    getAboutMe: () => api.get('/about/'),
+    getSkills: (username) => api.get(`${u(username)}/skills/`),
+    getCategories: (username) => api.get(`${u(username)}/categories/`),
 
-    getSkills: () => api.get("/skills/"),
+    getProjects: (username) => api.get(`${u(username)}/projects/`),
+    getFeaturedProjects: (username) => api.get(`${u(username)}/projects/featured/`),
+    getProject: (username, slug) => api.get(`${u(username)}/projects/${slug}/`),
+    searchProjects: (username, q) => api.get(`${u(username)}/projects/search/`, { params: { q } }),
 
-    getCategories: () => api.get("/categories/"),
+    getExperience: (username) => api.get(`${u(username)}/experience/`),
 
-    getSkillsByCategory: () => api.get('/skills/by_category/'),
-
-    getProjects: () => api.get('/projects/'),
-    getFeaturedProjects: () => api.get('/projects/featured/'),
-
-    getExperience: () => api.get('/experience/'),
-
-    //contact - post request
-
-    sendMessage: (data) => api.post('/contact/', data),
-}
+    sendMessage: (username, data) => api.post(`${u(username)}/contact/`, data),
+};
 
 export default api;

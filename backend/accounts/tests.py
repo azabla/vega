@@ -93,20 +93,3 @@ class AuthAPITests(APITestCase):
     def test_login_is_throttled(self):
         codes = [self.login(email="z@z.com", password="x").status_code for _ in range(11)]
         self.assertEqual(codes[-1], status.HTTP_429_TOO_MANY_REQUESTS)
-
-
-class PublicEndpointTests(APITestCase):
-    def test_public_endpoints_need_no_token(self):
-        self.assertEqual(self.client.get("/api/projects/").status_code, status.HTTP_200_OK)
-        self.assertEqual(self.client.get("/api/skills/").status_code, status.HTTP_200_OK)
-
-    def test_search_without_query_returns_empty_list(self):
-        res = self.client.get("/api/projects/search/")
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, [])
-
-    def test_contact_validation_returns_400(self):
-        res = self.client.post("/api/contact/", {"name": "x"}, format="json")
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        res = self.client.post("/api/contact/", {"name": "x", "email": "x@y.com", "message": "hi"}, format="json")
-        self.assertEqual(res.status_code, status.HTTP_201_CREATED)

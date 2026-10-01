@@ -24,9 +24,12 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class PortfolioSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source="owner.username", read_only=True)
+
     class Meta:
         model = Portfolio
-        fields = "__all__"
+        exclude = ["owner"]
+        read_only_fields = ["created_at", "update_at"]
 
 
 class ServiceSerializer(serializers.ModelSerializer):
@@ -233,11 +236,11 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
 class ExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Experience
-        fields = "__all__"
+        exclude = ["owner"]
 
 
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
-        fields = "__all__"
+        exclude = ["owner"]
         read_only_fields = ["created_at"]

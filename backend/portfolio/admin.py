@@ -18,32 +18,60 @@ from .models import (
 
 # Register your models here.
 
-admin.site.register(Category)
-admin.site.register(Portfolio)
+class OwnedAdmin(admin.ModelAdmin):
+    """Superusers see every user's content; filter by owner."""
 
-admin.site.register(Skill)
-admin.site.register(Contact)
-admin.site.register(Experience)
+    list_filter = ["owner"]
+    list_select_related = ["owner"]
+
+
+@admin.register(Portfolio)
+class PortfolioAdmin(OwnedAdmin):
+    list_display = ["name", "owner", "title", "update_at"]
+    search_fields = ["name", "owner__username", "owner__email"]
+
+
+@admin.register(Category)
+class CategoryAdmin(OwnedAdmin):
+    list_display = ["name", "owner", "display_order", "is_active"]
+
+
+@admin.register(Skill)
+class SkillAdmin(OwnedAdmin):
+    list_display = ["name", "owner", "category", "is_active"]
+
+
+@admin.register(Contact)
+class ContactAdmin(OwnedAdmin):
+    list_display = ["name", "email", "owner", "subject", "created_at"]
+
+
+@admin.register(Experience)
+class ExperienceAdmin(OwnedAdmin):
+    list_display = ["position", "company", "owner", "start_date"]
 
 
 @admin.register(About)
 class AboutAdmin(admin.ModelAdmin):
     list_display = [
         "title",
+        "owner",
         "experience_years",
         "is_active",
         "updated_at",
     ]
 
-    list_filter = ["is_active"]
+    list_filter = ["is_active", "owner"]
 
     search_fields = ["title", "description"]
 
 
 @admin.register(Technology)
 class TechnologyAdmin(admin.ModelAdmin):
+    list_filter = ("owner",)
     list_display = (
         "name",
+        "owner",
         "category",
         "slug",
     )
@@ -112,6 +140,7 @@ class ProjectAdmin(admin.ModelAdmin):
 
     list_display = (
         "title",
+        "owner",
         "featured",
         "order",
         "created_at",
@@ -122,7 +151,7 @@ class ProjectAdmin(admin.ModelAdmin):
         "summary",
     )
 
-    list_filter = ("featured",)
+    list_filter = ("featured", "owner")
 
     ordering = (
         "-featured",

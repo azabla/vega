@@ -1,21 +1,35 @@
+from django.conf import settings
 from django.db import models
-from .utils import generate_unique_slug
 
-# Create your models here.
+from .utils import OwnerUploadTo, generate_unique_slug
+
+
+def owner_field(related_name, **kwargs):
+    return models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name=related_name,
+        **kwargs,
+    )
 
 
 class Portfolio(models.Model):
+    owner = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="portfolio",
+    )
     name = models.CharField(max_length=220)
-    title = models.CharField(max_length=220)
-    bio = models.TextField()
-    phone = models.CharField(max_length=20)
-    email = models.EmailField()
+    title = models.CharField(max_length=220, blank=True)
+    bio = models.TextField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
     location = models.CharField(max_length=100, blank=True)
     github = models.URLField(blank=True)
     linkedin = models.URLField(blank=True)
     telegram = models.URLField(blank=True)
-    resume = models.FileField(upload_to="resume/", blank=True, null=True)
-    profile_image = models.ImageField(upload_to="profile/", blank=True, null=True)
+    resume = models.FileField(upload_to=OwnerUploadTo("resume"), blank=True, null=True)
+    profile_image = models.ImageField(upload_to=OwnerUploadTo("profile"), blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     update_at = models.DateTimeField(auto_now=True)
 
@@ -24,7 +38,7 @@ class Portfolio(models.Model):
 
 
 class About(models.Model):
-
+    owner = owner_field("abouts")
     heading = models.CharField(max_length=200)
     title = models.CharField(max_length=255)
 
@@ -33,7 +47,7 @@ class About(models.Model):
     description = models.TextField()
     description_2 = models.TextField(blank=True)
 
-    cv_file = models.FileField(upload_to="portfolio/cv/", blank=True, null=True)
+    cv_file = models.FileField(upload_to=OwnerUploadTo("cv"), blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
 
@@ -63,12 +77,9 @@ class Service(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(
-        unique=True,
-        blank=True,
-        null=True,
-    )
+    owner = owner_field("categories")
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(blank=True, null=True)
     display_order = models.PositiveBigIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
@@ -83,21 +94,22 @@ class Category(models.Model):
         # The name used for the plural list (usually in the Admin)
         verbose_name_plural = "Categories"
         ordering = ["display_order", "name"]
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "name"], name="unique_category_name_per_owner"),
+            models.UniqueConstraint(fields=["owner", "slug"], name="unique_category_slug_per_owner"),
+        ]
 
     def __str__(self):
         return self.name
 
 
 class Skill(models.Model):
+    owner = owner_field("skills")
     name = models.CharField(max_length=100)
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="skills"
     )
-    slug = models.SlugField(
-        unique=True,
-        blank=True,
-        null=True,
-    )
+    slug = models.SlugField(blank=True, null=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     display_order = models.PositiveIntegerField(default=0)
@@ -112,11 +124,15 @@ class Skill(models.Model):
 
     class Meta:
         ordering = ["display_order", "category", "name"]
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "slug"], name="unique_skill_slug_per_owner"),
+        ]
 
 
 class Technology(models.Model):
+    owner = owner_field("technologies")
     name = models.CharField(max_length=100)  # e.g., "Django", "React"
-    slug = models.SlugField(unique=True, null=True)
+    slug = models.SlugField(blank=True, null=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="techs"
@@ -130,18 +146,25 @@ class Technology(models.Model):
     def __str__(self):
         return f"{self.name} ({self.category.name})"
 
+    class Meta:
+        verbose_name_plural = "Technologies"
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "slug"], name="unique_technology_slug_per_owner"),
+        ]
+
 
 class Project(models.Model):
+    owner = owner_field("projects")
     title = models.CharField(max_length=220)
     slug = models.SlugField(
-        unique=True, help_text="Used in URLs. Example: ethiopnotify"
+        blank=True, help_text="Used in URLs. Example: ethiopnotify"
     )
     summary = models.CharField(max_length=300, help_text="Shown on project cards.")
 
     overview = models.TextField(help_text="Complete explanation of the project.")
 
     thumbnail = models.ImageField(
-        upload_to="projects/thumbnails/", blank=True, null=True
+        upload_to=OwnerUploadTo("projects/thumbnails"), blank=True, null=True
     )
 
     # Use ManyToManyField so one project can have many technologies
@@ -163,6 +186,9 @@ class Project(models.Model):
 
     class Meta:
         ordering = ["-featured", "-created_at", "order"]
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "slug"], name="unique_project_slug_per_owner"),
+        ]
 
 
 class ProjectImage(models.Model):
@@ -170,7 +196,7 @@ class ProjectImage(models.Model):
     project = models.ForeignKey(
         "Project", related_name="gallery", on_delete=models.CASCADE
     )
-    image = models.ImageField(upload_to="projects/gallery/")
+    image = models.ImageField(upload_to=OwnerUploadTo("projects/gallery"))
 
     caption = models.CharField(max_length=200, blank=True)
     order = models.PositiveBigIntegerField(default=0)
@@ -193,7 +219,7 @@ class ProjectFeature(models.Model):
     description = models.TextField(blank=True, null=True)
 
     image = models.ImageField(
-        upload_to="projects/features/",
+        upload_to=OwnerUploadTo("projects/features"),
         blank=True,
         null=True,
     )
@@ -259,7 +285,7 @@ class ProjectArchitecture(models.Model):
     description = models.TextField(blank=True, null=True)
 
     diagram = models.ImageField(
-        upload_to="projects/architecture/",
+        upload_to=OwnerUploadTo("projects/architecture"),
         blank=True,
         null=True,
     )
@@ -269,13 +295,14 @@ class ProjectArchitecture(models.Model):
 
 
 class Experience(models.Model):
+    owner = owner_field("experiences")
     company = models.CharField(max_length=220)
     position = models.CharField(max_length=220)
     description = models.TextField(max_length=220)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     current = models.BooleanField(default=False)
-    comap_logo = models.ImageField(upload_to="companies/", blank=True, null=True)
+    comap_logo = models.ImageField(upload_to=OwnerUploadTo("companies"), blank=True, null=True)
 
     def __str__(self):
         return f"{self.position} at {self.company}"
@@ -285,6 +312,8 @@ class Experience(models.Model):
 
 
 class Contact(models.Model):
+    # the portfolio owner the message was sent to
+    owner = owner_field("messages")
     name = models.CharField(max_length=50)
     email = models.EmailField(max_length=254)
     subject = models.CharField(max_length=30, blank=True)

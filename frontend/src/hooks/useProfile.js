@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { portfolioAPI } from "@/services/portfolioAPI";
+import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
 
 
 export const useProfile = () => {
+
+    const username = usePortfolioUsername();
 
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -15,7 +18,7 @@ export const useProfile = () => {
 
             try {
 
-                const response = await portfolioAPI.getProfile();
+                const response = await portfolioAPI.getProfile(username);
 
                 setProfile(response.data);
 
@@ -37,7 +40,7 @@ export const useProfile = () => {
         fetchProfile();
 
 
-    }, []);
+    }, [username]);
 
 
     return {

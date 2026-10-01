@@ -14,6 +14,7 @@ function App() {
      <BrowserRouter>
       <Routes>
         <Route index element={<Home />}></Route>
+        <Route path="u/:username" element={<Home />}></Route>
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
      </BrowserRouter>

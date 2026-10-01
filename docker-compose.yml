@@ -45,6 +45,7 @@ services:
       target: dev
     environment:
       VITE_API_URL: http://localhost:${BACKEND_PORT:-8000}/api
+      VITE_PORTFOLIO_USERNAME: ${PORTFOLIO_USERNAME:-vega}
     volumes:
       - ./frontend:/app
       - /app/node_modules  # keep the container's node_modules

@@ -1,9 +1,11 @@
 import { Briefcase, Code, User } from "lucide-react";
 
 import { portfolioAPI } from "@/services/portfolioAPI";
+import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
 import { useEffect, useState } from "react";
 
 export const AboutSection = () => {
+  const username = usePortfolioUsername();
   const [aboutme, setAboutme] = useState(null);
 
   useEffect(() => {
@@ -11,7 +13,7 @@ export const AboutSection = () => {
     const fetchAboutme = async () => {
 
       try {
-        const response = await portfolioAPI.getAboutMe();
+        const response = await portfolioAPI.getAboutMe(username);
         // console.log(response.data);
 
         setAboutme(response.data);
@@ -24,7 +26,7 @@ export const AboutSection = () => {
 
     fetchAboutme();
 
-  }, []);
+  }, [username]);
 
   if (!aboutme) {
     return (

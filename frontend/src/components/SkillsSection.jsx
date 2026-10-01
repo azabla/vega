@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
 import { portfolioAPI } from "@/services/portfolioAPI";
+import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
 
 export const SkillsSection = () => {
+  const username = usePortfolioUsername();
   const [skills, setSkills] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState("all");
@@ -13,8 +15,8 @@ export const SkillsSection = () => {
     const fetchSkills = async () => {
       try {
         const [skillsRes, categoriesRes] = await Promise.all([
-          portfolioAPI.getSkills(),
-          portfolioAPI.getCategories(),
+          portfolioAPI.getSkills(username),
+          portfolioAPI.getCategories(username),
         ]);
         setSkills(skillsRes.data);
         setCategories(categoriesRes.data);
@@ -26,7 +28,7 @@ export const SkillsSection = () => {
     };
 
     fetchSkills();
-  }, []);
+  }, [username]);
 
   const filteredSkills = useMemo(() => {
     if (activeCategory === "all") {

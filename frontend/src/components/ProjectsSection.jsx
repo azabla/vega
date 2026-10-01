@@ -2,10 +2,13 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FaGithub } from "react-icons/fa";
 import { portfolioAPI } from "../services/portfolioAPI";
+import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
 
 
 
 export const ProjectsSection = () => {
+
+  const username = usePortfolioUsername();
 
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +17,7 @@ export const ProjectsSection = () => {
   useEffect(()=>{
     const fetchProjects = async () => {
       try {
-        const response = await portfolioAPI.getFeaturedProjects();
+        const response = await portfolioAPI.getFeaturedProjects(username);
         setProjects(response.data);
       }catch(error){
         console.error("Failed to load featured projects: ", error);
@@ -24,7 +27,7 @@ export const ProjectsSection = () => {
     }
 
     fetchProjects();
-  }, [])
+  }, [username])
 
   if (loading) {
     return (
