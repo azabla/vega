@@ -1,10 +1,10 @@
-import { Award, ExternalLink, GraduationCap } from "lucide-react";
+import { Award, ExternalLink, GraduationCap, Languages } from "lucide-react";
 import { Reveal } from "@/components/ui/Reveal";
 import { Section, SectionHeader } from "@/components/ui/Section";
 import { Tag } from "@/components/ui/Tag";
 import { portfolioAPI } from "@/services/portfolioAPI";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
-import { formatDateRange, formatMonthYear } from "@/lib/format";
+import { formatMonthYear, formatYearRange } from "@/lib/format";
 
 const Column = ({ icon, title, children }) => {
   const Icon = icon;
@@ -21,12 +21,16 @@ const Column = ({ icon, title, children }) => {
 export const EducationSection = () => {
   const { data: education } = usePortfolioData(portfolioAPI.getEducation);
   const { data: certificates } = usePortfolioData(portfolioAPI.getCertificates);
+  const { data: languages } = usePortfolioData(portfolioAPI.getLanguages);
 
-  if (!education?.length && !certificates?.length) return null;
+  if (!education?.length && !certificates?.length && !languages?.length) return null;
 
   return (
     <Section id="education" className="bg-secondary/30">
-      <SectionHeader eyebrow="Education" title="Education & certifications" />
+      <SectionHeader
+        eyebrow="Education"
+        title={certificates?.length ? "Education & certifications" : "Education & languages"}
+      />
 
       <div className="grid gap-10 md:grid-cols-2">
         {education?.length > 0 && (
@@ -37,7 +41,7 @@ export const EducationSection = () => {
                 <h4 className="mt-2 font-semibold">{item.field_of_study || item.level_display}</h4>
                 <p className="text-sm">{item.institution}</p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {formatDateRange(item.start_date, item.end_date, item.current)}
+                  {formatYearRange(item.start_date, item.end_date, item.current)}
                   {item.grade && ` · ${item.grade}`}
                 </p>
                 {item.description && (
@@ -48,6 +52,7 @@ export const EducationSection = () => {
           </Column>
         )}
 
+        <div className="space-y-10">
         {certificates?.length > 0 && (
           <Column icon={Award} title="Certifications">
             {certificates.map((cert, i) => {
@@ -87,6 +92,20 @@ export const EducationSection = () => {
             })}
           </Column>
         )}
+
+        {languages?.length > 0 && (
+          <Column icon={Languages} title="Languages">
+            <Reveal className="surface divide-y">
+              {languages.map((lang) => (
+                <div key={lang.id} className="flex items-center justify-between gap-4 px-6 py-4">
+                  <span className="font-medium">{lang.name}</span>
+                  <span className="text-sm text-muted-foreground">{lang.proficiency_display}</span>
+                </div>
+              ))}
+            </Reveal>
+          </Column>
+        )}
+        </div>
       </div>
     </Section>
   );

@@ -18,6 +18,7 @@ export const portfolioAPI = {
     getExperience: (username) => api.get(`${u(username)}/experience/`),
     getEducation: (username) => api.get(`${u(username)}/education/`),
     getCertificates: (username) => api.get(`${u(username)}/certificates/`),
+    getLanguages: (username) => api.get(`${u(username)}/languages/`),
 
     sendMessage: (username, data) => api.post(`${u(username)}/contact/`, data),
 };

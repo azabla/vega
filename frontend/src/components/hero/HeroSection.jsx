@@ -1,4 +1,4 @@
-import { ArrowRight, Download, MapPin } from "lucide-react";
+import { ArrowRight, Download, Globe, MapPin } from "lucide-react";
 import { FaGithub, FaLinkedin, FaTelegram } from "react-icons/fa";
 import { portfolioAPI } from "@/services/portfolioAPI";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
@@ -29,6 +29,7 @@ export const HeroSection = () => {
         profile.github && { icon: FaGithub, label: "GitHub", href: profile.github },
         profile.linkedin && { icon: FaLinkedin, label: "LinkedIn", href: profile.linkedin },
         profile.telegram && { icon: FaTelegram, label: "Telegram", href: profile.telegram },
+        profile.website && { icon: Globe, label: "Website", href: profile.website },
       ].filter(Boolean)
     : [];
 

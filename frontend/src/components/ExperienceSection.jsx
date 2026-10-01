@@ -5,7 +5,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tag } from "@/components/ui/Tag";
 import { portfolioAPI } from "@/services/portfolioAPI";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
-import { formatDateRange } from "@/lib/format";
+import { formatYearRange } from "@/lib/format";
+
+// "• item" lines render as a list; anything else as a paragraph
+const Description = ({ text }) => {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const bullets = lines.filter((l) => /^[•\-*]\s/.test(l));
+  if (bullets.length !== lines.length) {
+    return <p className="mt-4 whitespace-pre-line text-sm leading-6 text-muted-foreground">{text}</p>;
+  }
+  return (
+    <ul className="mt-4 space-y-2 text-sm leading-6 text-muted-foreground">
+      {bullets.map((line) => (
+        <li key={line} className="flex gap-3">
+          <span className="mt-2.5 size-1 shrink-0 rounded-full bg-primary/70" />
+          <span>{line.replace(/^[•\-*]\s/, "")}</span>
+        </li>
+      ))}
+    </ul>
+  );
+};
 
 export const ExperienceSection = () => {
   const { data: experience, loading } = usePortfolioData(portfolioAPI.getExperience);
@@ -27,7 +46,7 @@ export const ExperienceSection = () => {
               <Reveal as="li" key={job.id} delay={i * 80} className="relative pl-8 md:grid md:grid-cols-[12rem_1fr] md:gap-8 md:pl-0">
                 <span className="absolute top-2 left-0 size-[15px] rounded-full border-4 border-background bg-primary md:left-[12rem]" />
                 <p className="mb-2 pt-1 text-sm text-muted-foreground md:mb-0 md:pr-6 md:text-right">
-                  {formatDateRange(job.start_date, job.end_date, job.current)}
+                  {formatYearRange(job.start_date, job.end_date, job.current)}
                 </p>
                 <div className="surface p-6 md:ml-8">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -50,9 +69,7 @@ export const ExperienceSection = () => {
                       )}
                     </div>
                   </div>
-                  {job.description && (
-                    <p className="mt-4 whitespace-pre-line text-sm leading-6 text-muted-foreground">{job.description}</p>
-                  )}
+                  {job.description && <Description text={job.description} />}
                   {job.skills.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-1.5">
                       {job.skills.map((s) => (

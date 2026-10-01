@@ -20,7 +20,7 @@ import { StatusBadge, Tag } from "@/components/ui/Tag";
 import { portfolioAPI } from "@/services/portfolioAPI";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { usePortfolioPath } from "@/hooks/usePortfolioPath";
-import { formatMonthYear } from "@/lib/format";
+import { yearOf } from "@/lib/format";
 
 const Block = ({ id, icon, title, children }) => {
   const Icon = icon;
@@ -98,7 +98,7 @@ export const ProjectDetail = () => {
 
   const facts = [
     project.role && { icon: User, label: "Role", value: project.role },
-    project.started_on && { icon: Calendar, label: "Started", value: formatMonthYear(project.started_on) },
+    project.started_on && { icon: Calendar, label: "Started", value: yearOf(project.started_on) },
   ].filter(Boolean);
 
   return (

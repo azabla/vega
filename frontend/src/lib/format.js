@@ -10,6 +10,16 @@ export const formatDateRange = (start, end, current) => {
     return from || to;
 };
 
+// "2022 – 2024", "2025 – Present" — for resume-style entries recorded by year
+export const formatYearRange = (start, end, current) => {
+    const from = yearOf(start);
+    const to = current ? "Present" : yearOf(end);
+    if (from && to && from !== to) return `${from} – ${to}`;
+    return String(from || to || "");
+};
+
 export const pluralize = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
-export const yearOf = (value) => (value ? new Date(value).getFullYear() : null);
+export function yearOf(value) {
+    return value ? new Date(value).getFullYear() : null;
+}

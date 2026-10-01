@@ -1,4 +1,4 @@
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Globe } from "lucide-react";
 import { FaGithub, FaLinkedin, FaTelegram } from "react-icons/fa";
 import { useProfile } from "@/hooks/useProfile";
 
@@ -8,6 +8,7 @@ export const Footer = () => {
     profile?.github && { icon: FaGithub, label: "GitHub", href: profile.github },
     profile?.linkedin && { icon: FaLinkedin, label: "LinkedIn", href: profile.linkedin },
     profile?.telegram && { icon: FaTelegram, label: "Telegram", href: profile.telegram },
+    profile?.website && { icon: Globe, label: "Website", href: profile.website },
   ].filter(Boolean);
 
   return (

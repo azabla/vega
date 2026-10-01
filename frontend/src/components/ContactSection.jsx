@@ -1,4 +1,4 @@
-import { LoaderCircle, Mail, MapPin, Phone, Send } from "lucide-react";
+import { Globe, LoaderCircle, Mail, MapPin, Phone, Send } from "lucide-react";
 import { useState } from "react";
 import { FaGithub, FaLinkedin, FaTelegram } from "react-icons/fa";
 import { Reveal } from "@/components/ui/Reveal";
@@ -27,6 +27,7 @@ export const ContactSection = () => {
     profile?.github && { icon: FaGithub, label: "GitHub", href: profile.github },
     profile?.linkedin && { icon: FaLinkedin, label: "LinkedIn", href: profile.linkedin },
     profile?.telegram && { icon: FaTelegram, label: "Telegram", href: profile.telegram },
+    profile?.website && { icon: Globe, label: "Website", href: profile.website },
   ].filter(Boolean);
 
   const handleSubmit = async (e) => {
