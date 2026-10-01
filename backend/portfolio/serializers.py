@@ -165,6 +165,7 @@ class ProjectArchitectureSerializer(serializers.ModelSerializer):
 
 
 class ProjectCardSerializer(serializers.ModelSerializer):
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
 
     skills = SkillTagSerializer(
         many=True,
@@ -183,6 +184,8 @@ class ProjectCardSerializer(serializers.ModelSerializer):
             "thumbnail",
             "skills",
             "featured",
+            "status",
+            "status_display",
             "github_url",
             "live_url",
         )
@@ -193,6 +196,7 @@ class ProjectListSerializer(ProjectCardSerializer):
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
 
     skills = SkillTagSerializer(
         many=True,
@@ -238,6 +242,10 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             "live_url",
             "skills",
             "featured",
+            "status",
+            "status_display",
+            "role",
+            "started_on",
             "gallery",
             "features",
             "challenges",

@@ -259,3 +259,29 @@ class MasterProfileTests(APITestCase):
         self.assertEqual(exp["employment_type_display"], "Internship")
         self.assertEqual(len(exp["description"]), 1000)  # no 220-character limit anymore
         self.assertIn("company_logo", exp)
+
+
+class SeedPortfolioTests(APITestCase):
+    def test_seed_file_is_valid_and_idempotent(self):
+        user = make_user("vega")
+        out = open("/dev/null", "w")
+        call_command("seed_portfolio", "portfolio/seed/vega.json", owner="vega", stdout=out)
+        counts = (Project.objects.filter(owner=user).count(), Skill.objects.filter(owner=user).count())
+        call_command("seed_portfolio", "portfolio/seed/vega.json", owner="vega", stdout=out)
+        self.assertEqual(
+            counts, (Project.objects.filter(owner=user).count(), Skill.objects.filter(owner=user).count())
+        )
+        self.assertGreater(counts[0], 0)
+
+        detail = self.client.get("/api/u/vega/projects/vega-grading-system/").data
+        self.assertTrue(detail["features"])
+        self.assertEqual(detail["status"], "in_progress")
+        django = next(s for s in self.client.get("/api/u/vega/skills/").data if s["name"] == "Django")
+        self.assertGreaterEqual(len(django["evidence"]["projects"]), 2)
+
+    def test_reset_removes_old_content(self):
+        user = make_user("vega")
+        Experience.objects.create(owner=user, company="Old", position="Old", start_date="2020-01-01")
+        call_command("seed_portfolio", "portfolio/seed/vega.json", owner="vega", reset=True,
+                     stdout=open("/dev/null", "w"))
+        self.assertFalse(Experience.objects.filter(owner=user).exists())

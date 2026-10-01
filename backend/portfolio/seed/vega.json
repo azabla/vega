@@ -1,0 +1,311 @@
+{
+  "profile": {
+    "name": "Andualem Chanie",
+    "title": "Backend Developer",
+    "bio": "I build multi-tenant SaaS platforms, APIs and integrations for Ethiopian businesses — with Django, FastAPI and Laravel, and the infrastructure to run them.",
+    "email": "andualemchanie.y@gmail.com",
+    "location": "Addis Ababa, Ethiopia",
+    "github": "https://github.com/azabla"
+  },
+  "about": {
+    "heading": "About me",
+    "title": "Backend developer focused on SaaS, integrations and clean architecture",
+    "description": "I design and build the server side of products: data models, APIs, authentication, background jobs and the deployment around them. Most of my recent work is multi-tenant SaaS — a school grading platform where every school gets an isolated database schema, a classifieds marketplace with phone, Telegram and Google sign-in, and this portfolio platform itself.",
+    "description_2": "I care about boring, reliable foundations: database constraints over application checks, audited changes, idempotent background jobs, and documentation a teammate can follow. I work across Python (Django, FastAPI) and PHP (Laravel), and ship everything with Docker.",
+    "services": [
+      {
+        "title": "Backend & API development",
+        "description": "REST APIs with Django/DRF, FastAPI and Laravel — authentication, permissions, validation, background jobs and tests."
+      },
+      {
+        "title": "Multi-tenant SaaS",
+        "description": "Tenant isolation (schema-per-tenant or owner-scoped data), onboarding flows and role-based access control."
+      },
+      {
+        "title": "Integrations",
+        "description": "SMS (Africa's Talking), Telegram and Google sign-in, transactional email, S3-compatible storage and payments."
+      },
+      {
+        "title": "DevOps & deployment",
+        "description": "Docker Compose stacks, GitHub Actions CI/CD, PostgreSQL and Redis in production."
+      }
+    ]
+  },
+  "categories": [
+    {
+      "name": "Backend",
+      "skills": ["Python", "Django", "Django REST Framework", "FastAPI", "SQLAlchemy", "PHP", "Laravel", "CodeIgniter", "Node.js", "Express"]
+    },
+    {
+      "name": "Data",
+      "skills": ["PostgreSQL", "PostGIS", "Redis", "MongoDB", "MySQL"]
+    },
+    {
+      "name": "Frontend",
+      "skills": ["React", "JavaScript", "Tailwind CSS", "Livewire", "Filament", "Vue.js"]
+    },
+    {
+      "name": "Async & messaging",
+      "skills": ["Celery", "ARQ", "Transactional outbox"]
+    },
+    {
+      "name": "DevOps",
+      "skills": ["Docker", "GitHub Actions", "Nginx"]
+    },
+    {
+      "name": "Integrations",
+      "skills": ["JWT auth", "OAuth / OIDC", "Africa's Talking SMS", "Telegram Login", "S3 storage", "Firebase"]
+    }
+  ],
+  "projects": [
+    {
+      "title": "Ethiopia Classifieds Marketplace API",
+      "slug": "ethiopia-classifieds-marketplace",
+      "summary": "Backend for an Ethiopian classifieds marketplace: phone, email, Telegram and Google sign-in, a four-level category taxonomy with dynamic attributes, listings and private media.",
+      "overview": "A FastAPI modular monolith powering a classifieds marketplace for Ethiopia. Sellers sign up with a phone number, email, Telegram or Google, create listings in a deep category tree whose attributes depend on the category, and upload photos that are processed in the background.\n\nThe system is built for correctness first: PostgreSQL constraints are the source of truth, background work goes through a transactional outbox, and every external provider (SMS, email, storage, search) sits behind an adapter so it can be swapped or faked in tests.",
+      "status": "in_progress",
+      "role": "Backend developer",
+      "started_on": "2026-08-24",
+      "featured": true,
+      "order": 1,
+      "skills": ["Python", "FastAPI", "SQLAlchemy", "PostgreSQL", "PostGIS", "Redis", "ARQ", "Transactional outbox", "OAuth / OIDC", "Telegram Login", "Africa's Talking SMS", "S3 storage", "Docker"],
+      "features": [
+        {"title": "Multi-channel identity", "description": "Sign up and log in with email, phone OTP, Google or Telegram (login widget and Mini App), then link several identities to one account."},
+        {"title": "Phone OTP with replay protection", "description": "Purpose-bound one-time codes delivered through Africa's Talking, with database constraints and checks that stop codes being reused."},
+        {"title": "Category taxonomy & dynamic attributes", "description": "A four-level category tree where each category defines its own listing attributes, seeded from structured data."},
+        {"title": "Listing lifecycle", "description": "Drafts, submission and moderation as separate states, so incomplete listings never leak into search."},
+        {"title": "Private media pipeline", "description": "Uploads go to S3-compatible storage and are resized by background workers before they are published."},
+        {"title": "Session management", "description": "Per-device sessions with user-agent details so users can see and revoke where they are logged in."}
+      ],
+      "architecture": {
+        "description": "FastAPI modular monolith (auth, users, categories, attributes, listings, locations, media) on async SQLAlchemy and PostgreSQL with PostGIS for locations. Redis and ARQ run background tasks and scheduled jobs. Side effects are written to a transactional outbox in the same database transaction and delivered by workers, so an email or SMS is never sent for a change that was rolled back. Providers — Resend email, Africa's Talking SMS, Telegram, S3 storage, search — are adapters behind interfaces."
+      },
+      "challenges": [
+        {"problem": "Linking a phone number to an already-authenticated account", "solution": "Separated sign-in challenges from link challenges, bound each OTP to its purpose in a database check constraint, and rejected replays — fixing a crash and a reuse hole found in testing."},
+        {"problem": "Telegram and Google sign-in in one identity model", "solution": "Modelled each provider as an identity attached to a user, verified Telegram widget/Mini App payloads and Google OIDC tokens server-side, and allowed linking rather than creating duplicate accounts."},
+        {"problem": "Category attributes that change over time", "solution": "Pinned the attribute schema version when a draft is created, so stored listing data is never silently reinterpreted when a category changes."}
+      ],
+      "lessons": [
+        {"title": "Let the database enforce the rules", "description": "Constraints caught bugs that application checks missed; they are cheaper than incident reports."},
+        {"title": "Don't reach for microservices early", "description": "A well-structured monolith with clear modules and an outbox gave the same decoupling with far less operational cost."}
+      ]
+    },
+    {
+      "title": "Vega Grading System",
+      "slug": "vega-grading-system",
+      "summary": "Multi-tenant school grading SaaS: each school gets an isolated PostgreSQL schema, with academic structure, audited marks and a grading engine for teachers, homeroom teachers and admins.",
+      "overview": "A SaaS platform for schools to manage assessments and grades. Each school registers as a tenant and gets its own PostgreSQL schema, so one school's data can never appear in another's queries.\n\nInside a school, admins define the academic structure (years, grades, sections, subjects), teachers record marks, and a grading engine computes results. Every change to a mark is audited. A React web UI provides separate experiences for teachers, homeroom teachers and administrators.",
+      "status": "in_progress",
+      "role": "Full-stack developer",
+      "started_on": "2026-06-02",
+      "github_url": "https://github.com/azabla/vega_grading_system",
+      "featured": true,
+      "order": 2,
+      "skills": ["Python", "Django", "Django REST Framework", "PostgreSQL", "JWT auth", "React", "Docker"],
+      "features": [
+        {"title": "Schema-per-tenant isolation", "description": "Built on django-tenants: each school is a PostgreSQL schema, resolved from the request's domain."},
+        {"title": "Tenant onboarding", "description": "Registering a school creates the tenant, its schema and the first admin profile in one flow."},
+        {"title": "Academic structure", "description": "Years, grades, sections and subjects modelled per school."},
+        {"title": "Audited marks & grading engine", "description": "Marks keep a change history; the engine computes totals and results from assessment weights."},
+        {"title": "Role-based API and UI", "description": "JWT-authenticated API with teacher, homeroom-teacher and admin roles, and a React interface for each."}
+      ],
+      "architecture": {
+        "description": "Django + DRF with django-tenants: a public schema holds tenants and domains; each school's apps (academics, assessments, users) live in its own schema. JWT authentication (simplejwt) is scoped to the tenant. React + Vite frontend. The whole stack runs in Docker Compose for development and production."
+      },
+      "challenges": [
+        {"problem": "Closing cross-tenant security holes", "solution": "Audited every endpoint and token path for tenant leakage, scoped authentication to the current schema, and fixed the gaps while dockerizing the stack."},
+        {"problem": "Trustworthy grades", "solution": "Recorded every mark change with who and when, so disputed grades can be traced instead of argued about."}
+      ],
+      "lessons": [
+        {"title": "Isolation is a feature you test", "description": "Multi-tenancy bugs are silent; they need explicit tests that try to read another tenant's data."}
+      ]
+    },
+    {
+      "title": "Vega — Professional Portfolio Platform",
+      "slug": "vega-portfolio-platform",
+      "summary": "This site. A portfolio SaaS where each user maintains one structured professional profile that powers their public portfolio — with skills backed by evidence.",
+      "overview": "Vega started as my personal portfolio and is becoming a platform that helps Ethiopians build a credible professional identity. Every user has one master profile — experience, education, projects, skills, certificates — and outputs such as the portfolio site (and soon CVs) are generated from it.\n\nSkills are evidence-based: instead of star ratings, each skill links to the projects, jobs and certificates that prove it.",
+      "status": "in_progress",
+      "role": "Solo full-stack developer",
+      "started_on": "2026-03-04",
+      "github_url": "https://github.com/azabla/vega",
+      "featured": true,
+      "order": 3,
+      "skills": ["Python", "Django", "Django REST Framework", "JWT auth", "PostgreSQL", "React", "Tailwind CSS", "Docker"],
+      "features": [
+        {"title": "One profile, many outputs", "description": "Structured profile data feeds the public portfolio at /u/<username>; CV generation is next."},
+        {"title": "Evidence-based skills", "description": "Each skill shows the projects, jobs and certificates that use it."},
+        {"title": "Owner-isolated multi-tenancy", "description": "Every row belongs to a user; the owner API returns 404 for anyone else's data and rejects links to it."},
+        {"title": "JWT auth with rotation", "description": "Email login, refresh-token rotation and blacklisting, throttled auth endpoints."},
+        {"title": "Case-study project pages", "description": "Overview, features, architecture, challenges and lessons for every project."}
+      ],
+      "architecture": {
+        "description": "Django + DRF backend with two API surfaces: a public read-only API at /api/u/<username>/ and an authenticated owner API at /api/me/. JWT auth with simplejwt. React + Vite + Tailwind frontend. Docker Compose for local and production-like environments."
+      },
+      "challenges": [
+        {"problem": "Turning a single-user site into multi-tenant SaaS", "solution": "Added an owner to every model, made uniqueness per owner, migrated existing rows to the first superuser and split the API into public and owner surfaces — with tests for isolation."},
+        {"problem": "Two lists describing the same thing", "solution": "Merged 'technologies' into 'skills' with a data migration that de-duplicates by name, so projects, jobs and certificates all point at one skill list."}
+      ],
+      "lessons": [
+        {"title": "Design the data model for the product you are heading to", "description": "Structuring the portfolio as a master profile now makes CVs and other outputs a rendering problem, not a rewrite."}
+      ]
+    },
+    {
+      "title": "Dejene Ethiopia Gifts",
+      "slug": "dejene-ethiopia-gifts",
+      "summary": "Multi-site commerce and content platform for Ethiopian gifts and art: bookings, payments and refunds, coupons, reviews, a blog, newsletters and the Adulis Art gallery for local artists.",
+      "overview": "A Laravel platform that runs several branded sites from one codebase. It combines e-commerce (payments, coupons, refunds, reviews), bookings with participants, a blog, FAQs, newsletters with email verification and support messaging.\n\nThe Adulis Art module lets local artists list artworks, receive inquiries and sell pieces, with artist memberships — a digital gallery for Ethiopian art and cultural heritage.",
+      "status": "in_progress",
+      "role": "Full-stack developer",
+      "started_on": "2026-04-23",
+      "featured": false,
+      "order": 4,
+      "skills": ["PHP", "Laravel", "Filament", "Livewire", "Tailwind CSS", "MySQL"],
+      "features": [
+        {"title": "Multi-site domains", "description": "One installation serves several sites, each with its own domain and content."},
+        {"title": "Commerce", "description": "Payments, coupons with usage tracking, refund requests and product reviews."},
+        {"title": "Bookings", "description": "Bookings with multiple participants for experiences and events."},
+        {"title": "Adulis Art gallery", "description": "Artists, artworks, inquiries, purchases with delivery addresses, and membership subscriptions."},
+        {"title": "Content & audience", "description": "Blog with categories and tags, FAQs, newsletter lists with email verification, and support messages."},
+        {"title": "Admin panel", "description": "Filament admin for managing every resource."}
+      ],
+      "architecture": {
+        "description": "Laravel 13 with Filament 5 for administration, Livewire 4 / Volt and Flux UI for the storefront, Fortify for authentication and Pest for tests. Documentation is split into architecture, domain, operations and runbooks."
+      },
+      "challenges": [
+        {"problem": "Many features, one codebase, several brands", "solution": "Modelled sites and domains explicitly so content, settings and analytics are scoped per site."}
+      ],
+      "lessons": [
+        {"title": "Write the runbook before you need it", "description": "Operations docs and runbooks made deployment and support repeatable."}
+      ]
+    },
+    {
+      "title": "School Management System",
+      "slug": "school-management-system",
+      "summary": "A full school ERP in CodeIgniter: attendance, exams and mark approval, report cards, lesson plans, library, communication book, chat and placement — deployed with GitHub Actions.",
+      "overview": "A large PHP school management system covering daily school operations: student and staff attendance with approvals, exams, mark entry and approval workflows, report cards and rankings, lesson plans, a library with borrowing requests, a parent-teacher communication book, internal chat, automatic student placement into branches and sections, and purchase approvals.\n\nI set up continuous deployment with a GitHub Actions workflow.",
+      "status": "completed",
+      "role": "Developer",
+      "started_on": "2025-05-16",
+      "github_url": "https://github.com/azabla/school-system",
+      "featured": false,
+      "order": 5,
+      "skills": ["PHP", "CodeIgniter", "MySQL", "JavaScript", "Firebase", "GitHub Actions"],
+      "features": [
+        {"title": "Attendance with approvals", "description": "Student and staff attendance, with approval steps for corrections."},
+        {"title": "Exams, marks & report cards", "description": "Exam setup, mark entry and approval, rankings and printable report cards."},
+        {"title": "Academic planning", "description": "Lesson plans and student lessons per subject and grade."},
+        {"title": "Library", "description": "Book borrowing, requests and borrowing reports."},
+        {"title": "Communication", "description": "Communication book between school and parents, chat, and push notifications via Firebase."},
+        {"title": "Placement", "description": "Automatic placement of students into branches and sections."}
+      ],
+      "architecture": {
+        "description": "CodeIgniter MVC application on MySQL, with Firebase Cloud Messaging for notifications and a GitHub Actions workflow that deploys to the server on push."
+      },
+      "challenges": [
+        {"problem": "Reliable deployments for a large legacy codebase", "solution": "Automated deployment with GitHub Actions instead of manual file uploads."}
+      ],
+      "lessons": [
+        {"title": "Automate the release path first", "description": "A repeatable deploy made every later change less risky."}
+      ]
+    },
+    {
+      "title": "Gym Management System",
+      "slug": "gym-management-system",
+      "summary": "Laravel + Filament app for running a gym: members, packages with add-ons, payments and role-based staff access.",
+      "overview": "An administration system for a gym. Staff register members, sell membership packages with optional add-ons, record payments and manage users with roles. Payment and member-creation logic lives in dedicated services so the admin resources stay thin.",
+      "status": "completed",
+      "role": "Full-stack developer",
+      "started_on": "2025-06-02",
+      "github_url": "https://github.com/azabla/gym",
+      "featured": false,
+      "order": 6,
+      "skills": ["PHP", "Laravel", "Filament", "Tailwind CSS", "GitHub Actions"],
+      "features": [
+        {"title": "Members & packages", "description": "Member records linked to user accounts, membership packages and add-ons/extras."},
+        {"title": "Payments", "description": "Payment recording handled by a service class, separate from the UI."},
+        {"title": "Roles", "description": "Role seeding and role assignment for staff and members."},
+        {"title": "Admin panel", "description": "Filament resources for members, users and packages (upgraded to Filament 4)."}
+      ],
+      "architecture": {
+        "description": "Laravel 12 with a Filament 4 admin panel and Tailwind CSS. Business logic for payments and member creation is extracted into service classes. Deployed through a CI workflow."
+      },
+      "challenges": [
+        {"problem": "Creating a member also creates a user with roles", "solution": "Moved the multi-step creation into one service so the user, member and role are created together, fixing duplicate and unique-email errors."}
+      ],
+      "lessons": [
+        {"title": "Keep admin resources thin", "description": "Services made logic testable and reusable outside the admin panel."}
+      ]
+    },
+    {
+      "title": "Gym Platform",
+      "slug": "gym-platform",
+      "summary": "Rebuilding the gym system as a domain-driven Laravel platform with a production-grade Docker stack: queues, scheduler, PostgreSQL, Redis, S3 storage and static analysis.",
+      "overview": "A ground-up rewrite of my gym management system, organised by business domain and designed to run anywhere with Docker. Architecture decisions are recorded as ADRs, and the development setup is documented so a new teammate can run the whole stack with two commands.",
+      "status": "in_progress",
+      "role": "Backend developer",
+      "started_on": "2026-10-01",
+      "github_url": "https://github.com/azabla/gym-platform",
+      "featured": false,
+      "order": 7,
+      "skills": ["PHP", "Laravel", "PostgreSQL", "Redis", "Docker", "Nginx", "S3 storage"],
+      "features": [
+        {"title": "Domain-driven structure", "description": "Code grouped under app/Domains by business area instead of by technical layer."},
+        {"title": "Complete local stack", "description": "nginx, PHP-FPM, queue worker, scheduler, PostgreSQL, Redis, Mailpit and SeaweedFS (S3) in Docker Compose."},
+        {"title": "Quality gates", "description": "PHPStan static analysis and a separate testing database."}
+      ],
+      "architecture": {
+        "description": "Laravel on PHP-FPM behind nginx; queue and scheduler run as their own containers. PostgreSQL (dev and testing databases), Redis for cache, queues, sessions and locks, Mailpit for email and SeaweedFS as S3-compatible storage. All ports bound to 127.0.0.1. Decisions documented as ADRs."
+      },
+      "challenges": [],
+      "lessons": [
+        {"title": "Document the setup as you build it", "description": "Writing development-setup.md alongside the compose file kept the environment reproducible."}
+      ]
+    },
+    {
+      "title": "EthioNotify",
+      "slug": "ethionotify",
+      "summary": "An async notification service for Ethiopian businesses, built with FastAPI, SQLAlchemy and Celery. Identity and media modules are in place.",
+      "overview": "EthioNotify aims to give businesses one API for sending notifications to their customers. The foundation is an async FastAPI service with an identity module (users and linked identities), a media module, Argon2 password hashing, JWT and Celery workers on Redis.",
+      "status": "in_progress",
+      "role": "Backend developer",
+      "featured": false,
+      "order": 8,
+      "skills": ["Python", "FastAPI", "SQLAlchemy", "PostgreSQL", "Celery", "Redis", "Docker"],
+      "features": [
+        {"title": "Async foundation", "description": "FastAPI with async SQLAlchemy, asyncpg and Alembic migrations."},
+        {"title": "Identity module", "description": "Users with linked identities, Argon2 password hashing and JWT."},
+        {"title": "Background workers", "description": "Celery on Redis for sending work outside the request."}
+      ],
+      "architecture": {
+        "description": "FastAPI modular service (identity, media) with structured logging (structlog), async PostgreSQL via SQLAlchemy/asyncpg, Alembic migrations, and Celery workers on Redis. Dockerized."
+      },
+      "challenges": [],
+      "lessons": []
+    },
+    {
+      "title": "MERN Blog App",
+      "slug": "mern-blog-app",
+      "summary": "A learning project: blog with an Express + MongoDB API and a React + Tailwind client, starting with user signup and error-handling middleware.",
+      "overview": "An early full-stack project to learn the MERN stack: an Express API connected to MongoDB with Mongoose, a user model with hashed passwords, a signup route with centralised error-handling middleware, and a React client with routing, a header, a footer and a signup page styled with Tailwind CSS.",
+      "status": "archived",
+      "role": "Solo developer",
+      "started_on": "2024-08-18",
+      "featured": false,
+      "order": 9,
+      "skills": ["JavaScript", "Node.js", "Express", "MongoDB", "React", "Tailwind CSS"],
+      "features": [
+        {"title": "Signup API", "description": "Express route with bcrypt password hashing and Mongoose user model."},
+        {"title": "Error middleware", "description": "One place to turn errors into consistent API responses."},
+        {"title": "React client", "description": "Pages, routing, header/footer and a signup form wired to the API."}
+      ],
+      "architecture": {
+        "description": "Express API (routes, controllers, models, utils) on MongoDB via Mongoose; React + Vite + Tailwind client."
+      },
+      "challenges": [],
+      "lessons": [
+        {"title": "Where it started", "description": "My first end-to-end app — the base for everything that came after."}
+      ]
+    }
+  ]
+}

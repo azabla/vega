@@ -138,6 +138,7 @@ class ProjectAdmin(admin.ModelAdmin):
     list_display = (
         "title",
         "owner",
+        "status",
         "featured",
         "order",
         "created_at",

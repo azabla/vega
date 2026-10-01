@@ -133,6 +133,11 @@ class Skill(models.Model):
 
 
 class Project(models.Model):
+    class Status(models.TextChoices):
+        COMPLETED = "completed", "Completed"
+        IN_PROGRESS = "in_progress", "In progress"
+        ARCHIVED = "archived", "Archived"
+
     owner = owner_field("projects")
     title = models.CharField(max_length=220)
     slug = models.SlugField(
@@ -150,6 +155,9 @@ class Project(models.Model):
     skills = models.ManyToManyField(Skill, related_name="projects", blank=True)
     github_url = models.URLField(blank=True)
     live_url = models.URLField(blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.COMPLETED)
+    role = models.CharField(max_length=120, blank=True, help_text="e.g. Backend developer, Solo full-stack")
+    started_on = models.DateField(null=True, blank=True)
     order = models.IntegerField(default=0)
     featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
