@@ -1,7 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { portfolioAPI } from "@/services/portfolioAPI";
+import { usePortfolioPath } from "@/hooks/usePortfolioPath";
+import { pluralize } from "@/lib/format";
+
+// "3 projects · 1 job · 2 yrs" — proof instead of star ratings
+const evidenceSummary = (skill) => {
+  const { projects, experience, certificates } = skill.evidence;
+  return [
+    projects.length && pluralize(projects.length, "project"),
+    experience.length && pluralize(experience.length, "job"),
+    certificates.length && pluralize(certificates.length, "certificate"),
+    skill.years_of_experience && `${skill.years_of_experience}+ yrs`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+};
 import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
 
 export const SkillsSection = () => {
@@ -9,6 +25,8 @@ export const SkillsSection = () => {
   const [skills, setSkills] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [openSkill, setOpenSkill] = useState(null);
+  const base = usePortfolioPath();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -103,38 +121,82 @@ export const SkillsSection = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in-delay-2">
-            {filteredSkills.map((skill, index) => (
-              <button
-                key={skill.id}
-                className={cn(
-                  "group relative gradient-border border-border card-hover bg-card p-6 rounded-2xl text-left",
-                  "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background"
-                )}
-                style={{ animationDelay: `${index * 50}ms` }}
-                onClick={() => console.log(skill.slug)}
-              >
-                {/* Subtle inner glow on hover */}
-                <div className="absolute inset-0 rounded-2xl bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <div className="relative flex items-start justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-primary/70 mb-2 uppercase tracking-wider">
-                      {skill.category?.name || "Technology"}
-                    </span>
-                    <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors duration-300">
-                      {skill.name}
-                    </h3>
+            {filteredSkills.map((skill, index) => {
+              const summary = evidenceSummary(skill);
+              const isOpen = openSkill === skill.id;
+              const { projects, experience, certificates } = skill.evidence;
+              return (
+                <div
+                  key={skill.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isOpen}
+                  className={cn(
+                    "group relative gradient-border border-border card-hover bg-card p-6 rounded-2xl text-left cursor-pointer",
+                    "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background"
+                  )}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                  onClick={() => setOpenSkill(isOpen ? null : skill.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setOpenSkill(isOpen ? null : skill.id);
+                    }
+                  }}
+                >
+                  {/* Subtle inner glow on hover */}
+                  <div className="absolute inset-0 rounded-2xl bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                  <div className="relative flex items-start justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-primary/70 mb-2 uppercase tracking-wider">
+                        {skill.category?.name || "Technology"}
+                      </span>
+                      <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors duration-300">
+                        {skill.name}
+                      </h3>
+                      {summary && (
+                        <span className="mt-1 text-xs text-muted-foreground">{summary}</span>
+                      )}
+                    </div>
+                    <ArrowUpRight
+                      className={cn(
+                        "h-5 w-5 text-primary transition-all duration-300",
+                        isOpen
+                          ? "opacity-100 rotate-90"
+                          : "opacity-0 translate-y-2 -translate-x-2 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0"
+                      )}
+                    />
                   </div>
-                  <ArrowUpRight
-                    className={cn(
-                      "h-5 w-5 text-primary transition-all duration-300",
-                      "opacity-0 translate-y-2 -translate-x-2",
-                      "group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0"
-                    )}
-                  />
+
+                  {isOpen && (
+                    <div className="relative mt-4 space-y-2 border-t border-border pt-4 text-xs">
+                      {!summary && <p className="text-muted-foreground">No evidence linked yet.</p>}
+                      {projects.map((project) => (
+                        <Link
+                          key={project.slug}
+                          to={`${base}/projects/${project.slug}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="block text-primary hover:underline"
+                        >
+                          {project.title} →
+                        </Link>
+                      ))}
+                      {experience.map((job) => (
+                        <p key={`${job.position}-${job.company}`} className="text-muted-foreground">
+                          {job.position} · {job.company}
+                        </p>
+                      ))}
+                      {certificates.map((cert) => (
+                        <p key={`${cert.name}-${cert.issuer}`} className="text-muted-foreground">
+                          {cert.name} · {cert.issuer}
+                        </p>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         )}
 

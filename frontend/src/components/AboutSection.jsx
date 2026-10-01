@@ -1,40 +1,13 @@
-import { Briefcase, Code, User } from "lucide-react";
+import { Code } from "lucide-react";
 
 import { portfolioAPI } from "@/services/portfolioAPI";
-import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
-import { useEffect, useState } from "react";
+import { usePortfolioData } from "@/hooks/usePortfolioData";
 
 export const AboutSection = () => {
-  const username = usePortfolioUsername();
-  const [aboutme, setAboutme] = useState(null);
+  const { data: aboutme } = usePortfolioData(portfolioAPI.getAboutMe);
 
-  useEffect(() => {
-
-    const fetchAboutme = async () => {
-
-      try {
-        const response = await portfolioAPI.getAboutMe(username);
-        // console.log(response.data);
-
-        setAboutme(response.data);
-
-      } catch(error) {
-        console.log(error);
-      }
-
-    };
-
-    fetchAboutme();
-
-  }, [username]);
-
-  if (!aboutme) {
-    return (
-      <section>
-        Loading...
-      </section>
-    );
-  }
+  // hidden while loading, and when the owner hasn't written an about section
+  if (!aboutme) return null;
 
   return (
     <section id="about" className="py-24 px-4 relative">
@@ -54,9 +27,11 @@ export const AboutSection = () => {
               {aboutme.description}
             </p>
 
-            <p className="text-muted-foreground">
-              {aboutme.description_2}
-            </p>
+            {aboutme.description_2 && (
+              <p className="text-muted-foreground">
+                {aboutme.description_2}
+              </p>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center">
               <a href="#contact" className="cosmic-button">
@@ -78,8 +53,8 @@ export const AboutSection = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-6">
-            {aboutme.services.map((service,item)  => (
-            <div className="gradient-border p-6 card-hover">
+            {aboutme.services.map((service) => (
+            <div key={service.id} className="gradient-border p-6 card-hover">
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-full bg-primary/10">
                   <Code className="h-6 w-6 text-primary" />

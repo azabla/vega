@@ -5,7 +5,9 @@ from . import manage_views as me
 from .views import (
     AboutAPIView,
     CategoryViewSet,
+    CertificateViewSet,
     ContactViewSet,
+    EducationViewSet,
     ExperienceViewSet,
     ProfileAPIView,
     ProjectViewSet,
@@ -18,6 +20,8 @@ public_router = SimpleRouter()
 public_router.register(r"categories", CategoryViewSet, basename="categories")
 public_router.register(r"skills", SkillViewSet, basename="skills")
 public_router.register(r"experience", ExperienceViewSet, basename="experience")
+public_router.register(r"education", EducationViewSet, basename="education")
+public_router.register(r"certificates", CertificateViewSet, basename="certificates")
 public_router.register(r"contact", ContactViewSet, basename="contact")
 public_router.register(r"projects", ProjectViewSet, basename="projects")
 
@@ -26,7 +30,6 @@ me_router = SimpleRouter()
 me_router.register(r"services", me.MyServiceViewSet, basename="my-services")
 me_router.register(r"categories", me.MyCategoryViewSet, basename="my-categories")
 me_router.register(r"skills", me.MySkillViewSet, basename="my-skills")
-me_router.register(r"technologies", me.MyTechnologyViewSet, basename="my-technologies")
 me_router.register(r"projects", me.MyProjectViewSet, basename="my-projects")
 me_router.register(r"project-images", me.MyProjectImageViewSet, basename="my-project-images")
 me_router.register(r"project-features", me.MyProjectFeatureViewSet, basename="my-project-features")
@@ -36,6 +39,8 @@ me_router.register(
     r"project-architecture", me.MyProjectArchitectureViewSet, basename="my-project-architecture"
 )
 me_router.register(r"experience", me.MyExperienceViewSet, basename="my-experience")
+me_router.register(r"education", me.MyEducationViewSet, basename="my-education")
+me_router.register(r"certificates", me.MyCertificateViewSet, basename="my-certificates")
 me_router.register(r"messages", me.MyMessageViewSet, basename="my-messages")
 
 urlpatterns = [

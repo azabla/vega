@@ -1,21 +1,30 @@
 import { Mail, MapPin, Phone, Send } from "lucide-react";
-import {
-  FaInstagram,
-  FaLinkedin,
-  FaTwitter,
-  FaTwitch,
-} from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaTelegram } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { portfolioAPI } from "@/services/portfolioAPI";
 import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
+import { useProfile } from "@/hooks/useProfile";
 
 export const ContactSection = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const username = usePortfolioUsername();
+  const { profile } = useProfile();
+
+  // only show what the owner filled in on their profile
+  const contactItems = [
+    profile?.email && { icon: Mail, label: "Email", value: profile.email, href: `mailto:${profile.email}` },
+    profile?.phone && { icon: Phone, label: "Phone", value: profile.phone, href: `tel:${profile.phone.replace(/\s/g, "")}` },
+    profile?.location && { icon: MapPin, label: "Location", value: profile.location },
+  ].filter(Boolean);
+  const socialLinks = [
+    profile?.github && { icon: FaGithub, label: "GitHub", href: profile.github },
+    profile?.linkedin && { icon: FaLinkedin, label: "LinkedIn", href: profile.linkedin },
+    profile?.telegram && { icon: FaTelegram, label: "Telegram", href: profile.telegram },
+  ].filter(Boolean);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,64 +72,44 @@ export const ContactSection = () => {
             </h3>
 
             <div className="space-y-6 justify-center">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Mail className="h-6 w-6 text-primary" />{" "}
+              {contactItems.map((item) => (
+                <div key={item.label} className="flex items-start space-x-4">
+                  <div className="p-3 rounded-full bg-primary/10">
+                    <item.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-medium">{item.label}</h4>
+                    {item.href ? (
+                      <a href={item.href} className="text-muted-foreground hover:text-primary transition-colors">
+                        {item.value}
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground">{item.value}</span>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium"> Email</h4>
-                  <a
-                    href="mailto:hello@gmail.com"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    hello@gmail.com
-                  </a>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Phone className="h-6 w-6 text-primary" />{" "}
-                </div>
-                <div>
-                  <h4 className="font-medium"> Phone</h4>
-                  <a
-                    href="tel:+11234567890"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    +1 (123) 456-7890
-                  </a>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <MapPin className="h-6 w-6 text-primary" />{" "}
-                </div>
-                <div>
-                  <h4 className="font-medium"> Location</h4>
-                  <a className="text-muted-foreground hover:text-primary transition-colors">
-                    Vancouver, BC, Canada
-                  </a>
-                </div>
-              </div>
+              ))}
             </div>
 
-            <div className="pt-8">
-              <h4 className="font-medium mb-4"> Connect With Me</h4>
-              <div className="flex space-x-4 justify-center">
-                <a href="#" target="_blank">
-                  <FaLinkedin />
-                </a>
-                <a href="#" target="_blank">
-                  <FaTwitter />
-                </a>
-                <a href="#" target="_blank">
-                  <FaInstagram />
-                </a>
-                <a href="#" target="_blank">
-                  <FaTwitch />
-                </a>
+            {socialLinks.length > 0 && (
+              <div className="pt-8">
+                <h4 className="font-medium mb-4">Connect With Me</h4>
+                <div className="flex space-x-4 justify-center">
+                  {socialLinks.map((link) => (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={link.label}
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <link.icon size={20} />
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div
@@ -144,7 +133,7 @@ export const ContactSection = () => {
                   name="name"
                   required
                   className="w-full px-4 py-3 rounded-md border border-input bg-background focus:outline-hidden foucs:ring-2 focus:ring-primary"
-                  placeholder="Pedro Machado..."
+                  placeholder="Your name"
                 />
               </div>
 
@@ -162,7 +151,7 @@ export const ContactSection = () => {
                   name="email"
                   required
                   className="w-full px-4 py-3 rounded-md border border-input bg-background focus:outline-hidden foucs:ring-2 focus:ring-primary"
-                  placeholder="john@gmail.com"
+                  placeholder="you@example.com"
                 />
               </div>
 

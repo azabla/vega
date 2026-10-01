@@ -34,7 +34,7 @@ class ProjectService:
         return (
             Project.objects.filter(owner=owner)
             .prefetch_related(
-                "technologies",
+                "skills__category",
                 "features",
                 "gallery",
                 "challenges",
@@ -75,12 +75,12 @@ class ProjectService:
             slug=slug,
         )
 
-    # By Technology
+    # By skill
     @staticmethod
-    def get_projects_by_technology(owner, slug: str) -> QuerySet[Project]:
+    def get_projects_by_skill(owner, slug: str) -> QuerySet[Project]:
         return (
             ProjectService._base_queryset(owner)
-            .filter(technologies__slug=slug)
+            .filter(skills__slug=slug)
             .distinct()
         )
 

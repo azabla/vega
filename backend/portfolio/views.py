@@ -12,11 +12,13 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import Category, Contact, Experience, Portfolio, Skill
+from .models import Category, Certificate, Contact, Education, Experience, Portfolio, Skill
 from .serializers import (
     AboutSerializer,
     CategorySerializer,
+    CertificateSerializer,
     ContactSerializer,
+    EducationSerializer,
     ExperienceSerializer,
     PortfolioSerializer,
     ProjectCardSerializer,
@@ -63,6 +65,7 @@ class SkillViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return (
             Skill.objects.select_related("category")
+            .prefetch_related("projects", "experiences", "certificates")
             .filter(owner=self.get_owner(), is_active=True)
             .order_by("category__display_order", "display_order")
         )
@@ -108,7 +111,21 @@ class ExperienceViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):
     serializer_class = ExperienceSerializer
 
     def get_queryset(self):
-        return Experience.objects.filter(owner=self.get_owner())
+        return Experience.objects.filter(owner=self.get_owner()).prefetch_related("skills__category")
+
+
+class EducationViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):
+    serializer_class = EducationSerializer
+
+    def get_queryset(self):
+        return Education.objects.filter(owner=self.get_owner())
+
+
+class CertificateViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):
+    serializer_class = CertificateSerializer
+
+    def get_queryset(self):
+        return Certificate.objects.filter(owner=self.get_owner()).prefetch_related("skills__category")
 
 
 class ContactViewSet(PortfolioOwnerMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):

@@ -1,13 +1,14 @@
 from rest_framework import serializers
 from .models import (
     About,
+    Certificate,
+    Education,
     Portfolio,
     Service,
     Skill,
     Contact,
     Experience,
     Category,
-    Technology,
     Project,
     ProjectImage,
     ProjectFeature,
@@ -60,8 +61,21 @@ class AboutSerializer(serializers.ModelSerializer):
         ]
 
 
+class SkillTagSerializer(serializers.ModelSerializer):
+    """Compact skill, used inside projects, experience and certificates."""
+
+    category_name = serializers.CharField(source="category.name", read_only=True)
+
+    class Meta:
+        model = Skill
+        fields = ["id", "name", "slug", "icon", "category_name"]
+
+
 class SkillSerializer(serializers.ModelSerializer):
+    """A skill with the evidence behind it: projects, jobs and certificates."""
+
     category = CategorySerializer(read_only=True)
+    evidence = serializers.SerializerMethodField()
 
     class Meta:
         model = Skill
@@ -71,16 +85,16 @@ class SkillSerializer(serializers.ModelSerializer):
             "slug",
             "icon",
             "category",
+            "years_of_experience",
+            "evidence",
         ]
 
-
-class TechnologySerializer(serializers.ModelSerializer):
-    # This pulls the category name directly into the tech object
-    category_name = serializers.CharField(source="category.name", read_only=True)
-
-    class Meta:
-        model = Technology
-        fields = ["id", "name", "slug", "icon", "category_name"]
+    def get_evidence(self, skill):
+        return {
+            "projects": [{"title": p.title, "slug": p.slug} for p in skill.projects.all()],
+            "experience": [{"position": e.position, "company": e.company} for e in skill.experiences.all()],
+            "certificates": [{"name": c.name, "issuer": c.issuer} for c in skill.certificates.all()],
+        }
 
 
 class ProjectImageSerializer(serializers.ModelSerializer):
@@ -152,7 +166,7 @@ class ProjectArchitectureSerializer(serializers.ModelSerializer):
 
 class ProjectCardSerializer(serializers.ModelSerializer):
 
-    technologies = TechnologySerializer(
+    skills = SkillTagSerializer(
         many=True,
         read_only=True,
     )
@@ -167,7 +181,7 @@ class ProjectCardSerializer(serializers.ModelSerializer):
             "slug",
             "summary",
             "thumbnail",
-            "technologies",
+            "skills",
             "featured",
             "github_url",
             "live_url",
@@ -180,7 +194,7 @@ class ProjectListSerializer(ProjectCardSerializer):
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
 
-    technologies = TechnologySerializer(
+    skills = SkillTagSerializer(
         many=True,
         read_only=True,
     )
@@ -222,7 +236,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             "thumbnail",
             "github_url",
             "live_url",
-            "technologies",
+            "skills",
             "featured",
             "gallery",
             "features",
@@ -234,8 +248,27 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
 
 
 class ExperienceSerializer(serializers.ModelSerializer):
+    employment_type_display = serializers.CharField(source="get_employment_type_display", read_only=True)
+    skills = SkillTagSerializer(many=True, read_only=True)
+
     class Meta:
         model = Experience
+        exclude = ["owner"]
+
+
+class EducationSerializer(serializers.ModelSerializer):
+    level_display = serializers.CharField(source="get_level_display", read_only=True)
+
+    class Meta:
+        model = Education
+        exclude = ["owner"]
+
+
+class CertificateSerializer(serializers.ModelSerializer):
+    skills = SkillTagSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Certificate
         exclude = ["owner"]
 
 

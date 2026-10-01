@@ -16,6 +16,8 @@ export const portfolioAPI = {
     searchProjects: (username, q) => api.get(`${u(username)}/projects/search/`, { params: { q } }),
 
     getExperience: (username) => api.get(`${u(username)}/experience/`),
+    getEducation: (username) => api.get(`${u(username)}/education/`),
+    getCertificates: (username) => api.get(`${u(username)}/certificates/`),
 
     sendMessage: (username, data) => api.post(`${u(username)}/contact/`, data),
 };

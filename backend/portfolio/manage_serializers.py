@@ -11,6 +11,8 @@ from rest_framework import serializers
 from .models import (
     About,
     Category,
+    Certificate,
+    Education,
     Contact,
     Experience,
     LessonLearned,
@@ -22,7 +24,6 @@ from .models import (
     ProjectImage,
     Service,
     Skill,
-    Technology,
 )
 
 
@@ -94,21 +95,21 @@ class MySkillSerializer(SluggedModelSerializer):
 
     class Meta:
         model = Skill
-        fields = ["id", "owner", "name", "slug", "icon", "category", "display_order", "is_active"]
-
-
-class MyTechnologySerializer(SluggedModelSerializer):
-    category = OwnedPrimaryKeyRelatedField(queryset=Category.objects.all())
-
-    class Meta:
-        model = Technology
-        fields = ["id", "owner", "name", "slug", "icon", "category"]
+        fields = [
+            "id",
+            "owner",
+            "name",
+            "slug",
+            "icon",
+            "category",
+            "years_of_experience",
+            "display_order",
+            "is_active",
+        ]
 
 
 class MyProjectSerializer(SluggedModelSerializer):
-    technologies = OwnedPrimaryKeyRelatedField(
-        queryset=Technology.objects.all(), many=True, required=False
-    )
+    skills = OwnedPrimaryKeyRelatedField(queryset=Skill.objects.all(), many=True, required=False)
 
     class Meta:
         model = Project
@@ -120,7 +121,7 @@ class MyProjectSerializer(SluggedModelSerializer):
             "summary",
             "overview",
             "thumbnail",
-            "technologies",
+            "skills",
             "github_url",
             "live_url",
             "order",
@@ -157,6 +158,8 @@ MyProjectArchitectureSerializer = project_child_serializer(ProjectArchitecture, 
 
 
 class MyExperienceSerializer(OwnedModelSerializer):
+    skills = OwnedPrimaryKeyRelatedField(queryset=Skill.objects.all(), many=True, required=False)
+
     class Meta:
         model = Experience
         fields = [
@@ -164,11 +167,52 @@ class MyExperienceSerializer(OwnedModelSerializer):
             "owner",
             "company",
             "position",
+            "employment_type",
+            "location",
             "description",
             "start_date",
             "end_date",
             "current",
-            "comap_logo",
+            "company_logo",
+            "skills",
+        ]
+
+
+class MyEducationSerializer(OwnedModelSerializer):
+    class Meta:
+        model = Education
+        fields = [
+            "id",
+            "owner",
+            "institution",
+            "level",
+            "field_of_study",
+            "start_date",
+            "end_date",
+            "current",
+            "grade",
+            "description",
+            "order",
+        ]
+
+
+class MyCertificateSerializer(OwnedModelSerializer):
+    skills = OwnedPrimaryKeyRelatedField(queryset=Skill.objects.all(), many=True, required=False)
+
+    class Meta:
+        model = Certificate
+        fields = [
+            "id",
+            "owner",
+            "name",
+            "issuer",
+            "issue_date",
+            "expiry_date",
+            "credential_id",
+            "credential_url",
+            "file",
+            "skills",
+            "order",
         ]
 
 

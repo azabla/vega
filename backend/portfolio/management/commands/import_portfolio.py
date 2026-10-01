@@ -15,7 +15,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import models, transaction
 
-from portfolio.models import Portfolio
+from portfolio.models import Portfolio, Skill
 
 # parents before children
 IMPORT_ORDER = [
@@ -24,7 +24,7 @@ IMPORT_ORDER = [
     "portfolio.service",
     "portfolio.category",
     "portfolio.skill",
-    "portfolio.technology",
+    "portfolio.technology",  # legacy: imported as skills
     "portfolio.project",
     "portfolio.projectimage",
     "portfolio.projectfeature",
@@ -32,8 +32,18 @@ IMPORT_ORDER = [
     "portfolio.lessonlearned",
     "portfolio.projectarchitecture",
     "portfolio.experience",
+    "portfolio.education",
+    "portfolio.certificate",
     "portfolio.contact",
 ]
+
+# fields renamed since older exports
+RENAMED_FIELDS = {
+    "portfolio.project": {"technologies": "skills"},
+    "portfolio.experience": {"comap_logo": "company_logo"},
+}
+# (model, field) whose old pks refer to a different exported model
+LEGACY_M2M_SOURCE = {("portfolio.project", "technologies"): "portfolio.technology"}
 
 
 class Command(BaseCommand):
@@ -67,8 +77,13 @@ class Command(BaseCommand):
         counts = {}
         with transaction.atomic():
             for label in IMPORT_ORDER:
-                model = apps.get_model(label)
                 for record in by_model.get(label, []):
+                    if label == "portfolio.technology":
+                        new_pk = self.import_technology_as_skill(record, user, pk_map)
+                        pk_map[(label, record["pk"])] = new_pk
+                        counts[label] = counts.get(label, 0) + 1
+                        continue
+                    model = apps.get_model(label)
                     new_pk = self.import_record(model, label, record, user, pk_map)
                     pk_map[(label, record["pk"])] = new_pk
                     counts[label] = counts.get(label, 0) + 1
@@ -77,8 +92,27 @@ class Command(BaseCommand):
             self.stdout.write(f"  {label}: {n}")
         self.stdout.write(self.style.SUCCESS(f"Imported {sum(counts.values())} objects for {user.username}."))
 
+    def import_technology_as_skill(self, record, user, pk_map):
+        """Old exports kept technologies separately; they are skills now."""
+        fields = record["fields"]
+        skill = Skill.objects.filter(owner=user, name__iexact=fields["name"]).first()
+        if skill is None:
+            skill = Skill.objects.create(
+                owner=user,
+                name=fields["name"],
+                icon=fields.get("icon"),
+                category_id=pk_map.get(("portfolio.category", fields.get("category"))),
+            )
+        return skill.pk
+
     def import_record(self, model, label, record, user, pk_map):
         fields = dict(record["fields"])
+        m2m_source = {}
+        for old, new in RENAMED_FIELDS.get(label, {}).items():
+            if old in fields:
+                fields[new] = fields.pop(old)
+                if (label, old) in LEGACY_M2M_SOURCE:
+                    m2m_source[new] = LEGACY_M2M_SOURCE[(label, old)]
         values, m2m = {}, {}
 
         for field in model._meta.get_fields():
@@ -86,8 +120,8 @@ class Command(BaseCommand):
                 continue
             value = fields[field.name]
             if isinstance(field, models.ManyToManyField):
-                target = field.related_model._meta.label_lower
-                m2m[field.name] = [pk_map[(target, v)] for v in value if (target, v) in pk_map]
+                source = m2m_source.get(field.name, field.related_model._meta.label_lower)
+                m2m[field.name] = [pk_map[(source, v)] for v in value if (source, v) in pk_map]
             elif isinstance(field, models.ForeignKey) and field.related_model is not get_user_model():
                 target = field.related_model._meta.label_lower
                 values[field.attname] = pk_map.get((target, value))

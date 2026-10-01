@@ -1,26 +1,22 @@
 import { AboutSection } from "../components/AboutSection";
 import { ContactSection } from "../components/ContactSection";
+import { EducationSection } from "../components/EducationSection";
+import { ExperienceSection } from "../components/ExperienceSection";
 import { HeroSection } from "../components/hero/HeroSection";
-import { Navbar } from "../components/Navbar";
+import { PortfolioLayout } from "../components/PortfolioLayout";
 import { ProjectsSection } from "../components/ProjectsSection";
 import { SkillsSection } from "../components/SkillsSection";
-import { SystemBackground } from "../components/SystemBackground";
-import { ThemeToggle } from "../components/ThemeToggle";
 
 export const Home = () => {
     return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-        <ThemeToggle />
-        <SystemBackground />
-        <Navbar />
-
-        <main>
+        <PortfolioLayout>
             <HeroSection />
             <AboutSection />
             <SkillsSection />
+            <ExperienceSection />
             <ProjectsSection />
+            <EducationSection />
             <ContactSection />
-        </main>
-    </div>
+        </PortfolioLayout>
     );
-}; 
+};

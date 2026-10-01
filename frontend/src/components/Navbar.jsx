@@ -1,22 +1,31 @@
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useProfile } from "@/hooks/useProfile";
+import { usePortfolioPath } from "@/hooks/usePortfolioPath";
 
-const navItems = [
-  { name: "Home", href: "#hero" },
-  { name: "About", href: "#about" },
-  { name: "Skills", href: "#skills" },
-  { name: "Projects", href: "#projects" },
-  { name: "Contact", href: "#contact" },
+const sections = [
+  { name: "Home", id: "hero" },
+  { name: "About", id: "about" },
+  { name: "Skills", id: "skills" },
+  { name: "Experience", id: "experience" },
+  { name: "Projects", id: "projects" },
+  { name: "Contact", id: "contact" },
 ];
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { profile } = useProfile();
+  const base = usePortfolioPath();
+
+  // works from sub-pages too (e.g. a project page links back to /#about)
+  const navItems = sections.map((s) => ({ name: s.name, href: `${base || "/"}#${s.id}` }));
+  const [firstName, ...rest] = (profile?.name || "").split(" ");
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.screenY > 10);
+      setIsScrolled(window.scrollY > 10);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -29,14 +38,14 @@ export const Navbar = () => {
         isScrolled ? "py-3 bg-background/80 backdrop-blur-md shadow-xs" : "py-5"
       )}
     >
-      <div className="container flex items-center justify-between">
+      <div className="container flex items-center justify-between md:pr-16">
         <a
           className="text-xl font-bold text-primary flex items-center"
-          href="#hero"
+          href={`${base || "/"}#hero`}
         >
           <span className="relative z-10">
-            <span className="text-glow text-foreground"> PedroTech </span>{" "}
-            Portfolio
+            <span className="text-glow text-foreground">{firstName}</span>{" "}
+            {rest.join(" ")}
           </span>
         </a>
 
@@ -65,7 +74,7 @@ export const Navbar = () => {
 
         <div
           className={cn(
-            "fixed inset-0 bg-background/95 backdroup-blur-md z-40 flex flex-col items-center justify-center",
+            "fixed inset-0 bg-background/95 backdrop-blur-md z-40 flex flex-col items-center justify-center",
             "transition-all duration-300 md:hidden",
             isMenuOpen
               ? "opacity-100 pointer-events-auto"

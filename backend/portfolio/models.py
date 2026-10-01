@@ -111,6 +111,9 @@ class Skill(models.Model):
     )
     slug = models.SlugField(blank=True, null=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
+    years_of_experience = models.PositiveSmallIntegerField(
+        null=True, blank=True, help_text="Optional. Shown as evidence next to the skill."
+    )
     is_active = models.BooleanField(default=True)
     display_order = models.PositiveIntegerField(default=0)
 
@@ -129,30 +132,6 @@ class Skill(models.Model):
         ]
 
 
-class Technology(models.Model):
-    owner = owner_field("technologies")
-    name = models.CharField(max_length=100)  # e.g., "Django", "React"
-    slug = models.SlugField(blank=True, null=True)
-    icon = models.CharField(max_length=50, blank=True, null=True)
-    category = models.ForeignKey(
-        Category, on_delete=models.CASCADE, related_name="techs"
-    )
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = generate_unique_slug(self, self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.name} ({self.category.name})"
-
-    class Meta:
-        verbose_name_plural = "Technologies"
-        constraints = [
-            models.UniqueConstraint(fields=["owner", "slug"], name="unique_technology_slug_per_owner"),
-        ]
-
-
 class Project(models.Model):
     owner = owner_field("projects")
     title = models.CharField(max_length=220)
@@ -167,8 +146,8 @@ class Project(models.Model):
         upload_to=OwnerUploadTo("projects/thumbnails"), blank=True, null=True
     )
 
-    # Use ManyToManyField so one project can have many technologies
-    technologies = models.ManyToManyField(Technology, related_name="projects")
+    # Skills used in the project: the evidence shown next to each skill
+    skills = models.ManyToManyField(Skill, related_name="projects", blank=True)
     github_url = models.URLField(blank=True)
     live_url = models.URLField(blank=True)
     order = models.IntegerField(default=0)
@@ -295,20 +274,82 @@ class ProjectArchitecture(models.Model):
 
 
 class Experience(models.Model):
+    class EmploymentType(models.TextChoices):
+        FULL_TIME = "full_time", "Full-time"
+        PART_TIME = "part_time", "Part-time"
+        CONTRACT = "contract", "Contract"
+        FREELANCE = "freelance", "Freelance"
+        INTERNSHIP = "internship", "Internship"
+        VOLUNTEER = "volunteer", "Volunteer"
+
     owner = owner_field("experiences")
     company = models.CharField(max_length=220)
     position = models.CharField(max_length=220)
-    description = models.TextField(max_length=220)
+    employment_type = models.CharField(
+        max_length=20, choices=EmploymentType.choices, default=EmploymentType.FULL_TIME
+    )
+    location = models.CharField(max_length=120, blank=True)
+    description = models.TextField(blank=True)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     current = models.BooleanField(default=False)
-    comap_logo = models.ImageField(upload_to=OwnerUploadTo("companies"), blank=True, null=True)
+    company_logo = models.ImageField(upload_to=OwnerUploadTo("companies"), blank=True, null=True)
+    skills = models.ManyToManyField(Skill, related_name="experiences", blank=True)
 
     def __str__(self):
         return f"{self.position} at {self.company}"
 
     class Meta:
-        ordering = ["-start_date"]
+        ordering = ["-current", "-start_date"]
+
+
+class Education(models.Model):
+    class Level(models.TextChoices):
+        HIGH_SCHOOL = "high_school", "High school"
+        TVET = "tvet", "TVET"
+        CERTIFICATE = "certificate", "Certificate"
+        DIPLOMA = "diploma", "Diploma"
+        BACHELOR = "bachelor", "Bachelor's (BSc/BA)"
+        MASTER = "master", "Master's (MSc/MA)"
+        DOCTORATE = "doctorate", "Doctorate (PhD)"
+        OTHER = "other", "Other"
+
+    owner = owner_field("education")
+    institution = models.CharField(max_length=220, help_text="e.g. Bahir Dar University")
+    level = models.CharField(max_length=20, choices=Level.choices, default=Level.BACHELOR)
+    field_of_study = models.CharField(max_length=220, blank=True, help_text="e.g. Computer Engineering")
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    current = models.BooleanField(default=False)
+    grade = models.CharField(max_length=50, blank=True, help_text="e.g. CGPA 3.8/4.0")
+    description = models.TextField(blank=True, help_text="Thesis, final project, activities, honors")
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name_plural = "Education"
+        ordering = ["order", "-start_date"]
+
+    def __str__(self):
+        return f"{self.get_level_display()} — {self.institution}"
+
+
+class Certificate(models.Model):
+    owner = owner_field("certificates")
+    name = models.CharField(max_length=220)
+    issuer = models.CharField(max_length=220, help_text="e.g. Google, Coursera, ALX")
+    issue_date = models.DateField(null=True, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
+    credential_id = models.CharField(max_length=120, blank=True)
+    credential_url = models.URLField(blank=True)
+    file = models.FileField(upload_to=OwnerUploadTo("certificates"), blank=True, null=True)
+    skills = models.ManyToManyField(Skill, related_name="certificates", blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "-issue_date"]
+
+    def __str__(self):
+        return f"{self.name} ({self.issuer})"
 
 
 class Contact(models.Model):

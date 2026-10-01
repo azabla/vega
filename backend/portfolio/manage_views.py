@@ -12,7 +12,9 @@ from . import manage_serializers as s
 from .models import (
     About,
     Category,
+    Certificate,
     Contact,
+    Education,
     Experience,
     LessonLearned,
     Portfolio,
@@ -23,7 +25,6 @@ from .models import (
     ProjectImage,
     Service,
     Skill,
-    Technology,
 )
 
 
@@ -92,17 +93,12 @@ class MySkillViewSet(OwnedViewSet):
     serializer_class = s.MySkillSerializer
 
 
-class MyTechnologyViewSet(OwnedViewSet):
-    model = Technology
-    serializer_class = s.MyTechnologySerializer
-
-
 class MyProjectViewSet(OwnedViewSet):
     model = Project
     serializer_class = s.MyProjectSerializer
 
     def get_queryset(self):
-        return super().get_queryset().prefetch_related("technologies")
+        return super().get_queryset().prefetch_related("skills")
 
 
 class ProjectChildViewSet(OwnedViewSet):
@@ -146,6 +142,16 @@ class MyProjectArchitectureViewSet(ProjectChildViewSet):
 class MyExperienceViewSet(OwnedViewSet):
     model = Experience
     serializer_class = s.MyExperienceSerializer
+
+
+class MyEducationViewSet(OwnedViewSet):
+    model = Education
+    serializer_class = s.MyEducationSerializer
+
+
+class MyCertificateViewSet(OwnedViewSet):
+    model = Certificate
+    serializer_class = s.MyCertificateSerializer
 
 
 class MyMessageViewSet(

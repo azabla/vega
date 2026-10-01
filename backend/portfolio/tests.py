@@ -8,7 +8,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Category, Contact, Portfolio, Project, Skill
+from .models import Category, Certificate, Contact, Education, Experience, Portfolio, Project, Skill
 
 User = get_user_model()
 
@@ -110,12 +110,9 @@ class OwnerAPITests(APITestCase):
         )
         self.assertEqual(skill.status_code, status.HTTP_201_CREATED)
 
-        tech = self.client.post(
-            "/api/me/technologies/", {"name": "Django", "category": cat.data["id"]}, format="json"
-        )
         project = self.client.post(
             "/api/me/projects/",
-            {"title": "Vega", "summary": "Portfolio SaaS", "overview": "...", "technologies": [tech.data["id"]]},
+            {"title": "Vega", "summary": "Portfolio SaaS", "overview": "...", "skills": [skill.data["id"]]},
             format="json",
         )
         self.assertEqual(project.status_code, status.HTTP_201_CREATED, project.data)
@@ -127,7 +124,7 @@ class OwnerAPITests(APITestCase):
         self.assertEqual(feature.status_code, status.HTTP_201_CREATED)
         detail = self.client.get("/api/u/alice/projects/vega/").data
         self.assertEqual([f["title"] for f in detail["features"]], ["Auth"])
-        self.assertEqual([t["name"] for t in detail["technologies"]], ["Django"])
+        self.assertEqual([t["name"] for t in detail["skills"]], ["Django"])
 
     def test_cannot_see_or_touch_other_users_objects(self):
         self.assertEqual(self.client.get("/api/me/categories/").data, [])
@@ -172,9 +169,15 @@ class ImportPortfolioTests(APITestCase):
             {"model": "portfolio.portfolio", "pk": 7, "fields": {"name": "Andu", "title": "Dev", "bio": "b",
                                                                   "phone": "1", "email": "a@a.com"}},
             {"model": "portfolio.category", "pk": 3, "fields": {"name": "Backend", "slug": "backend"}},
+            {"model": "portfolio.skill", "pk": 5, "fields": {"name": "Python", "slug": "python", "category": 3}},
+            # legacy model: imported as a skill; "Python" matches the existing skill
             {"model": "portfolio.technology", "pk": 9, "fields": {"name": "Django", "slug": "django", "category": 3}},
+            {"model": "portfolio.technology", "pk": 10, "fields": {"name": "python", "category": 3}},
             {"model": "portfolio.project", "pk": 4, "fields": {"title": "Vega", "slug": "vega", "summary": "s",
-                                                                "overview": "o", "technologies": [9]}},
+                                                                "overview": "o", "technologies": [9, 10]}},
+            {"model": "portfolio.experience", "pk": 2, "fields": {"company": "XYZ", "position": "Dev",
+                                                                   "description": "d", "start_date": "2024-01-01",
+                                                                   "comap_logo": ""}},
             {"model": "auth.user", "pk": 1, "fields": {}},
         ]
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
@@ -185,5 +188,74 @@ class ImportPortfolioTests(APITestCase):
         self.assertEqual(Portfolio.objects.filter(owner=user).count(), 1)  # updated, not duplicated
         self.assertEqual(Portfolio.objects.get(owner=user).title, "Dev")
         project = Project.objects.get(owner=user, slug="vega")
-        self.assertEqual([t.name for t in project.technologies.all()], ["Django"])
-        self.assertEqual(project.technologies.get().category.owner, user)
+        self.assertEqual(sorted(s.name for s in project.skills.all()), ["Django", "Python"])
+        self.assertEqual(Skill.objects.filter(owner=user).count(), 2)  # "python" reused, not duplicated
+        self.assertEqual(project.skills.get(name="Django").category.owner, user)
+        self.assertTrue(Experience.objects.filter(owner=user, company="XYZ").exists())
+
+
+class MasterProfileTests(APITestCase):
+    """Education, certificates, and skills backed by evidence."""
+
+    def setUp(self):
+        self.alice = make_user("alice")
+        self.client.force_authenticate(self.alice)
+        self.cat = Category.objects.create(owner=self.alice, name="Backend")
+        self.django = Skill.objects.create(owner=self.alice, name="Django", category=self.cat, years_of_experience=2)
+
+    def test_skill_shows_evidence(self):
+        project = Project.objects.create(owner=self.alice, title="EthioNotify", summary="s", overview="o")
+        project.skills.add(self.django)
+        job = Experience.objects.create(
+            owner=self.alice, company="XYZ", position="Backend Developer", start_date="2024-01-01"
+        )
+        job.skills.add(self.django)
+        cert = Certificate.objects.create(owner=self.alice, name="Django Pro", issuer="ALX")
+        cert.skills.add(self.django)
+
+        self.client.force_authenticate(None)
+        skill = self.client.get("/api/u/alice/skills/").data[0]
+        self.assertEqual(skill["years_of_experience"], 2)
+        self.assertEqual(skill["evidence"]["projects"], [{"title": "EthioNotify", "slug": "ethionotify"}])
+        self.assertEqual(skill["evidence"]["experience"], [{"position": "Backend Developer", "company": "XYZ"}])
+        self.assertEqual(skill["evidence"]["certificates"], [{"name": "Django Pro", "issuer": "ALX"}])
+
+    def test_education_crud_and_public(self):
+        res = self.client.post(
+            "/api/me/education/",
+            {"institution": "Bahir Dar University", "level": "bachelor", "field_of_study": "Computer Engineering",
+             "start_date": "2019-10-01", "end_date": "2024-07-01", "grade": "CGPA 3.8"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.data)
+        res = self.client.post("/api/me/education/", {"institution": "X", "level": "tvet"}, format="json")
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        res = self.client.post("/api/me/education/", {"institution": "X", "level": "nope"}, format="json")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+        public = self.client.get("/api/u/alice/education/").data
+        self.assertEqual(public[0]["level_display"], "Bachelor's (BSc/BA)")
+        self.assertNotIn("owner", public[0])
+
+    def test_certificate_with_skills(self):
+        res = self.client.post(
+            "/api/me/certificates/",
+            {"name": "AWS Cloud Practitioner", "issuer": "Amazon", "skills": [self.django.id]},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.data)
+        public = self.client.get("/api/u/alice/certificates/").data
+        self.assertEqual([s["name"] for s in public[0]["skills"]], ["Django"])
+
+    def test_experience_fields(self):
+        res = self.client.post(
+            "/api/me/experience/",
+            {"company": "XYZ", "position": "Intern", "employment_type": "internship", "location": "Addis Ababa",
+             "description": "x" * 1000, "start_date": "2024-01-01", "skills": [self.django.id]},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.data)
+        exp = self.client.get("/api/u/alice/experience/").data[0]
+        self.assertEqual(exp["employment_type_display"], "Internship")
+        self.assertEqual(len(exp["description"]), 1000)  # no 220-character limit anymore
+        self.assertIn("company_logo", exp)

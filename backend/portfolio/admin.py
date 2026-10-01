@@ -7,7 +7,8 @@ from .models import (
     Contact,
     Experience,
     Category,
-    Technology,
+    Certificate,
+    Education,
     Project,
     ProjectImage,
     ProjectFeature,
@@ -38,7 +39,8 @@ class CategoryAdmin(OwnedAdmin):
 
 @admin.register(Skill)
 class SkillAdmin(OwnedAdmin):
-    list_display = ["name", "owner", "category", "is_active"]
+    list_display = ["name", "owner", "category", "years_of_experience", "is_active"]
+    search_fields = ["name"]
 
 
 @admin.register(Contact)
@@ -48,7 +50,19 @@ class ContactAdmin(OwnedAdmin):
 
 @admin.register(Experience)
 class ExperienceAdmin(OwnedAdmin):
-    list_display = ["position", "company", "owner", "start_date"]
+    list_display = ["position", "company", "employment_type", "owner", "start_date", "current"]
+    filter_horizontal = ["skills"]
+
+
+@admin.register(Education)
+class EducationAdmin(OwnedAdmin):
+    list_display = ["institution", "level", "field_of_study", "owner", "start_date", "end_date"]
+
+
+@admin.register(Certificate)
+class CertificateAdmin(OwnedAdmin):
+    list_display = ["name", "issuer", "owner", "issue_date"]
+    filter_horizontal = ["skills"]
 
 
 @admin.register(About)
@@ -64,23 +78,6 @@ class AboutAdmin(admin.ModelAdmin):
     list_filter = ["is_active", "owner"]
 
     search_fields = ["title", "description"]
-
-
-@admin.register(Technology)
-class TechnologyAdmin(admin.ModelAdmin):
-    list_filter = ("owner",)
-    list_display = (
-        "name",
-        "owner",
-        "category",
-        "slug",
-    )
-
-    search_fields = ("name",)
-
-    prepopulated_fields = {
-        "slug": ("name",),
-    }
 
 
 @admin.register(Service)
@@ -158,7 +155,7 @@ class ProjectAdmin(admin.ModelAdmin):
         "order",
     )
 
-    filter_horizontal = ("technologies",)
+    filter_horizontal = ("skills",)
 
     prepopulated_fields = {
         "slug": ("title",),
