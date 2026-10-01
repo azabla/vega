@@ -186,6 +186,7 @@ class ProjectCardSerializer(serializers.ModelSerializer):
             "featured",
             "status",
             "status_display",
+            "started_on",
             "github_url",
             "live_url",
         )

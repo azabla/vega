@@ -172,7 +172,7 @@ class Project(models.Model):
         return self.title
 
     class Meta:
-        ordering = ["-featured", "-created_at", "order"]
+        ordering = ["-featured", "order", "-created_at"]
         constraints = [
             models.UniqueConstraint(fields=["owner", "slug"], name="unique_project_slug_per_owner"),
         ]
