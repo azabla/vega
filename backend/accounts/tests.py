@@ -42,6 +42,12 @@ class AuthAPITests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("password", res.data)
 
+    def test_registration_can_be_closed(self):
+        with self.settings(REGISTRATION_OPEN=False):
+            res = self.register()
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(User.objects.exists())
+
     def test_login_is_case_insensitive(self):
         self.register()
         self.assertEqual(self.login(email="JANE@example.com").status_code, status.HTTP_200_OK)

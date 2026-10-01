@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -27,6 +28,8 @@ class RegisterView(generics.CreateAPIView):
     throttle_scope = "auth"
 
     def create(self, request, *args, **kwargs):
+        if not settings.REGISTRATION_OPEN:
+            return Response({"detail": "Registration is closed."}, status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
