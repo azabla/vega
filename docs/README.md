@@ -4,10 +4,12 @@ One document per piece of work, in the order it was done.
 
 | # | Doc | What it covers |
 |---|-----|----------------|
+| 00 | [Product vision](00-product-vision.md) | Where Vega is going: one master profile → portfolio, CV, Career Passport |
 | 01 | [Bug fixes](01-bug-fixes.md) | Backend and frontend bugs fixed before the SaaS work |
 | 02 | [Docker](02-docker.md) | Running the full stack (Postgres + Django + Vite) with Docker Compose |
 | 03 | [Custom user & auth API](03-auth.md) | `accounts.User` model and the JWT auth endpoints |
 | 04 | [Multi-tenancy](04-multi-tenancy.md) | One portfolio per user: owner fields, public `/api/u/<username>/` and owner `/api/me/` APIs, importing data |
+| 05 | [Master profile v1](05-master-profile.md) | Skills with evidence, education, certificates, project pages |
 
 ## Quick start
 

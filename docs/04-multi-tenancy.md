@@ -7,7 +7,7 @@ Every user owns their own portfolio. Visitors see it at `/u/<username>`, and the
 | Model | Owner |
 |-------|-------|
 | `Portfolio` | `owner` — one-to-one with the user, created automatically at signup (`portfolio/signals.py`) |
-| `About`, `Category`, `Skill`, `Technology`, `Project`, `Experience` | `owner` foreign key |
+| `About`, `Category`, `Skill`, `Project`, `Experience`, `Education`, `Certificate` | `owner` foreign key |
 | `Contact` | `owner` = the user who received the message |
 | `Service` | via `about.owner` |
 | `ProjectImage`, `ProjectFeature`, `ProjectChallenge`, `LessonLearned`, `ProjectArchitecture` | via `project.owner` |
@@ -17,7 +17,7 @@ Every user owns their own portfolio. Visitors see it at `/u/<username>`, and the
 | Constraint | Fields |
 |-----------|--------|
 | `unique_category_name_per_owner` | `owner, name` |
-| `unique_category_slug_per_owner` / `skill` / `technology` / `project` | `owner, slug` |
+| `unique_category_slug_per_owner` / `skill` / `project` | `owner, slug` |
 
 `generate_unique_slug` only checks the same owner's rows, so slugs get `-1`, `-2`, … suffixes per user.
 
@@ -55,15 +55,15 @@ An unknown or inactive username returns `404`.
 | `about/` | GET, PATCH, PUT | Created on first access. Includes `services`. |
 | `services/` | CRUD | Attached to your about section |
 | `categories/` | CRUD | `slug` optional (generated from `name`) |
-| `skills/`, `technologies/` | CRUD | `category` must be one of **your** categories |
-| `projects/` | CRUD | `technologies`: list of **your** technology IDs. `slug` optional. |
+| `skills/` | CRUD | `category` must be one of **your** categories |
+| `projects/` | CRUD | `skills`: list of **your** skill IDs. `slug` optional. |
 | `project-images/`, `project-features/`, `project-challenges/`, `project-lessons/`, `project-architecture/` | CRUD | `project` must be **yours**. Filter with `?project=<id>`. |
-| `experience/` | CRUD | |
+| `experience/`, `education/`, `certificates/` | CRUD | See [05](05-master-profile.md) |
 | `messages/` | GET, DELETE | Contact-form messages sent to you |
 
 **Isolation rules**, all covered by tests:
 - Querysets are filtered to `request.user`, so another user's object returns `404`, even for `DELETE`.
-- Related fields (`category`, `technologies`, `project`) only accept your own objects. Anything else returns `400`.
+- Related fields (`category`, `skills`, `project`) only accept your own objects. Anything else returns `400`.
 - `owner` is never accepted from or exposed to the client. It's a `HiddenField` set from the logged-in user.
 
 File fields (`thumbnail`, `image`, `cv_file`, `profile_image`, …) accept `multipart/form-data` uploads.
