@@ -1,31 +1,33 @@
 #!/usr/bin/env bash
 # Update the live site after pushing to GitHub. Run on the server:
-#   cd /var/www/vega && ./deploy/deploy.sh
+#   cd /opt/vega && ./deploy/deploy.sh
 set -euo pipefail
 
-APP_DIR=/var/www/vega
-UV="$HOME/.local/bin/uv"
+cd "$(dirname "$0")/.."
+COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env.prod"
 
-cd "$APP_DIR"
+[ -f .env.prod ] || { echo "!! .env.prod missing (copy .env.prod.example)"; exit 1; }
+
 echo "==> Pulling latest code"
 git pull --ff-only
 
-echo "==> Backend: dependencies, migrations, static files"
-cd "$APP_DIR/backend"
-"$UV" pip install -q -p venv/bin/python -r requirements.txt
-venv/bin/python manage.py migrate --noinput
-venv/bin/python manage.py collectstatic --noinput
-venv/bin/python manage.py check --deploy --fail-level ERROR
+echo "==> Building images and restarting changed containers"
+# backend runs migrate + collectstatic on start (backend/entrypoint.sh)
+$COMPOSE up -d --build --remove-orphans
 
-echo "==> Frontend: build (reads frontend/.env.production)"
-cd "$APP_DIR/frontend"
-npm ci --no-audit --no-fund
-npm run build
+echo "==> Waiting for the backend health check"
+for i in $(seq 30); do
+    status=$(docker inspect -f '{{.State.Health.Status}}' "$($COMPOSE ps -q backend)" 2>/dev/null || echo starting)
+    [ "$status" = healthy ] && break
+    sleep 3
+done
+$COMPOSE ps
 
-echo "==> Restarting the app"
-sudo systemctl restart vega
-sleep 2
-systemctl is-active --quiet vega && echo "==> Done: vega is running" || {
-    echo "!! vega failed to start — see: sudo journalctl -u vega -n 50"
+if [ "$status" != healthy ]; then
+    echo "!! backend is not healthy — see: $COMPOSE logs --tail=80 backend"
     exit 1
-}
+fi
+
+echo "==> Removing old images"
+docker image prune -f >/dev/null
+echo "==> Done"

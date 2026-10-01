@@ -193,3 +193,6 @@ sketch
 
 # End of https://www.toptal.com/developers/gitignore/api/react
 
+
+# production secrets for docker-compose.prod.yml
+.env.prod

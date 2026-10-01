@@ -60,7 +60,11 @@ BACKEND_PORT=8001 docker compose up
 
 `VITE_API_URL` follows `BACKEND_PORT` automatically. Add new frontend origins to `CORS_ALLOWED_ORIGINS` if you change `FRONTEND_PORT`.
 
-## Production images
+## Production stack
+
+`docker-compose.prod.yml` runs PostgreSQL, Django (Gunicorn) and an Nginx `web` container that serves the React build, static and media files and proxies `/api` and `/admin`. Only `web` is published, on `127.0.0.1:${WEB_PORT}`, for a host Nginx to forward a domain to. Settings come from `.env.prod` (template: `.env.prod.example`). Full walkthrough: [07 — Deploying to the VPS](07-deployment-vps.md).
+
+## Production images (standalone)
 
 The backend image runs as a non-root `app` user. Its default command is gunicorn:
 

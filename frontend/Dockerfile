@@ -9,8 +9,10 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # --- build static bundle ---
 FROM dev AS build
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_API_URL=/api
+ARG VITE_PORTFOLIO_USERNAME
+ENV VITE_API_URL=$VITE_API_URL \
+    VITE_PORTFOLIO_USERNAME=$VITE_PORTFOLIO_USERNAME
 RUN npm run build
 
 # --- production: serve with nginx ---

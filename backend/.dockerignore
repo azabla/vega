@@ -8,3 +8,5 @@ db.sqlite3
 data.json
 media/
 staticfiles/
+dev.sqlite3
+backups/

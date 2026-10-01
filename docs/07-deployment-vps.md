@@ -1,69 +1,82 @@
-# 07 — Deploying to the VPS (andu.aetechsolution.et)
+# 07 — Deploying to the VPS with Docker (andu.aetechsolution.et)
 
-This guide deploys Vega **without Docker**, the same way the Laravel project on this server already runs: Nginx in front, the app as a system service. The Laravel site keeps working untouched. Each site gets its own Nginx config and its own port, and Nginx picks the right one by domain name.
+This guide runs Vega in **Docker** on a VPS that already hosts a Laravel site deployed manually (Nginx + PHP-FPM, no Docker). Both keep working side by side:
 
-Assumptions: Ubuntu 22.04 or 24.04, you can SSH in as a user with `sudo`, and Nginx is already installed (it serves the Laravel site). Commands marked **(local)** run on your laptop. Everything else runs on the server.
+- The **host Nginx** stays in charge of ports 80/443, the SSL certificates and the Laravel site. You only add one small config file that forwards `andu.aetechsolution.et` to Vega.
+- **Vega runs in three containers** (database, Django, web). Only the web container is published, and only on `127.0.0.1:8010`, so the internet can reach it only through the host Nginx.
+
+Assumptions: Ubuntu 22.04 or 24.04, SSH access as a user with `sudo`, and Nginx already installed. Commands marked **(local)** run on your laptop. Everything else runs on the server.
 
 ---
 
 ## How it fits together
 
 ```
-                         Internet
-                            │  https://andu.aetechsolution.et
-                            ▼
-┌───────────────────────── VPS ─────────────────────────────────┐
-│  Nginx (ports 80/443) — picks a site by domain name           │
-│   ├─ your Laravel domain → PHP-FPM → Laravel     (unchanged)  │
-│   └─ andu.aetechsolution.et                                   │
-│        ├─ /            → frontend/dist (React build, static)  │
-│        ├─ /assets/     → frontend/dist/assets (cached 1 year) │
-│        ├─ /api/ /admin/→ Gunicorn 127.0.0.1:8010 → Django     │
-│        ├─ /static/     → backend/staticfiles (admin CSS/JS)   │
-│        └─ /media/      → backend/media (uploads)              │
-│                                                               │
-│  Gunicorn (systemd service "vega") ──► PostgreSQL (local)     │
-└───────────────────────────────────────────────────────────────┘
+                          Internet
+                             │ https://andu.aetechsolution.et
+                             ▼
+┌──────────────────────────── VPS ─────────────────────────────────┐
+│  Host Nginx (80/443, SSL by Certbot) — picks a site by domain    │
+│   ├─ your Laravel domain ──► PHP-FPM ──► Laravel     (unchanged) │
+│   └─ andu.aetechsolution.et ──► 127.0.0.1:8010                   │
+│                                      │                           │
+│   ┌──────────── Docker network "vega-prod" ───────────────────┐  │
+│   │  web (Nginx)  :80  ◄── published as 127.0.0.1:8010         │  │
+│   │   ├─ /              React build (in the image)             │  │
+│   │   ├─ /static/       Django admin CSS/JS  (volume "static") │  │
+│   │   ├─ /media/        uploads              (volume "media")  │  │
+│   │   └─ /api/ /admin/ ─► backend (Gunicorn + Django) :8000    │  │
+│   │                          └─► db (PostgreSQL)  (volume "pgdata")│
+│   └────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-Key ideas:
+### Docker concepts used here
 
-- **Nginx** is the only thing exposed to the internet. It serves static files directly (fast) and forwards `/api/` and `/admin/` to Django.
-- **Gunicorn** is the production server for Django, replacing `runserver`. It listens on `127.0.0.1:8010`, which is reachable only from inside the server.
-- **systemd** keeps Gunicorn running: it starts at boot and restarts after a crash, much like PHP-FPM for Laravel.
-- The **frontend and API share one domain**. The React app calls `/api/...` on the same origin, so no CORS setup is needed.
-- **PostgreSQL** runs locally on the server, separate from the Laravel database (MySQL can keep running next to it).
+| Term | In this project |
+|------|-----------------|
+| **Image** | A packaged app. `backend` and `web` are built from the Dockerfiles in this repo; `postgres:17-alpine` is downloaded. |
+| **Container** | A running image. There are three: `db`, `backend`, `web`. |
+| **Volume** | Storage that survives rebuilds and restarts: `pgdata` (database), `media` (uploads), `static` (admin files). **Your data lives here, not in the containers.** |
+| **Network** | Compose puts the containers on a private network where they find each other by name (`db`, `backend`). The outside world can't reach it. |
+| **Port publishing** | `127.0.0.1:8010:80` means port 8010 on the server's **localhost** maps to port 80 in the `web` container. It is not open to the internet. |
+| **Health check** | Docker regularly checks the backend responds. `web` starts only once the backend is healthy, and `deploy.sh` waits for it. |
+| **restart: unless-stopped** | Containers come back after a crash or a server reboot, like a systemd service. |
 
-The files you'll install are in the repo under [`deploy/`](../deploy):
+### Files involved
 
-| File | Goes to | Purpose |
-|------|---------|---------|
-| `nginx-andu.aetechsolution.et.conf` | `/etc/nginx/sites-available/andu.aetechsolution.et` | Nginx site |
-| `vega.service` | `/etc/systemd/system/vega.service` | Runs Gunicorn |
-| `deploy.sh` | used in place | Updates the site after a `git push` |
-| `backup.sh` | used in place (cron) | Nightly database + uploads backup |
+| File | Purpose |
+|------|---------|
+| [`docker-compose.prod.yml`](../docker-compose.prod.yml) | Defines the 3 services, volumes, health checks and the published port |
+| [`.env.prod.example`](../.env.prod.example) | Template for `.env.prod`, the server's secrets (never committed) |
+| [`backend/Dockerfile`](../backend/Dockerfile) | Python 3.13 image running as a non-root user. The entrypoint runs `migrate` + `collectstatic` on start. |
+| [`frontend/Dockerfile`](../frontend/Dockerfile) (`prod` stage) | Builds the React app, then serves it with Nginx |
+| [`frontend/nginx.conf`](../frontend/nginx.conf) | Nginx **inside** the `web` container: SPA routing, static/media, proxy to Django |
+| [`deploy/nginx-host-andu.aetechsolution.et.conf`](../deploy/nginx-host-andu.aetechsolution.et.conf) | Nginx site on the **host**: forwards the domain to `127.0.0.1:8010` |
+| [`deploy/deploy.sh`](../deploy/deploy.sh) | Update after a `git push` |
+| [`deploy/backup.sh`](../deploy/backup.sh) | Nightly database + uploads backup |
+
+> **Why two Nginx?** The host Nginx must stay, because it serves Laravel and owns ports 80/443 and the certificates. The one in the container keeps Vega self-contained: routing, static files and caching travel with the app, and the host only needs a 10-line forwarding config.
 
 ---
 
 ## Step 0 — Look at the server first
 
-Get to know what's already there, so you don't collide with the Laravel setup.
-
 ```bash
 ssh YOUR_USER@YOUR_SERVER_IP
 
 lsb_release -a                 # Ubuntu version
-free -h                        # RAM (Gunicorn with 2 workers needs ~200 MB)
-ls /etc/nginx/sites-enabled/   # existing sites (your Laravel one is here)
-sudo ss -ltnp                  # ports in use: 8010 must be free
-sudo nginx -t                  # current config is valid?
+free -h; df -h /               # RAM and disk. Plan for ~600 MB RAM and a few GB of disk for images.
+ls /etc/nginx/sites-enabled/   # existing sites (Laravel)
+sudo ss -ltnp | grep 8010      # must print nothing (port free)
+docker --version               # already installed?
 ```
 
-If something already listens on **8010**, pick another free port and use it in both `vega.service` and the Nginx file.
+If port 8010 is taken, choose another and set `WEB_PORT` in `.env.prod` and in the host Nginx file.
 
 ---
 
-## Step 1 — DNS: point the subdomain at the server
+## Step 1 — DNS
 
 In the DNS panel for **aetechsolution.et**, add:
 
@@ -71,91 +84,48 @@ In the DNS panel for **aetechsolution.et**, add:
 |------|------|-------|-----|
 | A | `andu` | your VPS IPv4 address | 300 |
 
-(Add an `AAAA` record too if the server has IPv6.)
-
-Check it from your laptop **(local)**. It can take a few minutes:
-
-```bash
-dig +short andu.aetechsolution.et     # should print the VPS IP
-```
-
-SSL (step 9) won't work until this resolves.
+**(local)** Check: `dig +short andu.aetechsolution.et` should print the server IP. SSL (step 7) needs this to work.
 
 ---
 
-## Step 2 — Install what's missing
+## Step 2 — Install Docker
+
+Skip this if `docker compose version` already works.
 
 ```bash
-sudo apt update
-sudo apt install -y git postgresql postgresql-contrib nginx certbot python3-certbot-nginx
+curl -fsSL https://get.docker.com | sudo sh     # Docker Engine + the compose plugin
+sudo usermod -aG docker $USER                   # run docker without sudo
+exit                                            # log out and back in so the group applies
 ```
 
-Nginx and Certbot are probably already installed for Laravel. Apt will just skip them.
-
-**Python 3.13 with uv.** Django 6 needs Python 3.12 or newer, and Ubuntu 22.04 only ships 3.10. `uv` installs its own Python without touching the system's (the same tool used locally):
+Back in:
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source ~/.bashrc                 # puts ~/.local/bin on PATH
-uv --version
+docker run --rm hello-world
+docker compose version
 ```
 
-**Node.js 20+** to build the React app. Skip this if `node -v` already shows 20 or newer:
+Docker installs alongside the existing Nginx/PHP/MySQL without changing them.
 
-```bash
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-node -v && npm -v
-```
+> **Docker and the firewall:** a port published as `8010:80` would bypass `ufw` and be open to the world. That's why the compose file publishes **`127.0.0.1:8010`**. Keep the `127.0.0.1:` part.
 
 ---
 
-## Step 3 — Create the PostgreSQL database
-
-PostgreSQL has its own users ("roles"). Create one for Vega with a strong password:
+## Step 3 — Get the code
 
 ```bash
-# generate a password and keep it somewhere safe
-openssl rand -base64 24
-
-sudo -u postgres psql
+sudo mkdir -p /opt/vega
+sudo chown $USER:$USER /opt/vega
 ```
 
-In the `psql` prompt:
-
-```sql
-CREATE USER vega WITH PASSWORD 'PASTE_THE_PASSWORD';
-CREATE DATABASE vega OWNER vega;
-\q
-```
-
-Test the login:
-
-```bash
-psql -h 127.0.0.1 -U vega -d vega -c "select 1;"
-```
-
-PostgreSQL listens only on localhost by default, so it isn't reachable from the internet. Keep it that way.
-
----
-
-## Step 4 — Get the code onto the server
-
-The app lives at `/var/www/vega`, next to your Laravel project.
-
-```bash
-sudo mkdir -p /var/www/vega
-sudo chown $USER:www-data /var/www/vega
-```
-
-**If the GitHub repo is private,** give the server read-only access with a **deploy key**:
+**Private repo:** create a read-only deploy key.
 
 ```bash
 ssh-keygen -t ed25519 -C "vega-deploy" -f ~/.ssh/vega_deploy -N ""
 cat ~/.ssh/vega_deploy.pub
 ```
 
-On GitHub, open **azabla/vega → Settings → Deploy keys → Add deploy key** and paste the key. Leave "write access" off. Then tell SSH to use it:
+On GitHub, open **azabla/vega → Settings → Deploy keys → Add deploy key** and paste it, with write access off. Then:
 
 ```bash
 cat >> ~/.ssh/config <<'EOF'
@@ -165,262 +135,220 @@ Host github-vega
     IdentityFile ~/.ssh/vega_deploy
 EOF
 
-git clone git@github-vega:azabla/vega.git /var/www/vega
+git clone git@github-vega:azabla/vega.git /opt/vega
 ```
 
-(For a public repo, `git clone https://github.com/azabla/vega.git /var/www/vega` is enough.)
+(Public repo: `git clone https://github.com/azabla/vega.git /opt/vega`.)
 
 ---
 
-## Step 5 — Set up the backend
+## Step 4 — Production settings (`.env.prod`)
 
 ```bash
-cd /var/www/vega/backend
-uv venv --seed -p 3.13 venv
-uv pip install -p venv/bin/python -r requirements.txt
-```
+cd /opt/vega
+cp .env.prod.example .env.prod
 
-### 5.1 The production `.env`
-
-This file holds secrets. It stays on the server and is never committed.
-
-```bash
-cp .env.example .env
 python3 -c "import secrets; print(secrets.token_urlsafe(50))"   # → SECRET_KEY
-nano .env
+openssl rand -hex 24                                             # → POSTGRES_PASSWORD
+
+nano .env.prod
+chmod 600 .env.prod
 ```
 
 ```ini
-DEBUG=False
-SECRET_KEY=PASTE_THE_GENERATED_KEY
+DOMAIN=andu.aetechsolution.et
+SECRET_KEY=PASTE_GENERATED_KEY
 ALLOWED_HOSTS=andu.aetechsolution.et
-DATABASE_URL=postgres://vega:THE_DB_PASSWORD@127.0.0.1:5432/vega
-CORS_ALLOWED_ORIGINS=
 CSRF_TRUSTED_ORIGINS=https://andu.aetechsolution.et
+CORS_ALLOWED_ORIGINS=
 REGISTRATION_OPEN=false
+POSTGRES_PASSWORD=PASTE_GENERATED_PASSWORD
+PORTFOLIO_USERNAME=YOUR_USERNAME
+WEB_PORT=8010
+GUNICORN_WORKERS=2
 ```
-
-What each line does:
 
 | Setting | Why |
 |---------|-----|
-| `DEBUG=False` | **Never `True` in production.** Debug pages leak code and settings. It also turns on secure cookies and trust of Nginx's HTTPS header. |
-| `SECRET_KEY` | Signs sessions and tokens. Long, random, and different from your local key. |
-| `ALLOWED_HOSTS` | Django rejects requests for other domains (returns a 400). |
-| `DATABASE_URL` | The database from step 3. If the password contains `@ : / #`, URL-encode them. |
-| `CORS_ALLOWED_ORIGINS` | Empty: the frontend is on the same domain. |
-| `CSRF_TRUSTED_ORIGINS` | Needed for logging in to `/admin/` over HTTPS. |
-| `REGISTRATION_OPEN=false` | Strangers can't create accounts through `/api/auth/register/`. You create users yourself. |
+| `DOMAIN` | Used by the backend health check |
+| `SECRET_KEY` | Signs sessions and tokens. Long, random, unique to production. |
+| `ALLOWED_HOSTS` | Django refuses requests for other domains (returns a 400) |
+| `CSRF_TRUSTED_ORIGINS` | Lets you log in to `/admin/` over HTTPS |
+| `CORS_ALLOWED_ORIGINS` | Empty: the frontend and API share one domain |
+| `REGISTRATION_OPEN=false` | Strangers can't sign up. You create accounts yourself. |
+| `POSTGRES_PASSWORD` | Used by the `db` container and in Django's database URL (compose builds `DATABASE_URL` for you) |
+| `PORTFOLIO_USERNAME` | Whose portfolio `/` shows. Baked into the frontend at build time. |
+| `WEB_PORT` | The localhost port the host Nginx forwards to |
+| `GUNICORN_WORKERS` | Django processes. 2 suits a small VPS shared with Laravel. |
 
-Restrict who can read it:
-
-```bash
-chmod 640 .env
-```
-
-### 5.2 Database tables, static files, your account
-
-```bash
-venv/bin/python manage.py migrate
-venv/bin/python manage.py collectstatic --noinput
-venv/bin/python manage.py check --deploy
-venv/bin/python manage.py createsuperuser
-```
-
-- `migrate` creates all tables in PostgreSQL.
-- `collectstatic` copies the admin's CSS/JS into `backend/staticfiles/`, which Nginx serves.
-- `check --deploy` should show at most the HSTS and SSL-redirect warnings. Both are handled by Nginx and Certbot (see Security notes).
-- `createsuperuser`: pick your public **username** (e.g. `andu` or `vega`). It appears in URLs like `/u/andu`. Use a **strong password**. This is the internet, not your laptop.
-
-### 5.3 Fill in your portfolio
-
-```bash
-venv/bin/python manage.py seed_portfolio portfolio/seed/vega.json --owner YOUR_USERNAME
-```
-
-This loads your resume content (profile, experience, education, skills, projects). After that, edit everything in the admin. Images (profile photo, project thumbnails, CV) are uploaded there too.
-
-### 5.4 Try Gunicorn by hand
-
-```bash
-venv/bin/gunicorn core.wsgi:application --bind 127.0.0.1:8010
-```
-
-In a second SSH session:
-
-```bash
-curl -s -H "Host: andu.aetechsolution.et" http://127.0.0.1:8010/api/u/YOUR_USERNAME/profile/ | head -c 200
-```
-
-If you see your profile JSON, it works. Stop Gunicorn with `Ctrl+C`.
+`DEBUG=False` is forced in the compose file. Production never runs in debug mode.
 
 ---
 
-## Step 6 — Run Django as a service (systemd)
+## Step 5 — Build and start
 
 ```bash
-sudo cp /var/www/vega/deploy/vega.service /etc/systemd/system/vega.service
-sudo nano /etc/systemd/system/vega.service      # replace YOUR_USER with your Linux user (whoami)
-
-sudo systemctl daemon-reload
-sudo systemctl enable --now vega                # start now and on every boot
-sudo systemctl status vega                      # should say "active (running)"
+cd /opt/vega
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 ```
 
-What the service does: it runs Gunicorn from the virtualenv with 2 worker processes, as your user, in the `www-data` group so Nginx can read the files. If it crashes, systemd restarts it after 5 seconds.
+The first build takes a few minutes: it downloads base images, installs Python packages and builds the React app. Then:
 
-Useful commands:
+1. `db` starts, and its health check waits until PostgreSQL accepts connections;
+2. `backend` starts and runs `migrate` (creates the tables) and `collectstatic` (fills the `static` volume), then Gunicorn;
+3. once the backend's health check passes, `web` starts.
+
+Check:
 
 ```bash
-sudo journalctl -u vega -f          # live logs (requests and errors)
-sudo systemctl restart vega         # after changing .env or code
+docker compose -f docker-compose.prod.yml --env-file .env.prod ps
+# db and backend "healthy", web "Up", web shows 127.0.0.1:8010->80/tcp
+
+curl -s -H "Host: andu.aetechsolution.et" http://127.0.0.1:8010/api/testview/
+# "test"
 ```
 
-> **Workers:** 2 suits a small VPS that also runs Laravel. A common rule is `2 × CPU cores + 1`; check memory with `free -h` before raising it.
+**Save typing** with an alias (add it to `~/.bashrc`):
+
+```bash
+alias vega='docker compose -f /opt/vega/docker-compose.prod.yml --env-file /opt/vega/.env.prod'
+# then: vega ps · vega logs -f backend · vega restart backend
+```
+
+The rest of this guide uses `vega` as that alias.
+
+### Your account and content
+
+```bash
+vega exec backend python manage.py createsuperuser
+vega exec backend python manage.py seed_portfolio portfolio/seed/vega.json --owner YOUR_USERNAME
+```
+
+- Use the same **username** as `PORTFOLIO_USERNAME`, and a **strong password**.
+- `seed_portfolio` loads your resume content. Afterwards, edit everything and upload images in `/admin/`.
 
 ---
 
-## Step 7 — Build the frontend
-
-The frontend reads its build settings from `frontend/.env.production`. It's git-ignored, so create it on the server:
+## Step 6 — Host Nginx: forward the domain
 
 ```bash
-cd /var/www/vega/frontend
-cat > .env.production <<'EOF'
-VITE_API_URL=/api
-VITE_PORTFOLIO_USERNAME=YOUR_USERNAME
-EOF
-
-npm ci
-npm run build          # outputs frontend/dist/
-```
-
-- `VITE_API_URL=/api`: the React app calls the API on the **same domain**, through Nginx.
-- `VITE_PORTFOLIO_USERNAME`: whose portfolio the home page `/` shows. Other users stay at `/u/<username>`.
-
-These values are baked in at build time. If you change them, run `npm run build` again.
-
-> Low on RAM and the build gets killed? Build on your laptop **(local)** with the same `.env.production` and upload it: `rsync -az --delete frontend/dist/ YOUR_USER@SERVER:/var/www/vega/frontend/dist/`.
-
----
-
-## Step 8 — Add the Nginx site
-
-```bash
-sudo cp /var/www/vega/deploy/nginx-andu.aetechsolution.et.conf /etc/nginx/sites-available/andu.aetechsolution.et
+sudo cp /opt/vega/deploy/nginx-host-andu.aetechsolution.et.conf /etc/nginx/sites-available/andu.aetechsolution.et
 sudo ln -s /etc/nginx/sites-available/andu.aetechsolution.et /etc/nginx/sites-enabled/
 
-sudo nginx -t              # ALWAYS test before reloading
-sudo systemctl reload nginx
+sudo nginx -t                 # ALWAYS test first; it checks the Laravel config too
+sudo systemctl reload nginx   # reload, not restart: Laravel keeps serving
 ```
 
-- `nginx -t` checks every site, Laravel's included. **If it reports an error, don't reload.** Fix the problem first, and the running sites stay up meanwhile.
-- `reload` (not `restart`) applies the new config without dropping connections to the Laravel site.
+The file only does `proxy_pass http://127.0.0.1:8010`, plus headers telling Vega the real client IP and that the request came over HTTPS (`X-Forwarded-Proto`). Without that header Django would build `http://` image URLs and the admin's CSRF check would fail.
 
-How Nginx decides: it matches the request's domain against each site's `server_name`. Requests for `andu.aetechsolution.et` go to the new file, and everything else goes where it did before.
+Nginx matches requests by `server_name`. Your Laravel domain still goes to its own config.
 
-Nginx also needs to read the files. Folders under `/var/www` are usually fine:
-
-```bash
-namei -l /var/www/vega/frontend/dist/index.html   # every directory needs x for others or www-data
-```
-
-Open **http://andu.aetechsolution.et**. You should see the portfolio, without HTTPS for now.
+Visit **http://andu.aetechsolution.et**. The site should load, without the padlock for now.
 
 ---
 
-## Step 9 — HTTPS with Let's Encrypt
+## Step 7 — HTTPS
 
 ```bash
 sudo certbot --nginx -d andu.aetechsolution.et
-```
-
-Choose to **redirect HTTP to HTTPS** when asked. Certbot then:
-
-1. proves to Let's Encrypt that you control the domain (that's why DNS must point at the server);
-2. adds a `listen 443 ssl` block with the certificate to the Nginx file;
-3. adds an http → https redirect;
-4. sets up automatic renewal (the certificate lasts 90 days).
-
-Check that renewal works:
-
-```bash
 sudo certbot renew --dry-run
 ```
+
+When Certbot asks, choose **redirect HTTP to HTTPS**. Certbot edits only this site's file: it adds the 443/SSL block and the redirect, and sets up automatic renewal (certificates last 90 days). If Certbot isn't installed: `sudo apt install -y certbot python3-certbot-nginx`.
 
 Open **https://andu.aetechsolution.et** 🎉
 
 ---
 
-## Step 10 — Check everything
+## Step 8 — Check everything
 
 | Check | Expected |
 |-------|----------|
-| `https://andu.aetechsolution.et` | Your portfolio, with the padlock in the address bar |
-| `http://andu.aetechsolution.et` | Redirects to https |
-| `/projects` and a project page, then **refresh** | Page loads (Nginx falls back to `index.html`) |
-| `/admin/` | Admin login with styling. You can log in. |
-| Upload a project thumbnail in the admin | It appears on the site (`/media/...`) |
-| Contact form | Message appears in the admin under *Contacts* |
-| `curl -X POST https://andu.aetechsolution.et/api/auth/register/` | `403 Registration is closed` |
-| Your Laravel site | Still works exactly as before |
+| `https://andu.aetechsolution.et` | Your portfolio, with the padlock |
+| `http://...` | Redirects to https |
+| Open `/projects`, then refresh | Still loads |
+| `/admin/` | Styled login page. You can log in. |
+| Upload a project image in the admin | Shows on the site with an `https://.../media/...` URL |
+| Send the contact form | Appears in the admin under *Contacts* |
+| `curl -X POST https://andu.aetechsolution.et/api/auth/register/` | `403` (registration closed) |
+| `curl -m 5 http://YOUR_SERVER_IP:8010` from **(local)** | Fails or times out (not public) |
+| The Laravel site | Works as before |
 
 ---
 
-## Updating the site later
+## Updating the site
 
-The normal workflow is to work locally, push to GitHub, then run on the server:
-
-```bash
-cd /var/www/vega && ./deploy/deploy.sh
-```
-
-[`deploy.sh`](../deploy/deploy.sh) pulls the code, installs new Python packages, runs migrations, collects static files, rebuilds the frontend and restarts the service. If the service doesn't come back up, it stops and tells you where to look.
-
-`deploy.sh` uses `sudo systemctl restart vega`. To run it without a password prompt, allow just that one command (`sudo visudo -f /etc/sudoers.d/vega`):
-
-```
-YOUR_USER ALL=(root) NOPASSWD: /usr/bin/systemctl restart vega
-```
-
-**Rolling back** a bad release:
+Work locally, push to GitHub, then on the server:
 
 ```bash
-cd /var/www/vega
+cd /opt/vega && ./deploy/deploy.sh
+```
+
+The script:
+
+1. runs `git pull`;
+2. runs `up -d --build`, which rebuilds only changed images and recreates only changed containers;
+3. lets the backend run migrations and `collectstatic` on start;
+4. waits for the backend health check, and stops with a pointer to the logs if it fails;
+5. prunes old images to save disk.
+
+Your **data is safe** across updates: it lives in the `pgdata` and `media` volumes, not inside the containers.
+
+**Changing `PORTFOLIO_USERNAME`** needs a frontend rebuild, which `deploy.sh` does: `vega up -d --build web`.
+
+**Rolling back:**
+
+```bash
+cd /opt/vega
 git log --oneline -5
-git checkout <previous-commit>       # then re-run the backend/frontend steps from deploy.sh
+git checkout <good-commit>
+vega up -d --build
+# back to normal later: git checkout main && ./deploy/deploy.sh
 ```
 
-(Migrations that change tables may need reversing too: `manage.py migrate portfolio <previous_migration>`.)
+A release that changed the database may need its migration reversed: `vega exec backend python manage.py migrate portfolio <previous_migration>`.
 
 ---
 
 ## Backups
 
-[`backup.sh`](../deploy/backup.sh) dumps the database and archives uploads into `~/backups/vega/`, and keeps 14 days.
-
-Let it log in to PostgreSQL without a prompt:
-
 ```bash
-echo "127.0.0.1:5432:vega:vega:THE_DB_PASSWORD" > ~/.pgpass
-chmod 600 ~/.pgpass
-/var/www/vega/deploy/backup.sh          # test once
+/opt/vega/deploy/backup.sh          # test once → ~/backups/vega/
+crontab -e
 ```
 
-Schedule it nightly (`crontab -e`):
-
 ```
-30 2 * * * /var/www/vega/deploy/backup.sh >> $HOME/backups/vega-backup.log 2>&1
+30 2 * * * /opt/vega/deploy/backup.sh >> $HOME/backups/vega-backup.log 2>&1
 ```
 
-Copy backups **off the server** now and then **(local)**: `rsync -az YOUR_USER@SERVER:backups/vega/ ~/vega-backups/`. A backup on the same disk doesn't protect against losing the server.
+The script dumps PostgreSQL from inside the `db` container (`pg_dump`), archives the `media` volume through the backend container, and keeps 14 days. Copy backups **off the server** now and then **(local)**: `rsync -az YOUR_USER@SERVER:backups/vega/ ~/vega-backups/`.
 
 Restore:
 
 ```bash
-pg_restore -h 127.0.0.1 -U vega -d vega --clean db-YYYY-MM-DD.dump
-tar -xzf media-YYYY-MM-DD.tar.gz -C /var/www/vega/backend
+vega exec -T db pg_restore -U vega -d vega --clean < ~/backups/vega/db-YYYY-MM-DD.dump
+vega exec -T backend tar -xzf - -C /app < ~/backups/vega/media-YYYY-MM-DD.tar.gz
 ```
+
+> ⚠️ `docker compose down -v` **deletes the volumes**, meaning your database and uploads. Use plain `down` (or `stop`). Add `-v` only when you really want to wipe everything.
+
+---
+
+## Everyday commands
+
+```bash
+vega ps                                   # status and health
+vega logs -f backend                      # Django/Gunicorn logs (Ctrl+C to stop)
+vega logs -f web                          # Nginx (inside container) logs
+vega restart backend                      # after editing .env.prod (use "up -d" for compose changes)
+vega exec backend python manage.py shell  # Django shell
+vega exec db psql -U vega                 # database shell
+vega down                                 # stop everything (keeps data)
+vega up -d                                # start again
+docker system df                          # disk used by images and volumes
+```
+
+Host Nginx logs: `sudo tail -f /var/log/nginx/error.log`.
 
 ---
 
@@ -428,48 +356,41 @@ tar -xzf media-YYYY-MM-DD.tar.gz -C /var/www/vega/backend
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| **502 Bad Gateway** | Gunicorn isn't running | `sudo systemctl status vega`, then `sudo journalctl -u vega -n 50` |
-| **400 Bad Request** from the API | Domain missing from `ALLOWED_HOSTS` | Fix `.env`, then `sudo systemctl restart vega` |
-| Admin login says **CSRF verification failed** | `CSRF_TRUSTED_ORIGINS` missing, or Nginx doesn't send `X-Forwarded-Proto` | Check `.env` and the `proxy_set_header` lines |
-| Admin has **no styling** | `collectstatic` not run, or wrong `alias` path | Run `collectstatic`; the path must end with `/` |
-| Refreshing `/projects` gives **404** | `try_files ... /index.html` missing | Use the provided Nginx file |
-| Images 404 | Wrong media path, or Nginx can't read it | Check `alias` and `namei -l` permissions |
-| Upload fails: **Permission denied** | Gunicorn's user can't write `backend/media` | `sudo chown -R YOUR_USER:www-data /var/www/vega/backend/media` |
-| Upload fails: **413** | File larger than `client_max_body_size` | Raise it in the Nginx file and reload |
-| Site shows old content after deploy | Browser cache | Hard refresh. `index.html` isn't cached long; `/assets/` filenames change on each build. |
-| Laravel site broke | You edited its config, or a syntax error | `sudo nginx -t` shows the file and line |
-| Image URLs start with `http://` | Missing `X-Forwarded-Proto`, or `DEBUG=True` | Check the Nginx headers and `.env` |
-
-Logs:
-
-```bash
-sudo journalctl -u vega -f                       # Django / Gunicorn
-sudo tail -f /var/log/nginx/error.log            # Nginx errors (both sites)
-sudo tail -f /var/log/nginx/access.log
-```
+| **502 Bad Gateway** | The `web` container isn't running or is on another port | `vega ps`. `WEB_PORT` must match the host Nginx `proxy_pass`. |
+| `web` never starts | Backend unhealthy | `vega logs backend`. Usually a bad `.env.prod` value or the DB password changed after the first start (see below). |
+| **400 Bad Request** | Domain missing from `ALLOWED_HOSTS` | Fix `.env.prod`, then `vega up -d` |
+| Admin: **CSRF verification failed** | `CSRF_TRUSTED_ORIGINS` wrong, or the host Nginx lacks `X-Forwarded-Proto` | Check both |
+| Admin has no styling | `static` volume empty | `vega restart backend` (re-runs collectstatic) |
+| Image URLs start with `http://` | `X-Forwarded-Proto` not passed by the host Nginx | Use the provided host config |
+| Upload fails with **413** | File over 20 MB | Raise `client_max_body_size` in **both** the host and `frontend/nginx.conf` |
+| Backend can't log in to the DB after you changed `POSTGRES_PASSWORD` | Postgres only applies the password when the volume is first created | Set it back, or change it inside the DB: `vega exec db psql -U vega -c "ALTER USER vega PASSWORD '...'"` |
+| Build killed / very slow | Low RAM during `npm`/`pip` | Add swap: `sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile` |
+| Disk filling up | Old images and build cache | `docker image prune -f`, `docker builder prune -f` |
+| Laravel site broke | Host Nginx config error | `sudo nginx -t` shows the file and line |
 
 ---
 
 ## Security notes
 
-- **Firewall:** only SSH, 80 and 443 should be open. Gunicorn (8010) and PostgreSQL (5432) listen on localhost only.
-  ```bash
-  sudo ufw status            # expect: OpenSSH, Nginx Full
-  ```
-- **`DEBUG=False`**, a unique `SECRET_KEY` and a strong admin password.
-- **Registration closed** (`REGISTRATION_OPEN=false`). Open it only when Vega becomes a public SaaS.
-- **HSTS** (`SECURE_HSTS_SECONDS`) tells browsers to *only ever* use HTTPS for the domain. It's good once HTTPS is stable, but it can't easily be undone, and with `includeSubDomains` it would affect other `aetechsolution.et` subdomains. Leave it off until everything is confirmed working.
-- **The old Render database password** was exposed earlier. Rotate it or delete that database.
-- Keep the server updated: `sudo apt update && sudo apt upgrade` (consider `unattended-upgrades`).
+- The only public ports are SSH, 80 and 443 (`sudo ufw status`). Django and PostgreSQL are reachable only inside the Docker network, and `web` only on localhost.
+- Containers restart automatically. The backend runs as a non-root user.
+- Production forces `DEBUG=False` and needs a unique `SECRET_KEY` and a strong admin password. `.env.prod` is `chmod 600` and git-ignored.
+- Registration is closed (`REGISTRATION_OPEN=false`) until Vega becomes a public SaaS.
+- HSTS is not enabled. It forces browsers to use HTTPS forever, and with `includeSubDomains` it would affect other `aetechsolution.et` subdomains. Add it only once you're sure.
+- Rotate or delete the old Render database. Its password was exposed earlier.
+- Keep the host updated (`sudo apt update && sudo apt upgrade`), and rebuild occasionally (`vega build --pull && vega up -d`) to pick up base-image security fixes.
 
 ---
 
-## Why not Docker here?
+## Local testing of the production stack
 
-The repo has a Docker setup ([02](02-docker.md)), and it would work: run the containers bound to `127.0.0.1` and point the host Nginx at them. On this server the manual route is simpler:
+The same stack runs on a laptop **(local)**, which is how it was verified before writing this guide:
 
-- It matches how the Laravel site is deployed: one Nginx, one way of doing things.
-- It uses less memory on a small VPS than running extra Postgres and app containers.
-- Logs, services and SSL are managed the same way for both sites.
+```bash
+cp .env.prod.example .env.prod   # fill in values; WEB_PORT must be free
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+curl -H "Host: andu.aetechsolution.et" -H "X-Forwarded-Proto: https" http://127.0.0.1:8010/api/u/YOUR_USERNAME/profile/
+docker compose -f docker-compose.prod.yml --env-file .env.prod down -v   # -v wipes the test data
+```
 
-Switch to Docker later if the server hosts many apps, or when moving to a fresh server.
+For day-to-day development, keep using `docker-compose.yml` (hot reload) or the non-Docker setup in the [README](README.md).
