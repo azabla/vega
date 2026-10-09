@@ -1,4 +1,4 @@
-import { Award, Briefcase, GraduationCap, Handshake, Languages as LanguagesIcon, Sparkles, Tags } from "lucide-react";
+import { Award, Briefcase, Compass, GraduationCap, Handshake, Images, Languages as LanguagesIcon, MessageSquareQuote, Sparkles, Tags } from "lucide-react";
 import { Tag } from "@/components/ui/Tag";
 import { ObjectForm } from "@/dashboard/components/ObjectForm";
 import { PageHeader, Panel } from "@/dashboard/components/Page";
@@ -8,11 +8,14 @@ import {
   EMPLOYMENT_TYPES,
   LANGUAGE_LEVELS,
   aboutFields,
+  aboutPhotoFields,
   categoryFields,
   certificateFields,
   educationFields,
   experienceFields,
   labelOf,
+  principleFields,
+  testimonialFields,
   languageFields,
   profileFields,
   serviceFields,
@@ -54,9 +57,53 @@ export const AboutPage = () => (
           })}
         />
       </Panel>
+      <Panel title="How I work" description="Optional principles, shown on your About page.">
+        <ResourceManager
+          endpoint="/me/principles/"
+          fields={principleFields}
+          noun="Principle"
+          emptyIcon={Compass}
+          emptyText="For example: “Talk to users first”, “Leave code better than I found it”."
+          sort={byOrder()}
+          describe={(p) => ({ title: p.title, subtitle: p.description })}
+        />
+      </Panel>
+      <Panel title="Photos" description="A small photo strip on your About page.">
+        <ResourceManager
+          endpoint="/me/about-photos/"
+          fields={aboutPhotoFields}
+          noun="Photo"
+          emptyIcon={Images}
+          sort={byOrder()}
+          describe={(p) => ({ title: p.caption || "Untitled photo", image: p.image })}
+        />
+      </Panel>
     </div>
   </>
 );
+
+export const TestimonialsPage = () => {
+  const projects = useResource("/me/projects/");
+  return (
+    <>
+      <PageHeader title="Testimonials" description="What clients and colleagues say about working with you." />
+      <ResourceManager
+        endpoint="/me/testimonials/"
+        fields={testimonialFields(projects.data)}
+        noun="Testimonial"
+        emptyIcon={MessageSquareQuote}
+        emptyText="Ask a past client or manager for two or three sentences, then paste them here."
+        sort={byOrder()}
+        describe={(t) => ({
+          title: t.name,
+          subtitle: `“${t.quote}”`,
+          image: t.photo ?? null,
+          meta: !t.is_active && <Tag>Hidden</Tag>,
+        })}
+      />
+    </>
+  );
+};
 
 export const SkillsPage = () => {
   const categories = useResource("/me/categories/");

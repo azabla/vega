@@ -1,12 +1,15 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { CommandPalette } from "@/components/CommandPalette";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
-import { useProfile } from "@/hooks/useProfile";
+import { PageMeta } from "@/components/PageMeta";
+import { useApplyAppearance } from "@/hooks/useAppearance";
 
-export const PortfolioLayout = ({ title, children }) => {
+/** Every public page: navbar, the owner's look, meta tags, palette and footer. */
+export const PortfolioLayout = ({ title, meta, children }) => {
   const { pathname, hash } = useLocation();
-  const { profile } = useProfile();
+  useApplyAppearance();
 
   // new page: start at the top, or at the #section the link points to
   useEffect(() => {
@@ -17,7 +20,7 @@ export const PortfolioLayout = ({ title, children }) => {
     // sections appear once their data loads; retry briefly
     let tries = 0;
     const timer = setInterval(() => {
-      const el = document.getElementById(hash.slice(1));
+      const el = document.getElementById(decodeURIComponent(hash.slice(1)));
       if (el || ++tries > 20) {
         el?.scrollIntoView();
         clearInterval(timer);
@@ -26,17 +29,21 @@ export const PortfolioLayout = ({ title, children }) => {
     return () => clearInterval(timer);
   }, [pathname, hash]);
 
-  useEffect(() => {
-    if (profile?.name) {
-      document.title = title ? `${title} · ${profile.name}` : `${profile.name} — ${profile.title}`;
-    }
-  }, [title, profile]);
-
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
+    <div className="relative flex min-h-dvh flex-col overflow-x-clip">
+      <a
+        href="#main"
+        className="sr-only z-[80] rounded-full bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+      >
+        Skip to content
+      </a>
+      <PageMeta title={title} {...meta} />
       <Navbar />
-      <main>{children}</main>
+      <main id="main" key={pathname} className="flex-1 animate-page-in">
+        {children}
+      </main>
       <Footer />
+      <CommandPalette />
     </div>
   );
 };

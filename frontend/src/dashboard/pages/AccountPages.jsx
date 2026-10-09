@@ -35,6 +35,7 @@ const steps = ({ profile, about, skills, projects, experience, education }) => [
     label: "Add a way to contact you",
     to: "/dashboard/profile",
   },
+  { done: Boolean(profile?.settings?.theme), label: "Choose your look", to: "/dashboard/appearance" },
 ];
 
 export const OverviewPage = () => {

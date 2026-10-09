@@ -1,18 +1,26 @@
-import { Link } from "react-router-dom";
+import { ArrowLeft, Search } from "lucide-react";
+import { PortfolioLayout } from "@/components/PortfolioLayout";
+import { Button } from "@/components/ui/button";
+import { usePortfolioPath } from "@/hooks/usePortfolioPath";
+import { openCommandPalette } from "@/lib/commandPalette";
 
 export const NotFound = () => {
-    return (
-        <div className="relative flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
-            <div aria-hidden className="bg-grid pointer-events-none absolute inset-0" />
-            <p className="relative font-mono text-sm text-primary">404</p>
-            <h1 className="relative text-4xl font-semibold tracking-tight">Page not found</h1>
-            <p className="relative text-muted-foreground">The page you're looking for doesn't exist.</p>
-            <Link
-                to="/"
-                className="relative mt-2 inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground"
-            >
-                Go home
-            </Link>
+  const base = usePortfolioPath();
+  return (
+    <PortfolioLayout title="Page not found">
+      <div className="container flex min-h-[70dvh] flex-col items-center justify-center pt-24 pb-16 text-center">
+        <p className="font-mono text-sm text-primary-ink">404</p>
+        <h1 className="font-heading mt-4 text-h1">This page went on a coffee break</h1>
+        <p className="mt-4 max-w-md text-muted-foreground">It may have moved, or it was never here. Try home, or search for what you need.</p>
+        <div className="mt-8 flex flex-wrap justify-center gap-2">
+          <Button href={base || "/"}>
+            <ArrowLeft /> Home
+          </Button>
+          <Button variant="secondary" onClick={openCommandPalette}>
+            <Search /> Search
+          </Button>
         </div>
-    );
+      </div>
+    </PortfolioLayout>
+  );
 };

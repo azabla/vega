@@ -74,6 +74,8 @@ JSON validated by `backend/portfolio/site_settings.py`, resolved with defaults b
 `theme`, `accent`, `font`, `texture`, `mode`, `hero` (bento | classic | minimal), `projects_layout` (showcase | grid | list),
 `sections` (home order + visibility), `pages` (switch whole pages off → nav link gone, route 404s).
 Read them with `useAppearance()`; never read `profile.settings` directly. Add `?customize` (or `?theme=midnight&font=modern`) to any URL to preview looks without saving.
+Owners edit them at `/dashboard/appearance`, which previews the unsaved draft in an iframe via `postMessage` (`PREVIEW_MESSAGE` in `useAppearance.js`); a new setting needs a control there too.
+Dashboard and login pages use `useAppLook()` (plain Minimal look, `data-app` on `<html>`), never the owner's look.
 
 ## Backend rules
 

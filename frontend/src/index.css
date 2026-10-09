@@ -1,68 +1,179 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* Fonts are self-hosted; the browser only downloads the faces a page uses */
 @import "@fontsource-variable/geist";
+@import "@fontsource/instrument-serif";
+@import "@fontsource/instrument-serif/400-italic.css";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/noto-sans-ethiopic";
 
 @custom-variant dark (&:is(.dark *));
 
-/* ---------- Design tokens ---------- */
+/* ---------- Theme presets ----------
+   <html data-theme data-accent data-font data-texture class="dark?"> picks the look.
+   Each preset sets only the base tokens; everything else is derived below.
+   --primary is the accent as a fill, --primary-ink the accent as text/icons (AA on
+   background and card). Keep THEMES in src/lib/settings.js in sync. */
 
-:root {
-  --radius: 0.875rem;
-
-  --background: oklch(0.985 0.003 247);
-  --foreground: oklch(0.21 0.025 265);
-  --card: oklch(1 0 0);
-  --card-foreground: var(--foreground);
-  --popover: var(--card);
-  --popover-foreground: var(--foreground);
-
-  --primary: oklch(0.56 0.12 175);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.006 247);
-  --secondary-foreground: var(--foreground);
-  --muted: oklch(0.955 0.006 247);
-  --muted-foreground: oklch(0.52 0.022 257);
-  --accent: oklch(0.95 0.03 175);
-  --accent-foreground: oklch(0.38 0.08 175);
-  --destructive: oklch(0.58 0.22 27);
-
-  --border: oklch(0.915 0.008 247);
-  --input: oklch(0.9 0.01 247);
-  --ring: oklch(0.56 0.12 175 / 45%);
-
-  --glow: oklch(0.7 0.13 175 / 18%);
-  --grid-line: oklch(0.21 0.025 265 / 5%);
+:root,
+[data-theme="warm"] {
+  --background: #f7f1e8;
+  --card: #fffaf3;
+  --foreground: #3b2a20;
+  --muted-foreground: #6e5747;
+  --border: #e5d8c6;
+  --primary: #a84b2a;
+  --primary-foreground: #fffaf3;
+  --primary-ink: #a03f1e;
+}
+.dark:root,
+.dark[data-theme="warm"] {
+  --background: #1c1512;
+  --card: #251c18;
+  --foreground: #f2e8dd;
+  --muted-foreground: #b8a596;
+  --border: #3a2d26;
+  --primary: #e58e68;
+  --primary-foreground: #1c1512;
+  --primary-ink: #e9a07f;
 }
 
-.dark {
-  --background: oklch(0.145 0.012 262);
-  --foreground: oklch(0.96 0.005 247);
-  --card: oklch(0.185 0.014 262);
+[data-theme="minimal"] {
+  --background: #ffffff;
+  --card: #ffffff;
+  --foreground: #111113;
+  --muted-foreground: #5f6068;
+  --border: #e6e6e9;
+  --primary: #2350d8;
+  --primary-foreground: #ffffff;
+  --primary-ink: #2350d8;
+}
+.dark[data-theme="minimal"] {
+  --background: #0b0b0d;
+  --card: #131316;
+  --foreground: #ededef;
+  --muted-foreground: #9d9da6;
+  --border: #26262b;
+  --primary: #7091ff;
+  --primary-foreground: #0b0b0d;
+  --primary-ink: #8aa4ff;
+}
+
+[data-theme="midnight"] {
+  --background: #f4f6fb;
+  --card: #ffffff;
+  --foreground: #0f1630;
+  --muted-foreground: #525d78;
+  --border: #dde2ee;
+  --primary: #c6f432;
+  --primary-foreground: #0f1630;
+  --primary-ink: #4a6e00;
+}
+.dark[data-theme="midnight"] {
+  --background: #0b1020;
+  --card: #121933;
+  --foreground: #e6e9f2;
+  --muted-foreground: #9aa3bd;
+  --border: #232c4a;
+  --primary: #c6f432;
+  --primary-foreground: #0b1020;
+  --primary-ink: #c6f432;
+}
+[data-theme="midnight"][data-accent="violet"] {
+  --primary: #6d3fe0;
+  --primary-foreground: #ffffff;
+  --primary-ink: #6d3fe0;
+}
+.dark[data-theme="midnight"][data-accent="violet"] {
+  --primary: #a78bfa;
+  --primary-foreground: #0b1020;
+  --primary-ink: #b4a0fb;
+}
+
+[data-theme="mono"] {
+  --background: #ffffff;
+  --card: #ffffff;
+  --foreground: #0a0a0a;
+  --muted-foreground: #5c5c5c;
+  --border: #e3e3e3;
+  --primary: #ff4f00;
+  --primary-foreground: #0a0a0a;
+  --primary-ink: #b23700;
+  --radius: 0.375rem;
+}
+.dark[data-theme="mono"] {
+  --background: #0a0a0a;
+  --card: #141414;
+  --foreground: #f5f5f5;
+  --muted-foreground: #a3a3a3;
+  --border: #2a2a2a;
+  --primary: #ff5a1f;
+  --primary-foreground: #0a0a0a;
+  --primary-ink: #ff6f3c;
+}
+
+/* Derived tokens: the same recipe for every preset */
+:root {
+  --radius: 0.875rem;
   --card-foreground: var(--foreground);
   --popover: var(--card);
   --popover-foreground: var(--foreground);
-
-  --primary: oklch(0.77 0.13 172);
-  --primary-foreground: oklch(0.18 0.03 180);
-  --secondary: oklch(0.23 0.014 262);
+  --secondary: color-mix(in oklab, var(--foreground) 5%, var(--background));
   --secondary-foreground: var(--foreground);
-  --muted: oklch(0.225 0.014 262);
-  --muted-foreground: oklch(0.7 0.018 257);
-  --accent: oklch(0.3 0.05 175);
-  --accent-foreground: oklch(0.85 0.1 172);
-  --destructive: oklch(0.68 0.19 25);
+  --muted: color-mix(in oklab, var(--foreground) 6%, var(--background));
+  --accent: color-mix(in oklab, var(--primary) 12%, var(--card));
+  --accent-foreground: var(--foreground);
+  --input: color-mix(in oklab, var(--foreground) 22%, var(--background));
+  --ring: color-mix(in oklab, var(--primary-ink) 55%, transparent);
+  --glow: color-mix(in oklab, var(--primary) 16%, transparent);
+  --grid-line: color-mix(in oklab, var(--foreground) 6%, transparent);
 
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.77 0.13 172 / 50%);
+  --destructive: #b42318;
+  --success: #1c7c45;
+  --warning: #9a5b00;
+}
+.dark {
+  --destructive: #ff8a7a;
+  --success: #5fd38d;
+  --warning: #f5b84a;
+}
+[data-theme="mono"] {
+  --radius: 0.375rem;
+}
 
-  --glow: oklch(0.7 0.13 175 / 14%);
-  --grid-line: oklch(1 0 0 / 4.5%);
+/* Font pairings: heading face + body face. Noto Ethiopic covers Amharic. */
+:root {
+  --font-heading-family: "Instrument Serif", "Noto Sans Ethiopic Variable", serif;
+  --font-body-family: "Geist Variable", "Noto Sans Ethiopic Variable", ui-sans-serif, system-ui, sans-serif;
+  --heading-weight: 400;
+  --heading-tracking: -0.01em;
+}
+[data-font="modern"] {
+  --font-heading-family: "Space Grotesk Variable", "Noto Sans Ethiopic Variable", sans-serif;
+  --font-body-family: "Inter Variable", "Noto Sans Ethiopic Variable", ui-sans-serif, system-ui, sans-serif;
+  --heading-weight: 600;
+  --heading-tracking: -0.035em;
+}
+[data-font="classic"] {
+  --font-heading-family: "Fraunces Variable", "Noto Sans Ethiopic Variable", serif;
+  --font-body-family: "DM Sans Variable", "Noto Sans Ethiopic Variable", ui-sans-serif, system-ui, sans-serif;
+  --heading-weight: 500;
+  --heading-tracking: -0.02em;
+}
+/* The dashboard and login pages always use the plain app font */
+[data-app] {
+  --font-heading-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-body-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --heading-weight: 600;
+  --heading-tracking: -0.02em;
 }
 
 @theme inline {
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-body-family);
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
 
   --color-background: var(--background);
@@ -80,6 +191,9 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-primary-ink: var(--primary-ink);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -91,6 +205,26 @@
   --radius-2xl: calc(var(--radius) + 8px);
 
   --animate-fade-up: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-page-in: page-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pulse-dot: pulse-dot 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes pulse-dot {
+    75%,
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+  }
 
   @keyframes fade-up {
     from {
@@ -122,11 +256,35 @@
   }
 
   ::selection {
-    @apply bg-primary/20;
+    background: color-mix(in oklab, var(--primary) 30%, transparent);
+  }
+
+  /* Background textures (data-texture), behind everything and never clickable */
+  [data-texture="grid"] body::before,
+  [data-texture="noise"] body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  [data-texture="grid"] body::before {
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 100%);
+  }
+  [data-texture="noise"] body::before {
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .dark[data-texture="noise"] body::before {
+    opacity: 0.07;
   }
 
   *:focus-visible {
-    @apply outline-2 outline-offset-2 outline-primary;
+    @apply outline-2 outline-offset-2 outline-primary-ink;
   }
 }
 
@@ -136,7 +294,11 @@
   margin-inline: auto;
   width: 100%;
   max-width: 72rem;
-  padding-inline: 1.25rem;
+  padding-inline: 1rem;
+
+  @media (width >= 640px) {
+    padding-inline: 1.5rem;
+  }
 
   @media (width >= 768px) {
     padding-inline: 2rem;
@@ -145,11 +307,65 @@
 
 /* Hairline-bordered surface used for every card */
 @utility surface {
-  @apply rounded-2xl border bg-card shadow-[0_1px_2px_oklch(0_0_0/4%)];
+  @apply rounded-2xl border bg-card;
+}
+
+@utility prose-width {
+  max-width: 42rem;
+}
+
+/* Display face for headings, with the pairing's weight and tracking */
+@utility font-heading {
+  font-family: var(--font-heading-family);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
+  text-wrap: balance;
+}
+
+/* Fluid type scale */
+@utility text-display {
+  font-size: clamp(2.5rem, 1.6rem + 4.6vw, 5.25rem);
+  line-height: 1.02;
+}
+@utility text-h1 {
+  font-size: clamp(2.25rem, 1.7rem + 2.8vw, 3.75rem);
+  line-height: 1.05;
+}
+@utility text-h2 {
+  font-size: clamp(1.75rem, 1.4rem + 1.8vw, 2.75rem);
+  line-height: 1.1;
+}
+
+/* Small mono label above headings */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@utility link-underline {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+  transition: text-decoration-color 0.2s;
+  &:hover {
+    text-decoration-color: currentColor;
+  }
 }
 
 @utility surface-hover {
-  @apply transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_12px_32px_-12px_oklch(0_0_0/18%)];
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s,
+    box-shadow 0.3s;
+  &:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--primary-ink) 35%, var(--border));
+    box-shadow: 0 18px 40px -22px color-mix(in oklab, var(--foreground) 30%, transparent), 0 0 0 4px var(--glow);
+  }
 }
 
 /* Faint grid that fades out toward the edges */
@@ -163,7 +379,7 @@
 
 @utility text-gradient {
   @apply bg-clip-text text-transparent;
-  background-image: linear-gradient(110deg, var(--primary), oklch(0.62 0.15 230));
+  background-image: linear-gradient(110deg, var(--primary-ink), var(--foreground));
 }
 
 /* Scroll-reveal (see components/ui/Reveal.jsx) */
@@ -183,9 +399,23 @@
   html {
     scroll-behavior: auto;
   }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
   .reveal {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

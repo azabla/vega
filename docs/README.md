@@ -13,7 +13,9 @@ One document per piece of work, in the order it was done.
 | 06 | [Redesign & seed data](06-design-and-seed.md) | Design system, components and skeletons; `seed_portfolio` with my real projects |
 | 07 | [Deploying to the VPS](07-deployment-vps.md) | Step-by-step Docker deployment next to the existing Laravel site: `docker-compose.prod.yml`, host Nginx + HTTPS, updates, backups |
 | 08 | [Owner dashboard](08-dashboard.md) | Login/signup and mobile-first editing of the whole portfolio at `/dashboard` |
+| 08b | [UI design system](08-ui-design-system.md) | "The Living Résumé": themes, pages, components, owner look settings |
 | 09 | [CI/CD](09-ci-cd.md) | GitHub Actions: backend tests, lint, build and image checks on every push/PR; auto-deploy of `main` to the VPS |
+| 10 | [Appearance & UI polish](10-appearance-and-ui-polish.md) | Design system fully wired in; owners pick theme, fonts, layouts, sections and pages at `/dashboard/appearance` with a live preview |
 
 ## Quick start
 

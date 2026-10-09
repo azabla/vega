@@ -53,7 +53,13 @@ const media = window.matchMedia("(prefers-color-scheme: dark)");
 const fromUrl = previewFromUrl();
 const savedPreview = parse(storage.get(PREVIEW_KEY, sessionStorage));
 
+// The dashboard's Appearance page embeds the site in an iframe and posts unsaved
+// settings here, so the preview shows the draft before it's saved.
+export const PREVIEW_MESSAGE = "vega:appearance-draft";
+const embedded = window.parent !== window;
+
 let state = {
+  draft: null,
   mode: storage.get(MODE_KEY),
   preview: { ...savedPreview, ...fromUrl.preview },
   systemDark: media.matches,
@@ -72,6 +78,12 @@ const subscribe = (listener) => {
   return () => listeners.delete(listener);
 };
 media.addEventListener("change", (e) => update({ systemDark: e.matches }));
+if (embedded) {
+  window.addEventListener("message", (e) => {
+    if (e.origin !== window.location.origin || e.data?.type !== PREVIEW_MESSAGE) return;
+    update({ draft: e.data.settings ?? null, previewDark: e.data.dark });
+  });
+}
 
 export const setMode = (mode) => {
   storage.set(MODE_KEY, mode);
@@ -88,12 +100,15 @@ export const setPreview = (patch) => {
 export const useAppearance = () => {
   const snap = useSyncExternalStore(subscribe, () => state);
   const { profile, loading } = useProfile();
-  const owner = resolveSettings(profile?.settings);
+  const owner = resolveSettings(snap.draft ?? profile?.settings);
   const settings = { ...owner, ...snap.preview };
   // a previewed theme brings its own default mode (Midnight is dark-first)
   const defaultMode = snap.preview.theme ? (THEME_MODE[snap.preview.theme] ?? "system") : owner.mode;
   const mode = snap.mode ?? defaultMode;
-  const isDark = mode === "dark" || (mode === "system" && snap.systemDark);
+  const isDark =
+    typeof snap.previewDark === "boolean"
+      ? snap.previewDark
+      : mode === "dark" || (mode === "system" && snap.systemDark);
   const texture = settings.texture === "default" ? THEME_TEXTURE[settings.theme] : settings.texture;
 
   return {
@@ -132,7 +147,26 @@ export const useApplyAppearance = () => {
     root.dataset.accent = settings.accent;
     root.dataset.font = settings.font;
     root.dataset.texture = texture;
+    root.removeAttribute("data-app");
     root.classList.toggle("dark", isDark);
-    storage.set(lookKey(username), ownerLook);
+    // a dashboard preview must not overwrite the cached saved look
+    if (!embedded) storage.set(lookKey(username), ownerLook);
   }, [ready, username, settings.theme, settings.accent, settings.font, texture, isDark, ownerLook]);
+};
+
+/** Dashboard and login pages: one plain look, with the visitor's light/dark choice. */
+export const useAppLook = () => {
+  const snap = useSyncExternalStore(subscribe, () => state);
+  const mode = snap.mode ?? "system";
+  const isDark = mode === "dark" || (mode === "system" && snap.systemDark);
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-app", "");
+    root.dataset.theme = "minimal";
+    delete root.dataset.accent;
+    delete root.dataset.font;
+    delete root.dataset.texture;
+    root.classList.toggle("dark", isDark);
+  }, [isDark]);
+  return { isDark, toggleDark: () => setMode(isDark ? "light" : "dark") };
 };
