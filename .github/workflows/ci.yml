@@ -21,7 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:17-alpine  # same as production
+        # same as production; via Google's Docker Hub mirror because service
+        # images are pulled before any step runs (see the images job)
+        image: mirror.gcr.io/library/postgres:17-alpine
         env:
           POSTGRES_DB: vega
           POSTGRES_USER: vega
