@@ -1,0 +1,252 @@
+{
+  "_note": "Fictional sample portfolio for judging layouts and themes. Not a real person; never seed it into a real user's account.",
+  "profile": {
+    "name": "Hana Girma",
+    "title": "Product Engineer",
+    "bio": "I design and build calm, fast web products for people who are busy doing their real job: clinic staff, school administrators and small-shop owners across East Africa.",
+    "email": "hello@example.com",
+    "location": "Addis Ababa, Ethiopia",
+    "github": "https://github.com/",
+    "linkedin": "https://www.linkedin.com/",
+    "telegram": "https://t.me/",
+    "website": "https://example.com",
+    "availability": "busy",
+    "availability_note": "Booked until March",
+    "timezone": "Africa/Addis_Ababa",
+    "currently_learning": "Rust for WebAssembly, and Amharic typography",
+    "booking_url": "https://cal.com/",
+    "settings": {"theme": "warm", "font": "editorial", "hero": "bento", "projects_layout": "showcase"}
+  },
+  "about": {
+    "heading": "About me",
+    "title": "I build software that respects people's time",
+    "experience_years": 6,
+    "description": "I grew up translating forms for my grandmother at the kebele office, which is probably where my obsession with clear interfaces started. Today I work across the stack — product discovery, interface design, React front ends and Django back ends — and I'm happiest when a feature ships and nobody needs a manual to use it.",
+    "description_2": "Over six years I've shipped booking systems for clinics, a payments dashboard used by 1,200 merchants, and an offline-first attendance app for rural schools. I care about performance on cheap Android phones, bilingual (Amharic/English) interfaces, and leaving codebases better documented than I found them.",
+    "interests": "Long-distance running around Entoto\nEthiopian jazz records (Mulatu Astatke on repeat)\nTeaching a weekend coding class for girls\nHand-lettering Ge'ez script\nTesting every macchiato in Piassa",
+    "services": [
+      {"title": "Product engineering", "description": "From a fuzzy idea to a shipped, measured feature: discovery, prototypes, build and iteration."},
+      {"title": "Front-end architecture", "description": "Design systems, accessible components and fast React apps that work on low-end devices."},
+      {"title": "APIs & back ends", "description": "Django and PostgreSQL services with clear contracts, tests and boring, reliable deployments."},
+      {"title": "Bilingual interfaces", "description": "Amharic and English UI that reads naturally in both, including Ethiopic typography and dates."}
+    ],
+    "principles": [
+      {"title": "Ship small, ship often", "description": "A working slice in users' hands beats a perfect plan. I aim for something demoable every week."},
+      {"title": "Design for the slowest phone", "description": "If it's fast on a three-year-old Android on 3G, it's fast everywhere."},
+      {"title": "Write it down", "description": "Decisions, trade-offs and how-tos live in the repo, so the team doesn't depend on my memory."},
+      {"title": "Measure the outcome", "description": "Every feature starts with the number it should move, and I check it after launch."}
+    ]
+  },
+  "categories": [
+    {"name": "Languages", "skills": [{"name": "TypeScript", "years": 5}, {"name": "Python", "years": 6}, {"name": "SQL", "years": 6}, {"name": "Rust", "years": 1}]},
+    {"name": "Frameworks", "skills": [{"name": "React", "years": 5}, {"name": "Next.js", "years": 3}, {"name": "Django", "years": 5}, {"name": "Tailwind CSS", "years": 4}, {"name": "React Native", "years": 2}]},
+    {"name": "Tools", "skills": [{"name": "PostgreSQL", "years": 6}, {"name": "Redis", "years": 3}, {"name": "Docker", "years": 4}, {"name": "Figma", "years": 5}, {"name": "GitHub Actions", "years": 3}, {"name": "Sentry", "years": 3}]},
+    {"name": "Soft skills", "skills": ["Product discovery", "Technical writing", "Mentoring", "Workshop facilitation"]}
+  ],
+  "experience": [
+    {
+      "company": "Tena Health",
+      "position": "Lead Product Engineer",
+      "employment_type": "full_time",
+      "location": "Addis Ababa · Hybrid",
+      "start_date": "2023-06-01",
+      "current": true,
+      "description": "• Lead a team of four building scheduling and patient-records tools for 40+ private clinics.\n• Cut the booking flow from 7 steps to 3, raising completed bookings by 38%.\n• Introduced a shared design system and Storybook, halving the time to build new screens.\n• Run weekly user sessions with reception staff and turn findings into the roadmap.",
+      "skills": ["React", "TypeScript", "Django", "PostgreSQL", "Figma", "Product discovery", "Mentoring"]
+    },
+    {
+      "company": "Birr Pay",
+      "position": "Full-stack Engineer",
+      "employment_type": "full_time",
+      "location": "Addis Ababa",
+      "start_date": "2021-02-01",
+      "end_date": "2023-05-31",
+      "description": "• Built the merchant dashboard used by 1,200 shops to track payouts and refunds.\n• Designed the reconciliation service that matches bank statements to transactions nightly.\n• Reduced dashboard load time from 4.1s to 1.2s on mid-range Android phones.",
+      "skills": ["React", "Next.js", "Python", "Django", "PostgreSQL", "Redis", "Docker"]
+    },
+    {
+      "company": "Sheba Digital — Software Development and Digital Transformation Consultancy for the Public Sector",
+      "position": "Junior Developer",
+      "employment_type": "contract",
+      "location": "Bahir Dar",
+      "start_date": "2019-09-01",
+      "end_date": "2021-01-31",
+      "description": "Built internal tools and public information sites for regional government offices, including a permit-tracking system used in 12 woredas.",
+      "skills": ["Python", "Django", "SQL"]
+    },
+    {
+      "company": "Girls Can Code Addis",
+      "position": "Volunteer Instructor",
+      "employment_type": "volunteer",
+      "location": "Addis Ababa",
+      "start_date": "2022-01-01",
+      "current": true,
+      "description": "• Teach a 10-week weekend web-development course twice a year.\n• Wrote the bilingual curriculum now used by three partner schools.",
+      "skills": ["Mentoring", "Workshop facilitation", "Technical writing"]
+    },
+    {
+      "company": "iCog Labs",
+      "position": "Software Engineering Intern",
+      "employment_type": "internship",
+      "location": "Addis Ababa",
+      "start_date": "2019-02-01",
+      "end_date": "2019-07-31",
+      "description": "Built data-labelling tools for an Amharic speech dataset.",
+      "skills": ["Python"]
+    }
+  ],
+  "education": [
+    {"institution": "Addis Ababa Institute of Technology", "level": "bachelor", "field_of_study": "Software Engineering", "start_date": "2014-09-01", "end_date": "2019-07-31", "grade": "CGPA 3.72 / 4.00", "description": "Final project: offline-first attendance app for rural schools. Exit exam: 81%."},
+    {"institution": "Google Developer Student Clubs", "level": "certificate", "field_of_study": "Mobile Web Specialist track", "start_date": "2018-01-01", "end_date": "2018-12-31"}
+  ],
+  "languages": [
+    {"name": "Amharic", "proficiency": "native"},
+    {"name": "English", "proficiency": "fluent"},
+    {"name": "Afaan Oromo", "proficiency": "intermediate"}
+  ],
+  "certificates": [
+    {"name": "Professional Scrum Master I", "issuer": "Scrum.org", "issue_date": "2022-04-01", "skills": ["Product discovery"]},
+    {"name": "Web Accessibility Specialist", "issuer": "IAAP", "issue_date": "2023-10-01", "skills": ["React"]}
+  ],
+  "projects": [
+    {
+      "title": "Tena Booking",
+      "slug": "tena-booking",
+      "category": "SaaS",
+      "summary": "Appointment booking for private clinics, rebuilt around how reception staff actually work.",
+      "overview": "Tena Booking is the scheduling core of Tena Health's clinic suite. Patients book by phone, Telegram or the web; reception staff manage a shared calendar across doctors, rooms and equipment.",
+      "problem": "Clinics were losing a fifth of bookings to double-booked rooms and no-shows. The old flow took seven screens, worked badly on the cheap tablets at reception desks, and had no Amharic interface.",
+      "results": "Booking time at the desk dropped from about two minutes to under forty seconds, and SMS reminders cut no-shows by almost a third within the first quarter.",
+      "status": "completed",
+      "role": "Lead product engineer",
+      "team_size": 4,
+      "started_on": "2023-07-01",
+      "ended_on": "2024-03-31",
+      "live_url": "https://example.com",
+      "featured": true,
+      "order": 1,
+      "skills": ["React", "TypeScript", "Django", "PostgreSQL", "Redis", "Figma", "Product discovery"],
+      "metrics": [
+        {"value": "+38%", "label": "completed bookings", "description": "after the 3-step flow shipped"},
+        {"value": "-31%", "label": "no-shows", "description": "with SMS and Telegram reminders"},
+        {"value": "40s", "label": "average booking time", "description": "down from about 2 minutes"},
+        {"value": "40+", "label": "clinics live", "description": "across Addis Ababa and Hawassa"}
+      ],
+      "features": [
+        {"title": "Three-step booking", "description": "Pick a service, pick a time, confirm. Doctor and room are assigned automatically."},
+        {"title": "Resource-aware calendar", "description": "Doctors, rooms and equipment are booked together, so double-booking is impossible."},
+        {"title": "Bilingual reminders", "description": "SMS and Telegram reminders in Amharic or English, 24 hours and 2 hours before."},
+        {"title": "Works on reception tablets", "description": "Lightweight UI that stays fast on low-end Android tablets."}
+      ],
+      "architecture": {"description": "A Django API with PostgreSQL exclusion constraints guaranteeing no overlapping bookings per resource. Reminders run as Redis-backed background jobs. The React front end is code-split per role (reception, doctor, admin)."},
+      "challenges": [
+        {"problem": "Double bookings when two receptionists booked the same slot at once.", "solution": "Moved the rule into the database with an exclusion constraint on (resource, time range), and showed a friendly conflict message with the next free slots."},
+        {"problem": "Staff didn't trust the new calendar.", "solution": "Ran the old and new systems side by side for two weeks with a daily diff report, until the numbers matched."}
+      ],
+      "lessons": [
+        {"title": "Sit at the reception desk", "description": "Two days watching receptionists taught us more than a month of interviews."}
+      ]
+    },
+    {
+      "title": "Birr Pay Merchant Dashboard",
+      "slug": "birr-pay-dashboard",
+      "category": "Fintech",
+      "summary": "Payouts, refunds and reconciliation for 1,200 merchants, fast on a mid-range phone.",
+      "overview": "The merchant-facing dashboard for Birr Pay: daily payouts, refunds, disputes and downloadable statements.",
+      "problem": "Merchants called support to ask \"where is my money?\" because the old dashboard took over four seconds to load and showed raw transaction codes.",
+      "results": "Support calls about payouts fell by half, and the dashboard became the most-used page in the product.",
+      "status": "completed",
+      "role": "Full-stack engineer",
+      "team_size": 6,
+      "started_on": "2021-03-01",
+      "ended_on": "2022-11-30",
+      "featured": true,
+      "order": 2,
+      "skills": ["Next.js", "React", "TypeScript", "Python", "Django", "PostgreSQL", "Redis", "Docker", "Sentry"],
+      "metrics": [
+        {"value": "1.2s", "label": "load time on 3G", "description": "down from 4.1s"},
+        {"value": "-52%", "label": "payout support calls"},
+        {"value": "1,200", "label": "active merchants"}
+      ],
+      "features": [
+        {"title": "Plain-language payouts", "description": "Every payout shows when, how much and why — no transaction codes."},
+        {"title": "Nightly reconciliation", "description": "Bank statements are matched to transactions automatically, with mismatches flagged for finance."}
+      ],
+      "challenges": [
+        {"problem": "Statements from three banks used three different formats.", "solution": "Wrote a small parser per bank behind one interface, with fixture files from real (anonymised) statements as tests."}
+      ]
+    },
+    {
+      "title": "Kuteba — Offline-first School Attendance for Rural Ethiopia",
+      "slug": "kuteba-attendance",
+      "category": "Mobile",
+      "summary": "Attendance and reporting app that works for weeks without a connection and syncs when it can.",
+      "overview": "Teachers take attendance on a shared Android phone; data syncs to the regional education office whenever there's signal.",
+      "problem": "Paper registers took weeks to reach the woreda office, so dropouts were noticed months too late.",
+      "results": "Piloted in 18 schools; the office now sees attendance within a day and follows up on absences in the same week.",
+      "status": "in_progress",
+      "role": "Solo developer",
+      "team_size": 1,
+      "started_on": "2019-01-01",
+      "github_url": "https://github.com/",
+      "featured": true,
+      "order": 3,
+      "skills": ["React Native", "TypeScript", "Django", "PostgreSQL"],
+      "metrics": [
+        {"value": "18", "label": "pilot schools"},
+        {"value": "1 day", "label": "to reach the office", "description": "was 3–5 weeks on paper"}
+      ],
+      "features": [
+        {"title": "Weeks offline", "description": "Everything is stored locally and synced with conflict-free merge when back online."},
+        {"title": "Ge'ez calendar", "description": "Dates are shown in the Ethiopian calendar, as teachers expect."}
+      ]
+    },
+    {
+      "title": "Merkato Price Watch",
+      "slug": "merkato-price-watch",
+      "category": "Data",
+      "summary": "Crowd-sourced daily prices for staple foods in Addis Ababa's markets, sent over Telegram.",
+      "overview": "A Telegram bot where volunteers report prices, and a public page that charts them.",
+      "status": "archived",
+      "role": "Side project",
+      "started_on": "2020-05-01",
+      "ended_on": "2021-06-30",
+      "github_url": "https://github.com/",
+      "order": 4,
+      "skills": ["Python", "PostgreSQL", "Docker"]
+    },
+    {
+      "title": "Fidel Design System",
+      "slug": "fidel-design-system",
+      "category": "Open source",
+      "summary": "Accessible React components with first-class Amharic typography.",
+      "overview": "An open-source component library with Ethiopic-friendly line heights, number formatting and an Ethiopian date picker.",
+      "status": "in_progress",
+      "role": "Maintainer",
+      "started_on": "2024-01-01",
+      "github_url": "https://github.com/",
+      "live_url": "https://example.com",
+      "order": 5,
+      "skills": ["React", "TypeScript", "Tailwind CSS", "Figma", "Technical writing", "GitHub Actions", "Next.js", "Docker", "Sentry", "Python", "SQL", "Mentoring"]
+    },
+    {
+      "title": "Permit Tracker",
+      "slug": "permit-tracker",
+      "category": "Government",
+      "summary": "Lets residents follow a building-permit application from submission to approval.",
+      "overview": "A public tracker with SMS updates, used in 12 woredas.",
+      "status": "completed",
+      "role": "Junior developer",
+      "team_size": 3,
+      "started_on": "2020-01-01",
+      "ended_on": "2020-12-31",
+      "order": 6,
+      "skills": ["Django", "SQL"]
+    }
+  ],
+  "testimonials": [
+    {"name": "Dr. Meron Alemu", "role": "Medical Director", "company": "Kidus Clinic", "quote": "Hana spent two days at our front desk before writing a line of code. The booking system she built is the first software our receptionists actually asked for more of.", "project": "tena-booking"},
+    {"name": "Samuel Bekele", "role": "CTO", "company": "Birr Pay", "quote": "She has rare range: she'll run a merchant interview in the morning and fix a reconciliation edge case in the afternoon. Our dashboard went from our biggest support cost to our most-loved page.", "project": "birr-pay-dashboard"},
+    {"name": "Liya Tadesse", "role": "Student, Girls Can Code Addis", "company": "", "quote": "Hana explained things in Amharic when English got too hard and never made anyone feel slow. I built my first website in her class."}
+  ]
+}
