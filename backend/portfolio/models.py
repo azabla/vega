@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import F
 
 from .site_settings import validate_settings
 from .utils import OwnerUploadTo, generate_unique_slug
@@ -404,7 +405,8 @@ class Education(models.Model):
 
     class Meta:
         verbose_name_plural = "Education"
-        ordering = ["order", "-start_date"]
+        # Undated entries last on every database (Postgres sorts NULL first by default)
+        ordering = ["order", F("start_date").desc(nulls_last=True)]
 
     def __str__(self):
         return f"{self.get_level_display()} — {self.institution}"
@@ -446,7 +448,7 @@ class Certificate(models.Model):
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ["order", "-issue_date"]
+        ordering = ["order", F("issue_date").desc(nulls_last=True)]
 
     def __str__(self):
         return f"{self.name} ({self.issuer})"
