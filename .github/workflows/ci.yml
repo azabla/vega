@@ -78,6 +78,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      # Anonymous Docker Hub pulls from shared runners hit 429 rate limits.
+      # Pull base images through Google's public mirror; Docker falls back to
+      # Docker Hub for anything the mirror doesn't have. CI only.
+      - name: Use a Docker Hub mirror
+        run: |
+          echo '{"registry-mirrors": ["https://mirror.gcr.io"]}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+          docker info --format '{{.RegistryConfig.Mirrors}}'
       - run: docker build -t vega-backend:ci backend
       - run: >-
           docker build -t vega-web:ci --target prod
