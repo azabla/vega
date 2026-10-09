@@ -93,7 +93,7 @@ Switching a page off in `settings.pages` removes its nav link, and the route ret
 ## Known limits
 
 - **Open Graph tags are set in the browser.** Crawlers that don't run JavaScript (most link-preview bots) only see `index.html`. Proper per-project share images need the server to inject meta tags, which is a backend/nginx task.
-- **No dashboard yet.** Settings, availability, testimonials and metrics are edited in the Django admin or through the `/api/me/` endpoints.
+- ~~No dashboard yet.~~ Settings, availability, testimonials and metrics are now edited in the dashboard; see [10](10-appearance-and-ui-polish.md).
 - **The blog is not built.** It's left out by decision.
 
 ## Checking the UI

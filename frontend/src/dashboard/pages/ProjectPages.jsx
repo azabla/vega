@@ -1,4 +1,4 @@
-import { ArrowLeft, ExternalLink, FileStack, FolderKanban, Images, Lightbulb, Puzzle, Workflow } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileStack, FolderKanban, Gauge, Images, Lightbulb, Puzzle, Workflow } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/auth/context";
 import { buttonVariants } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   galleryFields,
   labelOf,
   lessonFields,
+  metricFields,
   projectFields,
 } from "@/dashboard/fields";
 import { useResource } from "@/dashboard/lib/useResource";
@@ -80,6 +81,16 @@ const PROJECT_PARTS = [
     noun: "Challenge",
     icon: Workflow,
     describe: (c) => ({ title: c.problem, subtitle: c.solution }),
+  },
+  {
+    key: "metrics",
+    title: "Results in numbers",
+    description: "Big numbers on the case study, e.g. “+38% completed bookings”.",
+    endpoint: "/me/project-metrics/",
+    fields: metricFields,
+    noun: "Metric",
+    icon: Gauge,
+    describe: (m) => ({ title: `${m.value} ${m.label}`, subtitle: m.description }),
   },
   {
     key: "lessons",

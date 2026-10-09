@@ -7,13 +7,39 @@
     <meta name="description" content="Portfolio — projects, skills and experience." />
     <title>Portfolio</title>
     <script>
-      // apply the saved (or system) theme before first paint — no flash
-      try {
-        var t = localStorage.getItem("theme");
-        if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-          document.documentElement.classList.add("dark");
+      // Apply the look before first paint, so there's no flash of the wrong theme.
+      // Mirrors src/hooks/useAppearance.js: owner's cached look, then this tab's
+      // preview, then the visitor's light/dark choice.
+      (function () {
+        var root = document.documentElement;
+        var path = location.pathname;
+        var get = function (store, key) {
+          try { return store.getItem(key); } catch (e) { return null; }
+        };
+        var parse = function (json) {
+          try { return JSON.parse(json) || {}; } catch (e) { return {}; }
+        };
+        var mode = get(localStorage, "theme");
+        var look = {};
+        if (/^\/(dashboard|login|register)(\/|$)/.test(path)) {
+          root.setAttribute("data-app", "");
+          root.dataset.theme = "minimal";
+        } else {
+          var match = path.match(/^\/u\/([^/]+)/);
+          var user = match ? decodeURIComponent(match[1]) : "%VITE_PORTFOLIO_USERNAME%";
+          look = parse(get(localStorage, "look:" + String(user).toLowerCase()));
+          var preview = parse(get(sessionStorage, "look-preview"));
+          for (var k in preview) look[k] = preview[k];
+          if (look.theme) root.dataset.theme = look.theme;
+          if (look.accent) root.dataset.accent = look.accent;
+          if (look.font) root.dataset.font = look.font;
+          if (look.texture) root.dataset.texture = look.texture;
         }
-      } catch (e) {}
+        mode = mode || look.mode || "system";
+        if (mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches)) {
+          root.classList.add("dark");
+        }
+      })();
     </script>
   </head>
   <body>

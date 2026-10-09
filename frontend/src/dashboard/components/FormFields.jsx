@@ -128,15 +128,25 @@ const FieldControl = ({ field, value, onChange, common }) => {
       );
     default:
       return (
-        <Input
-          {...common}
-          type={field.type ?? "text"}
-          value={value ?? ""}
-          placeholder={field.placeholder}
-          maxLength={field.maxLength}
-          autoComplete={field.autoComplete}
-          onChange={(e) => onChange(e.target.value)}
-        />
+        <>
+          <Input
+            {...common}
+            type={field.type ?? "text"}
+            value={value ?? ""}
+            placeholder={field.placeholder}
+            maxLength={field.maxLength}
+            autoComplete={field.autoComplete}
+            list={field.suggestions ? `${common.id}-list` : undefined}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          {field.suggestions && (
+            <datalist id={`${common.id}-list`}>
+              {field.suggestions.map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+          )}
+        </>
       );
   }
 };

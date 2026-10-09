@@ -1,22 +1,39 @@
-import { AboutSection } from "../components/AboutSection";
-import { ContactSection } from "../components/ContactSection";
-import { EducationSection } from "../components/EducationSection";
-import { ExperienceSection } from "../components/ExperienceSection";
-import { HeroSection } from "../components/hero/HeroSection";
-import { PortfolioLayout } from "../components/PortfolioLayout";
-import { ProjectsSection } from "../components/ProjectsSection";
-import { SkillsSection } from "../components/SkillsSection";
+import { PortfolioLayout } from "@/components/PortfolioLayout";
+import { AboutTeaser } from "@/components/home/AboutTeaser";
+import { ContactCTA } from "@/components/home/ContactCTA";
+import { ExperiencePreview } from "@/components/home/ExperiencePreview";
+import { FeaturedProjects } from "@/components/home/FeaturedProjects";
+import { Hero } from "@/components/home/Hero";
+import { SkillsPreview } from "@/components/home/SkillsPreview";
+import { Testimonials } from "@/components/home/Testimonials";
+import { useAppearance } from "@/hooks/useAppearance";
+import { useProfile } from "@/hooks/useProfile";
+import { personJsonLd } from "@/lib/profile";
 
+const SECTIONS = {
+  about: AboutTeaser,
+  projects: FeaturedProjects,
+  experience: ExperiencePreview,
+  skills: SkillsPreview,
+  testimonials: Testimonials,
+  contact: ContactCTA,
+};
+
+/** Hero, then the sections in the owner's order. Empty sections hide themselves. */
 export const Home = () => {
-    return (
-        <PortfolioLayout>
-            <HeroSection />
-            <AboutSection />
-            <SkillsSection />
-            <ExperienceSection />
-            <ProjectsSection />
-            <EducationSection />
-            <ContactSection />
-        </PortfolioLayout>
-    );
+  const { settings, ready } = useAppearance();
+  const { profile } = useProfile();
+
+  return (
+    <PortfolioLayout meta={{ type: "profile", jsonLd: personJsonLd(profile) }}>
+      <Hero />
+      {ready &&
+        settings.sections
+          .filter((s) => s.visible && SECTIONS[s.id])
+          .map((s) => {
+            const Component = SECTIONS[s.id];
+            return <Component key={s.id} />;
+          })}
+    </PortfolioLayout>
+  );
 };

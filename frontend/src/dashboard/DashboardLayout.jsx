@@ -10,6 +10,8 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageSquareQuote,
+  Palette,
   Settings,
   Sparkles,
   UserRound,
@@ -19,10 +21,12 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/auth/context";
+import { useAppLook } from "@/hooks/useAppearance";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, end: true },
+  { to: "/dashboard/appearance", label: "Appearance", icon: Palette },
   { heading: "Profile" },
   { to: "/dashboard/profile", label: "Profile", icon: UserRound },
   { to: "/dashboard/about", label: "About & services", icon: Info },
@@ -33,6 +37,7 @@ const NAV = [
   { to: "/dashboard/education", label: "Education", icon: GraduationCap },
   { to: "/dashboard/certificates", label: "Certificates", icon: Award },
   { to: "/dashboard/languages", label: "Languages", icon: Languages },
+  { to: "/dashboard/testimonials", label: "Testimonials", icon: MessageSquareQuote },
   { heading: "Account" },
   { to: "/dashboard/messages", label: "Messages", icon: Inbox },
   { to: "/dashboard/account", label: "Settings", icon: Settings },
@@ -109,6 +114,8 @@ export const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  useAppLook();
+  const wide = location.pathname.startsWith("/dashboard/appearance");
 
   // Each page starts at the top
   useEffect(() => {
@@ -173,7 +180,7 @@ export const DashboardLayout = () => {
       </aside>
 
       <main className="md:pl-64">
-        <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
+        <div className={cn("mx-auto w-full px-4 py-6 sm:px-6 sm:py-10", wide ? "max-w-7xl" : "max-w-3xl")}>
           <Outlet />
         </div>
       </main>

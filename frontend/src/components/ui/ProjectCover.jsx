@@ -1,46 +1,42 @@
+import { Img } from "@/components/ui/Img";
+import { hashOf, initialsOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-// Stable hue per project, kept in the teal → blue → violet range so covers match the theme
-const hueFor = (text) => {
-  let hash = 0;
-  for (const ch of text) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-  return 165 + (hash % 125);
-};
-
-const initials = (title) =>
-  title
-    .split(/[\s—-]+/)
-    .filter((w) => /^[A-Za-z]/.test(w))
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join("");
-
-// Uses the uploaded thumbnail when there is one, otherwise a generated cover
-export const ProjectCover = ({ project, className }) => {
-  if (project.thumbnail) {
-    return <img src={project.thumbnail} alt={project.title} className={cn("object-cover", className)} />;
-  }
-  const hue = hueFor(project.title);
+/** Cover for a project without a thumbnail: the theme's accent, a grid and initials. */
+export const GeneratedCover = ({ title = "", className }) => {
+  const angle = 120 + (hashOf(title) % 90);
   return (
     <div
       aria-hidden
-      className={cn("relative overflow-hidden", className)}
+      className={cn("relative size-full overflow-hidden", className)}
       style={{
-        background: `radial-gradient(120% 120% at 0% 0%, oklch(0.72 0.13 ${hue}) 0%, oklch(0.5 0.14 ${hue + 35}) 55%, oklch(0.3 0.08 ${hue + 60}) 100%)`,
+        background: `linear-gradient(${angle}deg, color-mix(in oklab, var(--primary) 26%, var(--card)), color-mix(in oklab, var(--primary) 8%, var(--background)))`,
       }}
     >
       <div
-        className="absolute inset-0 opacity-25"
+        className="absolute inset-0"
         style={{
           backgroundImage:
-            "linear-gradient(oklch(1 0 0 / 35%) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 35%) 1px, transparent 1px)",
+            "linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px)",
           backgroundSize: "28px 28px",
-          maskImage: "linear-gradient(to bottom right, #000, transparent 75%)",
+          maskImage: "linear-gradient(to bottom left, #000, transparent 80%)",
         }}
       />
-      <span className="absolute bottom-3 right-4 font-mono text-5xl font-semibold tracking-tighter text-white/85 md:text-6xl">
-        {initials(project.title)}
+      <span className="font-heading absolute right-5 bottom-3 text-6xl leading-none text-primary-ink/80 md:text-7xl">
+        {initialsOf(title)}
       </span>
     </div>
   );
 };
+
+/** The uploaded thumbnail in a fixed-ratio box, or a generated cover. `ratio={null}` fills the parent. */
+export const ProjectCover = ({ project, ratio = "16 / 9", className, eager }) => (
+  <Img
+    src={project.thumbnail}
+    alt=""
+    ratio={ratio ?? undefined}
+    eager={eager}
+    className={className}
+    fallback={<GeneratedCover title={project.title} />}
+  />
+);
