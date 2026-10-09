@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from . import manage_serializers as s
 from .models import (
     About,
+    AboutPhoto,
     Category,
     Certificate,
     Contact,
@@ -19,13 +20,16 @@ from .models import (
     Language,
     LessonLearned,
     Portfolio,
+    Principle,
     Project,
     ProjectArchitecture,
     ProjectChallenge,
     ProjectFeature,
     ProjectImage,
+    ProjectMetric,
     Service,
     Skill,
+    Testimonial,
 )
 
 
@@ -84,6 +88,25 @@ class MyServiceViewSet(OwnedViewSet):
         serializer.save(about=get_or_create_about(self.request.user))
 
 
+class AboutChildViewSet(OwnedViewSet):
+    """Principles and photos, attached to the user's about section."""
+
+    owner_lookup = "about__owner"
+
+    def perform_create(self, serializer):
+        serializer.save(about=get_or_create_about(self.request.user))
+
+
+class MyPrincipleViewSet(AboutChildViewSet):
+    model = Principle
+    serializer_class = s.MyPrincipleSerializer
+
+
+class MyAboutPhotoViewSet(AboutChildViewSet):
+    model = AboutPhoto
+    serializer_class = s.MyAboutPhotoSerializer
+
+
 class MyCategoryViewSet(OwnedViewSet):
     model = Category
     serializer_class = s.MyCategorySerializer
@@ -130,6 +153,11 @@ class MyProjectChallengeViewSet(ProjectChildViewSet):
     serializer_class = s.MyProjectChallengeSerializer
 
 
+class MyProjectMetricViewSet(ProjectChildViewSet):
+    model = ProjectMetric
+    serializer_class = s.MyProjectMetricSerializer
+
+
 class MyLessonLearnedViewSet(ProjectChildViewSet):
     model = LessonLearned
     serializer_class = s.MyLessonLearnedSerializer
@@ -158,6 +186,11 @@ class MyLanguageViewSet(OwnedViewSet):
 class MyCertificateViewSet(OwnedViewSet):
     model = Certificate
     serializer_class = s.MyCertificateSerializer
+
+
+class MyTestimonialViewSet(OwnedViewSet):
+    model = Testimonial
+    serializer_class = s.MyTestimonialSerializer
 
 
 class MyMessageViewSet(

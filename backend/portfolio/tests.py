@@ -291,3 +291,96 @@ class SeedPortfolioTests(APITestCase):
         self.assertEqual([l["name"] for l in langs], ["Amharic", "English"])
         self.assertEqual(langs[0]["proficiency_display"], "Native")
         self.assertTrue(self.client.get("/api/u/vega/profile/").data["website"])
+
+
+class DesignSystemContentTests(APITestCase):
+    """Testimonials, project metrics, principles and the owner's look settings."""
+
+    def setUp(self):
+        self.alice, self.bob = make_user("alice"), make_user("bob")
+        self.project = Project.objects.create(owner=self.alice, title="Tena", summary="s", overview="o")
+        self.bob_project = Project.objects.create(owner=self.bob, title="Bob app", summary="s", overview="o")
+        self.client.force_authenticate(self.alice)
+
+    def test_settings_are_validated(self):
+        good = {"theme": "midnight", "accent": "violet", "sections": [{"id": "about", "visible": False}]}
+        res = self.client.patch("/api/me/profile/", {"settings": good}, format="json")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.get("/api/u/alice/profile/").data["settings"], good)
+
+        for bad in (
+            {"theme": "neon"},
+            {"colour": "red"},
+            {"sections": [{"id": "about"}, {"id": "about"}]},
+            {"pages": {"blog": True}},
+        ):
+            res = self.client.patch("/api/me/profile/", {"settings": bad}, format="json")
+            self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST, bad)
+
+    def test_testimonials(self):
+        res = self.client.post(
+            "/api/me/testimonials/",
+            {"name": "Meron", "quote": "Great work", "project": self.project.id},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        res = self.client.post(
+            "/api/me/testimonials/", {"name": "X", "quote": "Q", "project": self.bob_project.id}, format="json"
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.client.post("/api/me/testimonials/", {"name": "Hidden", "quote": "Q", "is_active": False}, format="json")
+
+        data = self.client.get("/api/u/alice/testimonials/").data
+        self.assertEqual([t["name"] for t in data], ["Meron"])
+        self.assertEqual(data[0]["project"], {"title": "Tena", "slug": "tena"})
+        self.assertEqual(self.client.get("/api/u/bob/testimonials/").data, [])
+
+    def test_project_metrics_and_case_study_fields(self):
+        res = self.client.post(
+            "/api/me/project-metrics/",
+            {"project": self.project.id, "value": "+38%", "label": "bookings"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        res = self.client.post(
+            "/api/me/project-metrics/", {"project": self.bob_project.id, "value": "1", "label": "x"}, format="json"
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.client.patch(
+            f"/api/me/projects/{self.project.id}/",
+            {"problem": "Queues", "category": "SaaS", "team_size": 3, "ended_on": "2025-01-01"},
+            format="json",
+        )
+
+        detail = self.client.get("/api/u/alice/projects/tena/").data
+        self.assertEqual([m["value"] for m in detail["metrics"]], ["+38%"])
+        self.assertEqual((detail["problem"], detail["team_size"]), ("Queues", 3))
+        card = self.client.get("/api/u/alice/projects/").data[0]
+        self.assertEqual((card["category"], card["ended_on"]), ("SaaS", "2025-01-01"))
+
+    def test_principles_and_interests(self):
+        self.client.patch("/api/me/about/", {"description": "Hi", "interests": "Running\nJazz"}, format="json")
+        res = self.client.post("/api/me/principles/", {"title": "Ship small"}, format="json")
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        about = self.client.get("/api/u/alice/about/").data
+        self.assertEqual(about["interests"], "Running\nJazz")
+        self.assertEqual([p["title"] for p in about["principles"]], ["Ship small"])
+        self.assertEqual(about["photos"], [])
+
+        self.client.force_authenticate(self.bob)
+        self.assertEqual(self.client.get("/api/me/principles/").data, [])
+
+    def test_demo_seed_uses_every_feature(self):
+        make_user("sample")
+        for _ in range(2):  # idempotent
+            call_command("seed_portfolio", "portfolio/seed/demo.json", owner="sample", stdout=open("/dev/null", "w"))
+        profile = self.client.get("/api/u/sample/profile/").data
+        self.assertTrue(profile["availability"] and profile["timezone"] and profile["settings"])
+        self.assertTrue(self.client.get("/api/u/sample/about/").data["principles"])
+        testimonials = self.client.get("/api/u/sample/testimonials/").data
+        self.assertTrue(testimonials)
+        self.assertTrue(any(t["project"] for t in testimonials))
+        featured = self.client.get("/api/u/sample/projects/featured/").data[0]
+        self.assertTrue(self.client.get(f"/api/u/sample/projects/{featured['slug']}/").data["metrics"])
+        self.assertTrue(any(s["years_of_experience"] for s in self.client.get("/api/u/sample/skills/").data))

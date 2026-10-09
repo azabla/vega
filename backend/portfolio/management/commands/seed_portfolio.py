@@ -7,16 +7,18 @@ Fill a user's portfolio from a seed file (see portfolio/seed/vega.json).
 Safe to run repeatedly:
 - profile and about are updated in place
 - categories and skills are matched by name (case-insensitive)
-- projects are matched by slug; their features, challenges, lessons and
-  architecture are replaced with the file's version
-- services, experience, education and certificates are replaced only when
-  the file contains that section
+- projects are matched by slug; their metrics, features, challenges, lessons
+  and architecture are replaced with the file's version
+- services, principles, experience, education, certificates and testimonials
+  are replaced only when the file contains that section
+- profile "settings" (theme, layout, ...) are validated like the owner API
 --reset first deletes all of the user's portfolio content (not the account).
 """
 
 import json
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
@@ -29,17 +31,20 @@ from portfolio.models import (
     Language,
     LessonLearned,
     Portfolio,
+    Principle,
     Project,
     ProjectArchitecture,
     ProjectChallenge,
     ProjectFeature,
+    ProjectMetric,
     Service,
     Skill,
+    Testimonial,
 )
 
 PROJECT_FIELDS = [
-    "title", "summary", "overview", "status", "role", "started_on",
-    "github_url", "live_url", "featured", "order",
+    "title", "summary", "overview", "problem", "results", "category", "status", "role",
+    "team_size", "started_on", "ended_on", "github_url", "live_url", "featured", "order",
 ]
 
 
@@ -83,6 +88,8 @@ class Command(BaseCommand):
                     self.seed_list(user, model, data[key])
             for project in data.get("projects", []):
                 self.seed_project(user, project)
+            if "testimonials" in data:
+                self.seed_testimonials(user, data["testimonials"])
 
         self.stdout.write(self.style.SUCCESS(
             f"Seeded {user.username}: {Skill.objects.filter(owner=user).count()} skills, "
@@ -90,7 +97,9 @@ class Command(BaseCommand):
         ))
 
     def reset(self, user):
-        for model in (Project, Skill, Category, Experience, Education, Certificate, Language, About):
+        for model in (
+            Testimonial, Project, Skill, Category, Experience, Education, Certificate, Language, About,
+        ):
             model.objects.filter(owner=user).delete()
 
     # -- sections ---------------------------------------------------------
@@ -99,11 +108,16 @@ class Command(BaseCommand):
         portfolio, _ = Portfolio.objects.get_or_create(owner=user, defaults={"name": user.username})
         for key, value in fields.items():
             setattr(portfolio, key, value)
+        try:
+            portfolio.full_clean(exclude=["owner", "resume", "profile_image"])
+        except ValidationError as e:
+            raise CommandError(f"Invalid profile: {e.message_dict}")
         portfolio.save()
 
     def seed_about(self, user, fields):
         fields = dict(fields)
         services = fields.pop("services", None)
+        principles = fields.pop("principles", None)
         about = About.objects.filter(owner=user).order_by("-updated_at").first() or About(owner=user)
         for key, value in fields.items():
             setattr(about, key, value)
@@ -113,6 +127,10 @@ class Command(BaseCommand):
             about.services.all().delete()
             for i, service in enumerate(services):
                 Service.objects.create(about=about, display_order=i, **service)
+        if principles is not None:
+            about.principles.all().delete()
+            for i, principle in enumerate(principles):
+                Principle.objects.create(about=about, order=i, **principle)
 
     def seed_category(self, user, data, order):
         category = Category.objects.filter(owner=user, name__iexact=data["name"]).first()
@@ -121,10 +139,15 @@ class Command(BaseCommand):
         category.display_order = order
         category.is_active = True
         category.save()
-        for i, name in enumerate(data.get("skills", [])):
-            skill = self.get_skill(user, name, category)
+        # A skill is a name, or {"name": "Python", "years": 6}
+        for i, item in enumerate(data.get("skills", [])):
+            if isinstance(item, str):
+                item = {"name": item}
+            skill = self.get_skill(user, item["name"], category)
             skill.category = category
             skill.display_order = i
+            if "years" in item:
+                skill.years_of_experience = item["years"]
             skill.save()
 
     def get_skill(self, user, name, category=None):
@@ -159,10 +182,27 @@ class Command(BaseCommand):
         project.save()
         project.skills.set([self.get_skill(user, n) for n in data.get("skills", [])])
 
-        for model, key in ((ProjectFeature, "features"), (ProjectChallenge, "challenges"), (LessonLearned, "lessons")):
+        for model, key in (
+            (ProjectMetric, "metrics"),
+            (ProjectFeature, "features"),
+            (ProjectChallenge, "challenges"),
+            (LessonLearned, "lessons"),
+        ):
             if key in data:
                 model.objects.filter(project=project).delete()
                 for i, item in enumerate(data[key]):
                     model.objects.create(project=project, order=i, **item)
         if "architecture" in data:
             ProjectArchitecture.objects.update_or_create(project=project, defaults=data["architecture"])
+
+    def seed_testimonials(self, user, items):
+        """Each item may name a project by slug: {"project": "tena-booking", ...}."""
+        Testimonial.objects.filter(owner=user).delete()
+        for i, item in enumerate(items):
+            item = dict(item)
+            slug = item.pop("project", None)
+            project = Project.objects.filter(owner=user, slug=slug).first() if slug else None
+            if slug and project is None:
+                raise CommandError(f"Testimonial from {item.get('name')}: no project '{slug}'.")
+            item.setdefault("order", i)
+            Testimonial.objects.create(owner=user, project=project, **item)

@@ -10,6 +10,7 @@ from rest_framework import serializers
 
 from .models import (
     About,
+    AboutPhoto,
     Category,
     Certificate,
     Education,
@@ -18,13 +19,16 @@ from .models import (
     Language,
     LessonLearned,
     Portfolio,
+    Principle,
     Project,
     ProjectArchitecture,
     ProjectChallenge,
     ProjectFeature,
     ProjectImage,
+    ProjectMetric,
     Service,
     Skill,
+    Testimonial,
 )
 
 
@@ -78,11 +82,24 @@ class MyAboutSerializer(serializers.ModelSerializer):
             "description",
             "description_2",
             "cv_file",
+            "interests",
             "is_active",
             "services",
             "updated_at",
         ]
         read_only_fields = ["updated_at"]
+
+
+class MyPrincipleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Principle
+        fields = ["id", "title", "description", "order"]
+
+
+class MyAboutPhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AboutPhoto
+        fields = ["id", "image", "caption", "order"]
 
 
 class MyCategorySerializer(SluggedModelSerializer):
@@ -121,13 +138,18 @@ class MyProjectSerializer(SluggedModelSerializer):
             "slug",
             "summary",
             "overview",
+            "problem",
+            "results",
+            "category",
             "thumbnail",
             "skills",
             "github_url",
             "live_url",
             "status",
             "role",
+            "team_size",
             "started_on",
+            "ended_on",
             "order",
             "featured",
             "created_at",
@@ -157,6 +179,7 @@ MyProjectFeatureSerializer = project_child_serializer(
     ProjectFeature, ["title", "description", "image", "demo_url", "documentation_url", "order"]
 )
 MyProjectChallengeSerializer = project_child_serializer(ProjectChallenge, ["problem", "solution", "order"])
+MyProjectMetricSerializer = project_child_serializer(ProjectMetric, ["value", "label", "description", "order"])
 MyLessonLearnedSerializer = project_child_serializer(LessonLearned, ["title", "description", "order"])
 MyProjectArchitectureSerializer = project_child_serializer(ProjectArchitecture, ["description", "diagram"])
 
@@ -223,6 +246,26 @@ class MyCertificateSerializer(OwnedModelSerializer):
             "file",
             "skills",
             "order",
+        ]
+
+
+class MyTestimonialSerializer(OwnedModelSerializer):
+    project = OwnedPrimaryKeyRelatedField(queryset=Project.objects.all(), required=False, allow_null=True)
+
+    class Meta:
+        model = Testimonial
+        fields = [
+            "id",
+            "owner",
+            "name",
+            "role",
+            "company",
+            "quote",
+            "photo",
+            "url",
+            "project",
+            "order",
+            "is_active",
         ]
 
 

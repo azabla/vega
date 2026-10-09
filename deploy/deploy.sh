@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # Update the live site after pushing to GitHub. Run on the server:
-#   cd /opt/vega && ./deploy/deploy.sh
+#   cd /opt/vega && ./deploy/deploy.sh            # latest main
+#   ./deploy/deploy.sh <commit-sha>               # that commit (what CI/CD does)
 set -euo pipefail
+
+REF="${1:-}"
+if [ -n "$REF" ] && ! [[ "$REF" =~ ^[0-9a-f]{7,40}$ ]]; then
+    echo "!! expected a commit SHA, got: $REF"; exit 1
+fi
 
 cd "$(dirname "$0")/.."
 COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env.prod"
@@ -9,7 +15,13 @@ COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env.prod"
 [ -f .env.prod ] || { echo "!! .env.prod missing (copy .env.prod.example)"; exit 1; }
 
 echo "==> Pulling latest code"
-git pull --ff-only
+if [ -n "$REF" ]; then
+    git fetch --quiet origin
+    git merge --ff-only "$REF"
+else
+    git pull --ff-only
+fi
+echo "    now at $(git log -1 --format='%h %s')"
 
 echo "==> Building images and restarting changed containers"
 # backend runs migrate + collectstatic on start (backend/entrypoint.sh)

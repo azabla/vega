@@ -1,6 +1,10 @@
 from django.contrib import admin
 from .models import (
     About,
+    AboutPhoto,
+    Principle,
+    ProjectMetric,
+    Testimonial,
     Portfolio,
     Service,
     Skill,
@@ -71,8 +75,26 @@ class CertificateAdmin(OwnedAdmin):
     filter_horizontal = ["skills"]
 
 
+@admin.register(Testimonial)
+class TestimonialAdmin(OwnedAdmin):
+    list_display = ["name", "company", "owner", "project", "order", "is_active"]
+    search_fields = ["name", "company", "quote"]
+
+
+class PrincipleInline(admin.TabularInline):
+    model = Principle
+    extra = 1
+
+
+class AboutPhotoInline(admin.TabularInline):
+    model = AboutPhoto
+    extra = 1
+
+
 @admin.register(About)
 class AboutAdmin(admin.ModelAdmin):
+    inlines = [PrincipleInline, AboutPhotoInline]
+
     list_display = [
         "title",
         "owner",
@@ -107,6 +129,11 @@ class ServiceAdmin(admin.ModelAdmin):
 
 class ProjectImageInline(admin.TabularInline):
     model = ProjectImage
+    extra = 1
+
+
+class ProjectMetricInline(admin.TabularInline):
+    model = ProjectMetric
     extra = 1
 
 
@@ -169,6 +196,7 @@ class ProjectAdmin(admin.ModelAdmin):
     }
 
     inlines = [
+        ProjectMetricInline,
         ProjectFeatureInline,
         ProjectChallengeInline,
         LessonLearnedInline,

@@ -17,7 +17,9 @@ class AboutService:
                     queryset=Service.objects.filter(is_active=True).order_by(
                         "display_order"
                     ),
-                )
+                ),
+                "principles",
+                "photos",
             )
             .order_by("-updated_at")
             .first()
@@ -39,6 +41,7 @@ class ProjectService:
                 "gallery",
                 "challenges",
                 "lessons",
+                "metrics",
             )
             .select_related(
                 "architecture",

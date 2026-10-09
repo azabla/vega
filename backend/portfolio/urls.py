@@ -13,6 +13,7 @@ from .views import (
     ProfileAPIView,
     ProjectViewSet,
     SkillViewSet,
+    TestimonialViewSet,
     TestView,
 )
 
@@ -24,18 +25,22 @@ public_router.register(r"experience", ExperienceViewSet, basename="experience")
 public_router.register(r"education", EducationViewSet, basename="education")
 public_router.register(r"certificates", CertificateViewSet, basename="certificates")
 public_router.register(r"languages", LanguageViewSet, basename="languages")
+public_router.register(r"testimonials", TestimonialViewSet, basename="testimonials")
 public_router.register(r"contact", ContactViewSet, basename="contact")
 public_router.register(r"projects", ProjectViewSet, basename="projects")
 
 # Owner, authenticated: /api/me/...
 me_router = SimpleRouter()
 me_router.register(r"services", me.MyServiceViewSet, basename="my-services")
+me_router.register(r"principles", me.MyPrincipleViewSet, basename="my-principles")
+me_router.register(r"about-photos", me.MyAboutPhotoViewSet, basename="my-about-photos")
 me_router.register(r"categories", me.MyCategoryViewSet, basename="my-categories")
 me_router.register(r"skills", me.MySkillViewSet, basename="my-skills")
 me_router.register(r"projects", me.MyProjectViewSet, basename="my-projects")
 me_router.register(r"project-images", me.MyProjectImageViewSet, basename="my-project-images")
 me_router.register(r"project-features", me.MyProjectFeatureViewSet, basename="my-project-features")
 me_router.register(r"project-challenges", me.MyProjectChallengeViewSet, basename="my-project-challenges")
+me_router.register(r"project-metrics", me.MyProjectMetricViewSet, basename="my-project-metrics")
 me_router.register(r"project-lessons", me.MyLessonLearnedViewSet, basename="my-project-lessons")
 me_router.register(
     r"project-architecture", me.MyProjectArchitectureViewSet, basename="my-project-architecture"
@@ -44,6 +49,7 @@ me_router.register(r"experience", me.MyExperienceViewSet, basename="my-experienc
 me_router.register(r"education", me.MyEducationViewSet, basename="my-education")
 me_router.register(r"certificates", me.MyCertificateViewSet, basename="my-certificates")
 me_router.register(r"languages", me.MyLanguageViewSet, basename="my-languages")
+me_router.register(r"testimonials", me.MyTestimonialViewSet, basename="my-testimonials")
 me_router.register(r"messages", me.MyMessageViewSet, basename="my-messages")
 
 urlpatterns = [

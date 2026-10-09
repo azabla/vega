@@ -12,7 +12,17 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import Category, Certificate, Contact, Education, Experience, Language, Portfolio, Skill
+from .models import (
+    Category,
+    Certificate,
+    Contact,
+    Education,
+    Experience,
+    Language,
+    Portfolio,
+    Skill,
+    Testimonial,
+)
 from .serializers import (
     AboutSerializer,
     CategorySerializer,
@@ -25,6 +35,7 @@ from .serializers import (
     ProjectCardSerializer,
     ProjectDetailSerializer,
     SkillSerializer,
+    TestimonialSerializer,
 )
 from .services import AboutService, ProjectService
 
@@ -134,6 +145,13 @@ class CertificateViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return Certificate.objects.filter(owner=self.get_owner()).prefetch_related("skills__category")
+
+
+class TestimonialViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):
+    serializer_class = TestimonialSerializer
+
+    def get_queryset(self):
+        return Testimonial.objects.filter(owner=self.get_owner(), is_active=True).select_related("project")
 
 
 class ContactViewSet(PortfolioOwnerMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):

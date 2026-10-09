@@ -1,0 +1,117 @@
+# CI on every push and pull request; CD (deploy to the VPS) on pushes to main
+# once every check has passed. Setup: docs/09-ci-cd.md
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine  # same as production
+        env:
+          POSTGRES_DB: vega
+          POSTGRES_USER: vega
+          POSTGRES_PASSWORD: vega
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U vega -d vega"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      SECRET_KEY: ci-only-not-secret
+      DEBUG: "False"
+      ALLOWED_HOSTS: localhost,testserver
+      DATABASE_URL: postgres://vega:vega@localhost:5432/vega
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Django system check
+        run: python manage.py check --fail-level WARNING
+      - name: Models and migrations are in sync
+        run: python manage.py makemigrations --check --dry-run
+      - name: Tests
+        run: python manage.py test portfolio accounts
+
+  frontend:
+    name: Frontend lint & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22  # same as frontend/Dockerfile
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx eslint src
+      - run: npx vite build
+        env:
+          VITE_API_URL: /api
+          VITE_PORTFOLIO_USERNAME: vega
+
+  images:
+    name: Production images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker build -t vega-backend:ci backend
+      - run: >-
+          docker build -t vega-web:ci --target prod
+          --build-arg VITE_API_URL=/api --build-arg VITE_PORTFOLIO_USERNAME=vega
+          frontend
+
+  deploy:
+    name: Deploy to VPS
+    needs: [backend, frontend, images]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.SITE_URL }}
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false  # never stop a deploy halfway
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Run deploy/deploy.sh on the server
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+          APP_DIR: ${{ vars.DEPLOY_PATH || '/opt/vega' }}
+        # Deploys exactly the commit that passed CI, not whatever main is by then
+        run: >-
+          ssh -i ~/.ssh/deploy_key -p "$PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes
+          "$USER@$HOST" "$APP_DIR/deploy/deploy.sh $GITHUB_SHA"

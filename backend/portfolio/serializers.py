@@ -1,10 +1,13 @@
 from rest_framework import serializers
 from .models import (
     About,
+    AboutPhoto,
     Certificate,
     Education,
     Language,
     Portfolio,
+    Principle,
+    ProjectMetric,
     Service,
     Skill,
     Contact,
@@ -16,6 +19,7 @@ from .models import (
     ProjectChallenge,
     LessonLearned,
     ProjectArchitecture,
+    Testimonial,
 )
 
 
@@ -45,8 +49,22 @@ class ServiceSerializer(serializers.ModelSerializer):
         ]
 
 
+class PrincipleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Principle
+        fields = ["id", "title", "description"]
+
+
+class AboutPhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AboutPhoto
+        fields = ["id", "image", "caption"]
+
+
 class AboutSerializer(serializers.ModelSerializer):
     services = ServiceSerializer(many=True, read_only=True)
+    principles = PrincipleSerializer(many=True, read_only=True)
+    photos = AboutPhotoSerializer(many=True, read_only=True)
 
     class Meta:
         model = About
@@ -58,7 +76,10 @@ class AboutSerializer(serializers.ModelSerializer):
             "description",
             "description_2",
             "cv_file",
+            "interests",
             "services",
+            "principles",
+            "photos",
         ]
 
 
@@ -153,6 +174,12 @@ class ProjectLessonSerializer(serializers.ModelSerializer):
         )
 
 
+class ProjectMetricSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectMetric
+        fields = ("id", "value", "label", "description")
+
+
 class ProjectArchitectureSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -185,9 +212,12 @@ class ProjectCardSerializer(serializers.ModelSerializer):
             "thumbnail",
             "skills",
             "featured",
+            "category",
             "status",
             "status_display",
+            "role",
             "started_on",
+            "ended_on",
             "github_url",
             "live_url",
         )
@@ -229,6 +259,8 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    metrics = ProjectMetricSerializer(many=True, read_only=True)
+
     class Meta:
 
         model = Project
@@ -239,6 +271,9 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             "slug",
             "summary",
             "overview",
+            "problem",
+            "results",
+            "metrics",
             "thumbnail",
             "github_url",
             "live_url",
@@ -246,8 +281,11 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             "featured",
             "status",
             "status_display",
+            "category",
             "role",
+            "team_size",
             "started_on",
+            "ended_on",
             "gallery",
             "features",
             "challenges",
@@ -288,6 +326,18 @@ class CertificateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Certificate
         exclude = ["owner"]
+
+
+class TestimonialSerializer(serializers.ModelSerializer):
+    project = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Testimonial
+        fields = ["id", "name", "role", "company", "quote", "photo", "url", "project"]
+
+    def get_project(self, testimonial):
+        p = testimonial.project
+        return {"title": p.title, "slug": p.slug} if p else None
 
 
 class ContactSerializer(serializers.ModelSerializer):

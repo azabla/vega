@@ -278,7 +278,7 @@ Open **https://andu.aetechsolution.et** 🎉
 
 ## Updating the site
 
-Work locally, push to GitHub, then on the server:
+Pushing to `main` deploys automatically once CI passes (see [09 — CI/CD](09-ci-cd.md)). To deploy by hand, on the server:
 
 ```bash
 cd /opt/vega && ./deploy/deploy.sh

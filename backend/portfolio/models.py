@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 
+from .site_settings import validate_settings
 from .utils import OwnerUploadTo, generate_unique_slug
 
 
@@ -14,6 +15,12 @@ def owner_field(related_name, **kwargs):
 
 
 class Portfolio(models.Model):
+    class Availability(models.TextChoices):
+        OPEN = "open", "Open to work"
+        FREELANCE = "freelance", "Available for freelance"
+        BUSY = "busy", "Busy"
+        UNAVAILABLE = "unavailable", "Not available"
+
     owner = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -31,6 +38,17 @@ class Portfolio(models.Model):
     website = models.URLField(blank=True)
     resume = models.FileField(upload_to=OwnerUploadTo("resume"), blank=True, null=True)
     profile_image = models.ImageField(upload_to=OwnerUploadTo("profile"), blank=True, null=True)
+    availability = models.CharField(max_length=20, choices=Availability.choices, blank=True)
+    availability_note = models.CharField(
+        max_length=120, blank=True, help_text='Shown next to the status, e.g. "Busy until March"'
+    )
+    timezone = models.CharField(
+        max_length=64, blank=True, help_text="IANA name for the local-time card, e.g. Africa/Addis_Ababa"
+    )
+    currently_learning = models.CharField(max_length=200, blank=True)
+    booking_url = models.URLField(blank=True, help_text="Calendly-style booking link")
+    # Look and layout: theme, font, hero, section order... (see site_settings.py)
+    settings = models.JSONField(default=dict, blank=True, validators=[validate_settings])
     created_at = models.DateTimeField(auto_now_add=True)
     update_at = models.DateTimeField(auto_now=True)
 
@@ -47,6 +65,7 @@ class About(models.Model):
 
     description = models.TextField()
     description_2 = models.TextField(blank=True)
+    interests = models.TextField(blank=True, help_text="One per line. Shown as fun facts on the About page.")
 
     cv_file = models.FileField(upload_to=OwnerUploadTo("cv"), blank=True, null=True)
 
@@ -57,6 +76,34 @@ class About(models.Model):
 
     class Meta:
         ordering = ["-updated_at"]
+
+    def __str__(self):
+        return self.title
+
+
+class AboutPhoto(models.Model):
+    about = models.ForeignKey(About, on_delete=models.CASCADE, related_name="photos")
+    image = models.ImageField(upload_to=OwnerUploadTo("about"))
+    caption = models.CharField(max_length=200, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return self.caption or f"Photo {self.pk}"
+
+
+class Principle(models.Model):
+    """A short "how I work" statement on the About page."""
+
+    about = models.ForeignKey(About, on_delete=models.CASCADE, related_name="principles")
+    title = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
 
     def __str__(self):
         return self.title
@@ -147,6 +194,9 @@ class Project(models.Model):
     summary = models.CharField(max_length=300, help_text="Shown on project cards.")
 
     overview = models.TextField(help_text="Complete explanation of the project.")
+    problem = models.TextField(blank=True, help_text="The problem the project solves.")
+    results = models.TextField(blank=True, help_text="What changed because of it. Add numbers as metrics.")
+    category = models.CharField(max_length=60, blank=True, help_text="e.g. SaaS, API, Website. Used as a filter.")
 
     thumbnail = models.ImageField(
         upload_to=OwnerUploadTo("projects/thumbnails"), blank=True, null=True
@@ -158,7 +208,9 @@ class Project(models.Model):
     live_url = models.URLField(blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.COMPLETED)
     role = models.CharField(max_length=120, blank=True, help_text="e.g. Backend developer, Solo full-stack")
+    team_size = models.PositiveSmallIntegerField(null=True, blank=True)
     started_on = models.DateField(null=True, blank=True)
+    ended_on = models.DateField(null=True, blank=True)
     order = models.IntegerField(default=0)
     featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -177,6 +229,22 @@ class Project(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["owner", "slug"], name="unique_project_slug_per_owner"),
         ]
+
+
+class ProjectMetric(models.Model):
+    """An outcome shown as a big number on the project page."""
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="metrics")
+    value = models.CharField(max_length=20, help_text='e.g. "+40%", "3x", "120ms"')
+    label = models.CharField(max_length=80)
+    description = models.CharField(max_length=200, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.value} {self.label}"
 
 
 class ProjectImage(models.Model):
@@ -382,6 +450,27 @@ class Certificate(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.issuer})"
+
+
+class Testimonial(models.Model):
+    owner = owner_field("testimonials")
+    name = models.CharField(max_length=120)
+    role = models.CharField(max_length=160, blank=True, help_text="e.g. CTO")
+    company = models.CharField(max_length=160, blank=True)
+    quote = models.TextField()
+    photo = models.ImageField(upload_to=OwnerUploadTo("testimonials"), blank=True, null=True)
+    url = models.URLField(blank=True, help_text="Link to the person, e.g. LinkedIn")
+    project = models.ForeignKey(
+        Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="testimonials"
+    )
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.name}: {self.quote[:40]}"
 
 
 class Contact(models.Model):
