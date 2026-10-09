@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "./styles/shadcn-tailwind.css";
 /* Fonts are self-hosted; the browser only downloads the faces a page uses */
 @import "@fontsource-variable/geist";
 @import "@fontsource/instrument-serif";
