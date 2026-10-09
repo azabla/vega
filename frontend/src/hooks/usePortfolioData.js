@@ -56,3 +56,9 @@ export const usePortfolioData = (fetcher, ...args) => {
         loading: !current,
     };
 };
+
+// Forget fetched data, e.g. after the owner edits their portfolio in the dashboard
+export const clearPortfolioCache = () => {
+    pending.clear();
+    settled.clear();
+};

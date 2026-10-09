@@ -12,6 +12,7 @@ One document per piece of work, in the order it was done.
 | 05 | [Master profile v1](05-master-profile.md) | Skills with evidence, education, certificates, project pages |
 | 06 | [Redesign & seed data](06-design-and-seed.md) | Design system, components and skeletons; `seed_portfolio` with my real projects |
 | 07 | [Deploying to the VPS](07-deployment-vps.md) | Step-by-step Docker deployment next to the existing Laravel site: `docker-compose.prod.yml`, host Nginx + HTTPS, updates, backups |
+| 08 | [Owner dashboard](08-dashboard.md) | Login/signup and mobile-first editing of the whole portfolio at `/dashboard` |
 
 ## Quick start
 
@@ -21,6 +22,7 @@ docker compose up --build
 # frontend: http://localhost:5173
 # admin:    http://localhost:8000/admin/
 docker compose exec backend python manage.py createsuperuser
+# or sign up at http://localhost:5173/register and edit at /dashboard
 ```
 
 ## Running locally (without Docker)

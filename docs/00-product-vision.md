@@ -33,8 +33,8 @@ Change something once (e.g. add "Backend Developer at XYZ") and it updates the s
 
 ## Roadmap
 
-1. **Now:** the owner's own portfolio, built on the master-profile data model (see [05](05-master-profile.md))
-2. Owner dashboard (mobile-first forms on `/api/me/`)
+1. **Done:** the owner's own portfolio, built on the master-profile data model (see [05](05-master-profile.md))
+2. **Done:** owner dashboard, mobile-first forms on `/api/me/` (see [08](08-dashboard.md))
 3. CV/PDF generation from the profile, plus a QR code
 4. Templates and profession-specific sections, English/Amharic content
 5. Public signup, subdomains, custom domains

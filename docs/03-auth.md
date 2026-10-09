@@ -105,12 +105,9 @@ curl -X POST $API/logout/ -H "Authorization: Bearer <access>" \
   -H "Content-Type: application/json" -d '{"refresh":"<refresh>"}'
 ```
 
-## Frontend integration (next step)
+## Frontend integration
 
-Not built yet. The plan:
-1. Store the `access` token in memory and the `refresh` token in `localStorage` (or move to httpOnly cookies later).
-2. Use an axios request interceptor to add `Authorization: Bearer`.
-3. Use an axios response interceptor so that on a `401` it calls `token/refresh/` once, retries the request, and logs out if that fails.
+Built with the dashboard: access token in memory, refresh token in `localStorage`, and an axios interceptor that refreshes once on a `401` and retries. See [08](08-dashboard.md).
 
 ## Existing databases
 

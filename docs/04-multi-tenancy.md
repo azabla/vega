@@ -102,6 +102,6 @@ Superusers see everyone's content. The main models list `owner` and can be filte
 
 ## Next steps
 
-- React dashboard (login + forms) on top of `/api/me/`
+- ~~React dashboard (login + forms) on top of `/api/me/`~~ Done, see [08](08-dashboard.md)
 - SEO for public pages (server-rendered meta tags / Next.js)
 - Media on S3/R2 (`django-storages`)
