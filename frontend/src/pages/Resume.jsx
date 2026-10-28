@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAbout, useCertificates, useEducation, useExperience, useLanguages, useProjects, useSkills } from "@/hooks/usePortfolio";
+import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
 import { useProfile } from "@/hooks/useProfile";
 import { bulletsOf, formatMonthYear, formatYearRange } from "@/lib/format";
 import { featuredProjects } from "@/lib/portfolio";
 import { resumeFileOf, socialLinksOf } from "@/lib/profile";
+import { portfolioFiles } from "@/services/portfolioAPI";
 
 const bare = (url) => url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 
@@ -167,6 +169,7 @@ const ResumeDocument = ({ profile, about, experience, education, projects, skill
 };
 
 export const Resume = () => {
+  const username = usePortfolioUsername();
   const { profile, loading } = useProfile();
   const { data: about } = useAbout();
   const data = {
@@ -189,12 +192,15 @@ export const Resume = () => {
             <p className="text-sm text-muted-foreground">Generated from this site, so it's always up to date.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => window.print()} disabled={!ready}>
-              <Printer /> Download PDF
+            <Button href={portfolioFiles.cv(username, { download: true })}>
+              <Download /> Download PDF
+            </Button>
+            <Button variant="secondary" onClick={() => window.print()} disabled={!ready}>
+              <Printer /> Print
             </Button>
             {file && (
               <Button href={file} variant="secondary">
-                <Download /> Original file
+                <FileText /> Original file
               </Button>
             )}
           </div>
@@ -217,7 +223,7 @@ export const Resume = () => {
         )}
 
         <p className="mx-auto mt-6 max-w-[52rem] text-center text-xs text-muted-foreground print:hidden">
-          “Download PDF” opens your browser's print dialog. Choose “Save as PDF” as the destination.
+          The PDF is made from this profile when you download it, with a QR code that links back here.
         </p>
       </div>
     </PortfolioLayout>

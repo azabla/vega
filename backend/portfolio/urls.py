@@ -1,4 +1,4 @@
-from django.urls import include, path
+from django.urls import include, path, re_path
 from rest_framework.routers import SimpleRouter
 
 from . import manage_views as me
@@ -7,11 +7,13 @@ from .views import (
     CategoryViewSet,
     CertificateViewSet,
     ContactViewSet,
+    CVPDFView,
     EducationViewSet,
     LanguageViewSet,
     ExperienceViewSet,
     ProfileAPIView,
     ProjectViewSet,
+    QRCodeView,
     SkillViewSet,
     TestimonialViewSet,
     TestView,
@@ -59,5 +61,7 @@ urlpatterns = [
     path("me/", include(me_router.urls)),
     path("u/<str:username>/profile/", ProfileAPIView.as_view(), name="profile"),
     path("u/<str:username>/about/", AboutAPIView.as_view(), name="about"),
+    path("u/<str:username>/cv.pdf", CVPDFView.as_view(), name="cv-pdf"),
+    re_path(r"^u/(?P<username>[^/]+)/qr\.(?P<kind>svg|png)$", QRCodeView.as_view(), name="qr-code"),
     path("u/<str:username>/", include(public_router.urls)),
 ]

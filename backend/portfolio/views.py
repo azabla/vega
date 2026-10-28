@@ -5,12 +5,16 @@ Every view is scoped to the portfolio owner named in the URL.
 """
 
 from django.contrib.auth import get_user_model
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils.http import content_disposition_header
+from django.utils.text import slugify
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import (
     Category,
@@ -37,6 +41,7 @@ from .serializers import (
     SkillSerializer,
     TestimonialSerializer,
 )
+from .cv import portfolio_url, qr_bytes, render_cv_pdf
 from .services import AboutService, ProjectService
 
 User = get_user_model()
@@ -168,6 +173,46 @@ class ContactViewSet(PortfolioOwnerMixin, mixins.CreateModelMixin, viewsets.Gene
         return Response(
             {"message": "You succesfully sent"}, status=status.HTTP_201_CREATED
         )
+
+
+class FileView(PortfolioOwnerMixin, APIView):
+    """Serves a generated file. Never 406s on the Accept header: errors fall back to JSON."""
+
+    def perform_content_negotiation(self, request, force=False):
+        return super().perform_content_negotiation(request, force=True)
+
+    def get_portfolio(self):
+        return get_object_or_404(Portfolio.objects.select_related("owner"), owner=self.get_owner())
+
+    def file_response(self, content, content_type, filename):
+        response = HttpResponse(content, content_type=content_type)
+        as_attachment = bool(self.request.GET.get("download"))
+        response["Content-Disposition"] = content_disposition_header(as_attachment, filename)
+        return response
+
+
+class CVPDFView(FileView):
+    """The CV as a PDF, built from the profile. 404 when the owner turned the résumé page off."""
+
+    throttle_scope = "cv"
+
+    def get(self, request, username):
+        portfolio = self.get_portfolio()
+        if portfolio.settings.get("pages", {}).get("resume") is False:
+            raise Http404("This portfolio has no résumé.")
+        pdf = render_cv_pdf(portfolio, portfolio_url(request, portfolio.owner.username))
+        name = slugify(portfolio.name) or portfolio.owner.username
+        return self.file_response(pdf, "application/pdf", f"{name}-cv.pdf")
+
+
+class QRCodeView(FileView):
+    """QR code that opens the public portfolio, as SVG (print) or PNG (chat apps)."""
+
+    def get(self, request, username, kind):
+        username = self.get_owner().username
+        content_type = "image/svg+xml" if kind == "svg" else "image/png"
+        content = qr_bytes(portfolio_url(request, username), kind)
+        return self.file_response(content, content_type, f"{username}-qr.{kind}")
 
 
 @api_view(["GET"])

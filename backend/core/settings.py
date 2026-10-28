@@ -30,6 +30,9 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+# Public frontend origin, e.g. https://example.com. Used for the portfolio link
+# in QR codes and CV PDFs; empty = the API's own host (same-origin deployments).
+SITE_URL = env("SITE_URL", default="")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -113,7 +116,7 @@ REST_FRAMEWORK = {
     # Secure by default: public endpoints opt in with AllowAny
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.ScopedRateThrottle"],
-    "DEFAULT_THROTTLE_RATES": {"auth": "10/minute", "contact": "5/minute"},
+    "DEFAULT_THROTTLE_RATES": {"auth": "10/minute", "contact": "5/minute", "cv": "20/minute"},
 }
 
 SIMPLE_JWT = {

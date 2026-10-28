@@ -384,3 +384,84 @@ class DesignSystemContentTests(APITestCase):
         featured = self.client.get("/api/u/sample/projects/featured/").data[0]
         self.assertTrue(self.client.get(f"/api/u/sample/projects/{featured['slug']}/").data["metrics"])
         self.assertTrue(any(s["years_of_experience"] for s in self.client.get("/api/u/sample/skills/").data))
+
+
+class CVTests(APITestCase):
+    def setUp(self):
+        cache.clear()  # the cv throttle counts across tests
+        self.alice = make_user("alice")
+        self.portfolio = Portfolio.objects.get(owner=self.alice)
+        self.portfolio.name, self.portfolio.title = "Alice Abebe", "Backend developer"
+        self.portfolio.save()
+        cat = Category.objects.create(owner=self.alice, name="Backend")
+        python = Skill.objects.create(owner=self.alice, name="Python", category=cat)
+        Skill.objects.create(owner=self.alice, name="Hidden", category=cat, is_active=False)
+        project = Project.objects.create(owner=self.alice, title="Todo", summary="s", overview="o", featured=True)
+        project.skills.add(python)
+        Project.objects.create(owner=self.alice, title="Side thing", summary="s", overview="o")
+        Experience.objects.create(
+            owner=self.alice, company="Acme", position="Engineer", start_date="2022-01-01", current=True,
+            description="- Built the API\n- Ran the team",
+        )
+        Experience.objects.create(
+            owner=self.alice, company="Club", position="Mentor", start_date="2021-01-01",
+            employment_type=Experience.EmploymentType.VOLUNTEER,
+        )
+
+    def test_pdf_download(self):
+        res = self.client.get("/api/u/alice/cv.pdf")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res["Content-Type"], "application/pdf")
+        self.assertTrue(res.content.startswith(b"%PDF"))
+        self.assertTrue(res["Content-Disposition"].startswith("inline"))
+        res = self.client.get("/api/u/alice/cv.pdf?download=1", HTTP_ACCEPT="application/pdf")
+        self.assertEqual(res["Content-Disposition"], 'attachment; filename="alice-abebe-cv.pdf"')
+
+    def test_empty_profile_still_renders(self):
+        make_user("bob")
+        res = self.client.get("/api/u/bob/cv.pdf")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertTrue(res.content.startswith(b"%PDF"))
+
+    def test_hidden_resume_page_and_unknown_user_are_404(self):
+        self.assertEqual(self.client.get("/api/u/nobody/cv.pdf").status_code, status.HTTP_404_NOT_FOUND)
+        self.portfolio.settings = {"pages": {"resume": False}}
+        self.portfolio.save()
+        self.assertEqual(self.client.get("/api/u/alice/cv.pdf").status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_content_matches_resume_page(self):
+        from .cv import cv_context
+
+        ctx = cv_context(self.portfolio, "https://example.com/u/alice")
+        self.assertEqual([j["title"] for j in ctx["work"]], ["Engineer"])
+        self.assertEqual(ctx["work"][0]["body"], {"bullets": ["Built the API", "Ran the team"]})
+        self.assertEqual(ctx["work"][0]["when"], "2022 – Present")
+        self.assertEqual([j["title"] for j in ctx["volunteering"]], ["Mentor"])
+        self.assertEqual([p["title"] for p in ctx["projects"]], ["Todo"])  # featured only
+        self.assertEqual(ctx["projects"][0]["skills"], "Python")
+        self.assertEqual(dict(ctx["skills"]), {"Backend": ["Python"]})
+        self.assertEqual(ctx["url_label"], "example.com/u/alice")
+
+    @override_settings(SITE_URL="https://cv.example.com/")
+    def test_qr_code_links_to_portfolio(self):
+        from .cv import portfolio_url
+
+        self.assertEqual(portfolio_url(None, "alice"), "https://cv.example.com/u/alice")
+        res = self.client.get("/api/u/alice/qr.svg")
+        self.assertEqual(res["Content-Type"], "image/svg+xml")
+        self.assertIn(b"<svg", res.content)
+        res = self.client.get("/api/u/alice/qr.png?download=1")
+        self.assertEqual(res["Content-Type"], "image/png")
+        self.assertEqual(res["Content-Disposition"], 'attachment; filename="alice-qr.png"')
+        self.assertEqual(self.client.get("/api/u/nobody/qr.svg").status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_renderer_only_loads_bundled_fonts(self):
+        from weasyprint.urls import URLFetchingError
+
+        from .cv import FONTS_URI, _FontsOnlyFetcher
+
+        fetcher = _FontsOnlyFetcher()
+        for url in ("file:///etc/passwd", "https://example.com/x.png", FONTS_URI + "../models.py"):
+            with self.assertRaises(URLFetchingError):
+                fetcher.fetch(url)
+        fetcher.fetch(FONTS_URI + "geist-latin-wght-normal.woff2").close()

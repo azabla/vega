@@ -4,7 +4,7 @@ Vega is a portfolio SaaS. One structured **master profile** per user (Django) dr
 **Never hardcode personal content in the frontend**: everything comes from the API, and every section must
 work for any user, including one with no data. Product direction: [docs/00-product-vision.md](docs/00-product-vision.md).
 
-- `backend/` — Django REST. Public read API `/api/u/<username>/…`, owner API `/api/me/…`.
+- `backend/` — Django REST. Public read API `/api/u/<username>/…`, owner API `/api/me/…`. CV PDF + QR code: `portfolio/cv.py` (WeasyPrint, fonts bundled in `cv_fonts/`; see [docs/11](docs/11-cv-pdf-and-qr.md)).
 - `frontend/` — React 19 + Vite + Tailwind v4 (CSS-first config in `src/index.css`) + Base UI primitives + Lucide icons.
 - Docs, one per piece of work: [docs/README.md](docs/README.md). The UI system is described in [docs/08-ui-design-system.md](docs/08-ui-design-system.md).
 

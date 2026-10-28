@@ -16,6 +16,7 @@ One document per piece of work, in the order it was done.
 | 08b | [UI design system](08-ui-design-system.md) | "The Living Résumé": themes, pages, components, owner look settings |
 | 09 | [CI/CD](09-ci-cd.md) | GitHub Actions: backend tests, lint, build and image checks on every push/PR; auto-deploy of `main` to the VPS |
 | 10 | [Appearance & UI polish](10-appearance-and-ui-polish.md) | Design system fully wired in; owners pick theme, fonts, layouts, sections and pages at `/dashboard/appearance` with a live preview |
+| 11 | [CV PDF & QR code](11-cv-pdf-and-qr.md) | Server-generated CV PDF (`/api/u/<username>/cv.pdf`, WeasyPrint) and a QR code to the portfolio, on `/resume` and the dashboard |
 
 ## Quick start
 
