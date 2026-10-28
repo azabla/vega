@@ -15,6 +15,7 @@ export const useSkills = () => useList(portfolioAPI.getSkills);
 export const useCertificates = () => useList(portfolioAPI.getCertificates);
 export const useLanguages = () => useList(portfolioAPI.getLanguages);
 export const useTestimonials = () => useList(portfolioAPI.getTestimonials);
+export const useCVs = () => useList(portfolioAPI.getCVs);
 
 // 404 when the owner hasn't written one: treated as "no about", not an error
 export const useAbout = () => {

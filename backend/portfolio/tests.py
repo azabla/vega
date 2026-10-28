@@ -8,7 +8,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Category, Certificate, Contact, Education, Experience, Portfolio, Project, Skill
+from .models import CV, Category, Certificate, Contact, Education, Experience, Portfolio, Project, Skill
 
 User = get_user_model()
 
@@ -433,13 +433,15 @@ class CVTests(APITestCase):
         from .cv import cv_context
 
         ctx = cv_context(self.portfolio, "https://example.com/u/alice")
-        self.assertEqual([j["title"] for j in ctx["work"]], ["Engineer"])
-        self.assertEqual(ctx["work"][0]["body"], {"bullets": ["Built the API", "Ran the team"]})
-        self.assertEqual(ctx["work"][0]["when"], "2022 – Present")
-        self.assertEqual([j["title"] for j in ctx["volunteering"]], ["Mentor"])
-        self.assertEqual([p["title"] for p in ctx["projects"]], ["Todo"])  # featured only
-        self.assertEqual(ctx["projects"][0]["skills"], "Python")
-        self.assertEqual(dict(ctx["skills"]), {"Backend": ["Python"]})
+        data = {s["id"]: s["data"] for s in ctx["sections"]}
+        self.assertEqual([j["title"] for j in data["experience"]], ["Engineer"])
+        self.assertEqual(data["experience"][0]["body"], "<ul><li>Built the API</li><li>Ran the team</li></ul>")
+        self.assertEqual(data["experience"][0]["when"], "2022 – Present")
+        self.assertEqual([j["title"] for j in data["volunteering"]], ["Mentor"])
+        self.assertEqual([p["title"] for p in data["projects"]], ["Todo"])  # featured only
+        self.assertEqual(data["projects"][0]["skills"], ["Python"])
+        self.assertEqual(data["skills"]["groups"], {"Backend": ["Python"]})
+        self.assertNotIn("summary", data)  # nothing to say: the section is dropped
         self.assertEqual(ctx["url_label"], "example.com/u/alice")
 
     @override_settings(SITE_URL="https://cv.example.com/")
@@ -465,3 +467,162 @@ class CVTests(APITestCase):
             with self.assertRaises(URLFetchingError):
                 fetcher.fetch(url)
         fetcher.fetch(FONTS_URI + "geist-latin-wght-normal.woff2").close()
+
+
+class CVVersionTests(APITestCase):
+    """CV versions: templates, design and content choices, the owner API and public links."""
+
+    def setUp(self):
+        cache.clear()
+        self.alice, self.bob = make_user("alice"), make_user("bob")
+        cat = Category.objects.create(owner=self.alice, name="Backend")
+        Skill.objects.create(owner=self.alice, name="Python", category=cat)
+        self.p1 = Project.objects.create(owner=self.alice, title="One", summary="s", overview="o", featured=True)
+        self.p2 = Project.objects.create(owner=self.alice, title="Two", summary="s", overview="o")
+        self.client.force_authenticate(self.alice)
+
+    def test_every_template_renders_for_an_empty_profile(self):
+        from .cv import render_cv_pdf
+        from .cv_options import TEMPLATES
+
+        portfolio = Portfolio.objects.get(owner=self.bob)
+        design = {"photo": "upload", "logos": True, "skills_style": "tags", "dates": "month", "paper": "letter"}
+        for template in TEMPLATES:
+            with self.subTest(template=template):
+                cv = CV(owner=self.bob, name="x", template=template, design=design)
+                self.assertTrue(render_cv_pdf(portfolio, "https://x/u/bob", cv).startswith(b"%PDF"))
+
+    def test_options_are_validated(self):
+        for bad in (
+            {"design": {"accent": "red"}},
+            {"design": {"font": "comic"}},
+            {"design": {"qr": "yes"}},
+            {"template": "nope"},
+            {"content": {"sections": [{"id": "hobbies"}]}},
+            {"content": {"sections": [{"id": "skills"}, {"id": "skills"}]}},
+            {"content": {"items": {"projects": ["1"]}}},
+            {"content": {"hide_contact": ["address"]}},
+            {"content": {"summary": "x" * 5000}},
+        ):
+            with self.subTest(bad=bad):
+                res = self.client.post("/api/me/cvs/", {"name": "CV", **bad}, format="json")
+                self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST, res.data)
+
+    def test_first_cv_is_default_and_only_one_default(self):
+        first = self.client.post("/api/me/cvs/", {"name": "General"}, format="json").data
+        self.assertTrue(first["is_default"])
+        self.assertEqual(first["slug"], "general")
+        second = self.client.post("/api/me/cvs/", {"name": "Backend", "is_default": True}, format="json").data
+        self.assertFalse(CV.objects.get(pk=first["id"]).is_default)
+        # deleting the default promotes another
+        self.client.delete(f"/api/me/cvs/{second['id']}/")
+        self.assertTrue(CV.objects.get(pk=first["id"]).is_default)
+
+    def test_default_cv_backs_the_public_pdf_and_is_always_public(self):
+        cv = CV.objects.create(owner=self.alice, name="Main", template="executive", is_public=False)
+        self.assertTrue(cv.is_default and cv.is_public)
+        from .cv import cv_context
+
+        ctx = cv_context(Portfolio.objects.get(owner=self.alice), "https://x/u/alice")
+        self.assertEqual(ctx["template"], "executive")
+
+    def test_public_and_private_versions(self):
+        CV.objects.create(owner=self.alice, name="Main")
+        CV.objects.create(owner=self.alice, name="Secret", is_public=False)
+        self.client.force_authenticate(None)
+        self.assertEqual(self.client.get("/api/u/alice/cv/main.pdf").status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.get("/api/u/alice/cv/secret.pdf").status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual([c["slug"] for c in self.client.get("/api/u/alice/cvs/").data], ["main"])
+        self.assertEqual(self.client.get("/api/u/bob/cv/main.pdf").status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_owner_downloads_private_versions_and_cannot_touch_others(self):
+        secret = CV.objects.create(owner=self.alice, name="Secret", is_public=False)
+        res = self.client.get(f"/api/me/cvs/{secret.pk}/pdf/")
+        self.assertEqual(res["Content-Type"], "application/pdf")
+        self.assertIn("attachment", res["Content-Disposition"])
+        self.client.force_authenticate(self.bob)
+        self.assertEqual(self.client.get(f"/api/me/cvs/{secret.pk}/pdf/").status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(self.client.get("/api/me/cvs/").data, [])
+
+    def test_duplicate(self):
+        cv = CV.objects.create(owner=self.alice, name="Main", template="timeline", design={"accent": "#123456"})
+        res = self.client.post(f"/api/me/cvs/{cv.pk}/duplicate/")
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual((res.data["name"], res.data["template"], res.data["is_default"]), ("Main (copy)", "timeline", False))
+        self.assertEqual(res.data["design"], {"accent": "#123456"})
+
+    def test_preview_returns_page_images(self):
+        res = self.client.post("/api/me/cvs/preview/", {"template": "creative", "design": {"accent": "#c2410c"}}, format="json")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["page_count"], len(res.data["pages"]))
+        self.assertTrue(res.data["pages"][0].startswith("data:image/webp;base64,"))
+        bad = self.client.post("/api/me/cvs/preview/", {"template": "creative", "design": {"accent": "x"}}, format="json")
+        self.assertEqual(bad.status_code, status.HTTP_400_BAD_REQUEST)
+        self.client.force_authenticate(None)
+        self.assertEqual(self.client.post("/api/me/cvs/preview/", {}, format="json").status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_content_choices(self):
+        from .cv import cv_context
+
+        cv = CV(
+            owner=self.alice,
+            name="x",
+            content={
+                "headline": "Backend *engineer*",
+                "summary": "Hi **there** <script>",
+                "items": {"projects": [self.p2.pk]},
+                "sections": [
+                    {"id": "custom-pubs", "title": "Publications", "body": "- [Paper](https://example.com/p)"},
+                    {"id": "projects", "title": "Work"},
+                    {"id": "summary"},
+                    {"id": "skills", "visible": False},
+                ],
+                "hide_contact": ["email"],
+            },
+        )
+        ctx = cv_context(Portfolio.objects.get(owner=self.alice), "https://x/u/alice", cv)
+        sections = {s["id"]: s for s in ctx["sections"]}
+        self.assertEqual([s["id"] for s in ctx["sections"]][:3], ["custom-pubs", "projects", "summary"])
+        self.assertNotIn("skills", sections)
+        self.assertEqual(sections["projects"]["title"], "Work")
+        self.assertEqual([p["title"] for p in sections["projects"]["data"]], ["Two"])
+        self.assertEqual(sections["summary"]["data"], "<p>Hi <strong>there</strong> &lt;script&gt;</p>")
+        self.assertEqual(sections["custom-pubs"]["data"], '<ul><li><a href="https://example.com/p">Paper</a></li></ul>')
+        self.assertEqual(ctx["headline"], "Backend <em>engineer</em>")
+        self.assertNotIn("email", [c["kind"] for c in ctx["contact"]])
+
+    def test_rich_text_never_passes_html_through(self):
+        from .cv import rich
+
+        self.assertEqual(rich('[x](javascript:alert(1)) <img src=x onerror="y">'),
+                         "<p>[x](javascript:alert(1)) &lt;img src=x onerror=&quot;y&quot;&gt;</p>")
+        self.assertEqual(rich("Intro\n- a\n- b\n\nOutro"), "<p>Intro</p><ul><li>a</li><li>b</li></ul><p>Outro</p>")
+
+    @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+    def test_uploaded_photo_and_logo_are_embedded(self):
+        from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        from .cv import cv_context
+
+        buffer = BytesIO()
+        Image.new("RGB", (800, 600), "#336699").save(buffer, "JPEG")
+        upload = SimpleUploadedFile("me.jpg", buffer.getvalue(), content_type="image/jpeg")
+        cv = CV.objects.create(owner=self.alice, name="Main", design={"photo": "upload"})
+        res = self.client.patch(f"/api/me/cvs/{cv.pk}/", {"photo": upload}, format="multipart")
+        self.assertEqual(res.status_code, status.HTTP_200_OK, res.data)
+        cv.refresh_from_db()
+        ctx = cv_context(Portfolio.objects.get(owner=self.alice), "https://x/u/alice", cv)
+        self.assertTrue(ctx["photo"].startswith("data:image/jpeg;base64,"))
+        cv.design = {"photo": "none"}
+        self.assertIsNone(cv_context(Portfolio.objects.get(owner=self.alice), "https://x", cv)["photo"])
+
+    def test_seed_cvs(self):
+        make_user("sample")
+        call_command("seed_portfolio", "portfolio/seed/demo.json", owner="sample", stdout=open("/dev/null", "w"))
+        cvs = CV.objects.filter(owner__username="sample")
+        self.assertEqual(cvs.filter(is_default=True).count(), 1)
+        self.assertTrue(cvs.filter(is_public=False).exists())
+        self.assertGreaterEqual(cvs.values("template").distinct().count(), 3)

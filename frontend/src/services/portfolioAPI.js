@@ -20,6 +20,7 @@ export const portfolioAPI = {
     getCertificates: (username) => api.get(`${u(username)}/certificates/`),
     getLanguages: (username) => api.get(`${u(username)}/languages/`),
     getTestimonials: (username) => api.get(`${u(username)}/testimonials/`),
+    getCVs: (username) => api.get(`${u(username)}/cvs/`),
 
     sendMessage: (username, data) => api.post(`${u(username)}/contact/`, data),
 };
@@ -29,7 +30,8 @@ const fileUrl = (username, file, download) =>
     `${import.meta.env.VITE_API_URL}${u(username)}/${file}${download ? "?download=1" : ""}`;
 
 export const portfolioFiles = {
-    cv: (username, { download = false } = {}) => fileUrl(username, "cv.pdf", download),
+    // the default CV, or a public version by slug
+    cv: (username, { slug, download = false } = {}) => fileUrl(username, slug ? `cv/${slug}.pdf` : "cv.pdf", download),
     qr: (username, kind = "svg", { download = false } = {}) => fileUrl(username, `qr.${kind}`, download),
 };
 

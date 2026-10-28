@@ -28,6 +28,8 @@ Before this, `/resume` only had a "Download PDF" button that opened the browser'
 
 ## Next
 
+> Templates and owner controls have since been built: see [12 — CV builder](12-cv-builder.md).
+
 - More templates: academic (publications, research first) and a one-page variant, with a `?template=` switch.
 - Owner controls: pick which projects, sections and order go on the CV; job-specific versions.
 - Amharic CV (needs Amharic section labels and content).

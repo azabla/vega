@@ -1,0 +1,35 @@
+{% extends "cv/base.html" %}
+{% comment %}Creative: a full-width accent band with photo on page one, marked section titles.{% endcomment %}
+{% block style %}
+  .band {
+    margin: -{{ m.margin }}mm -{{ m.margin }}mm 0; padding: {{ m.margin|add:-3 }}mm {{ m.margin }}mm 8mm;
+    background: {{ colors.accent }}; color: {{ colors.on_accent }};
+    display: flex; align-items: center;
+  }
+  .band .who { flex: 1; min-width: 0; }
+  .band h1 { font-size: {{ m.h1 }}pt; }
+  .band .headline { color: {{ colors.on_accent }}; opacity: 0.88; }
+  .band .contact { margin-top: 3mm; color: {{ colors.on_accent }}; }
+  .band .photo { margin-left: 6mm; border: 1.2mm solid {{ colors.on_accent }}; }
+  .band .qr { margin-left: 5mm; width: 19mm; color: {{ colors.on_accent }}; }
+  .band .qr img { background: #ffffff; padding: 1.2mm; }
+  .sec-title { font-size: {{ m.headline }}pt; font-weight: 700; color: {{ colors.ink }}; margin-bottom: 2.5mm; }
+  .sec-title span::before {
+    content: ""; display: inline-block; width: 2.4mm; height: 2.4mm; margin-right: 2.2mm;
+    border-radius: 0.6mm; background: {{ colors.accent }}; vertical-align: 0.15em;
+  }
+  .when { padding: 0.2mm 2mm; border-radius: 2mm; background: {{ colors.tint }}; color: #2a2a2a; }
+  .sec:first-of-type { margin-top: 7mm; }
+{% endblock %}
+{% block body %}
+  <header class="band">
+    <div class="who">
+      <h1>{{ name }}</h1>
+      {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
+      {% include "cv/partials/contact.html" with icon_color=colors.on_accent %}
+    </div>
+    {% include "cv/partials/photo.html" with size="30mm" %}
+    {% include "cv/partials/qr.html" with label=" " %}
+  </header>
+  {% include "cv/partials/sections.html" with list=sections %}
+{% endblock %}

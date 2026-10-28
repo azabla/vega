@@ -1,0 +1,8 @@
+{% comment %}Contact details; pass icon_color (and stacked=True for one per line).{% endcomment %}
+{% if contact %}
+  <ul class="contact{% if stacked %} stacked{% endif %}">
+    {% for c in contact %}
+      <li>{% if design.icons %}<svg viewBox="0 0 24 24" fill="none" stroke="{{ icon_color|default:'#555555' }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{{ c.icon }}</svg>{% endif %}{% if c.href %}<a href="{{ c.href }}">{{ c.label }}</a>{% else %}{{ c.label }}{% endif %}</li>
+    {% endfor %}
+  </ul>
+{% endif %}

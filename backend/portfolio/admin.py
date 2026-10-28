@@ -9,6 +9,7 @@ from .models import (
     Service,
     Skill,
     Contact,
+    CV,
     Experience,
     Category,
     Certificate,
@@ -73,6 +74,12 @@ class LanguageAdmin(OwnedAdmin):
 class CertificateAdmin(OwnedAdmin):
     list_display = ["name", "issuer", "owner", "issue_date"]
     filter_horizontal = ["skills"]
+
+
+@admin.register(CV)
+class CVAdmin(OwnedAdmin):
+    list_display = ["name", "owner", "template", "is_default", "is_public", "updated_at"]
+    list_filter = ["owner", "template"]
 
 
 @admin.register(Testimonial)

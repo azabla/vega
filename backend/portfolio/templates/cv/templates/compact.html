@@ -1,0 +1,33 @@
+{% extends "cv/base.html" %}
+{% comment %}Compact: dense, section titles in a left column. Fits the most on one page.{% endcomment %}
+{% block page %}margin: {{ m.margin|add:-4 }}mm {{ m.margin|add:-3 }}mm {{ m.margin|add:-2 }}mm;{% endblock %}
+{% block style %}
+  header { display: flex; align-items: center; padding-bottom: 3mm; border-bottom: 1.2pt solid {{ colors.accent }}; }
+  header .photo { margin-right: 4mm; }
+  header .who { flex: 1; min-width: 0; }
+  header h1 { font-size: {{ m.h1 }}pt; }
+  header .headline { color: {{ colors.ink }}; margin-top: 0.8mm; }
+  header .contact { margin-top: 1.8mm; }
+  header .qr { flex: none; width: 17mm; margin-left: 4mm; }
+  header .qr img { width: 16mm; height: 16mm; }
+  .sec { position: relative; padding-left: 31mm; margin-top: {{ m.entry_gap }}mm; padding-top: {{ m.entry_gap }}mm; border-top: 0.5pt solid #e2e2e2; }
+  .sec:first-of-type { border-top: 0; }
+  .sec-title {
+    position: absolute; left: 0; top: {{ m.entry_gap }}mm; width: 27mm;
+    font-size: {{ m.tiny }}pt; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: {{ colors.ink }};
+  }
+  .entry + .entry { margin-top: 2mm; }
+  .skill-groups { grid-template-columns: 26mm 1fr; }
+{% endblock %}
+{% block body %}
+  <header>
+    {% include "cv/partials/photo.html" with size="19mm" %}
+    <div class="who">
+      <h1>{{ name }}</h1>
+      {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
+      {% include "cv/partials/contact.html" with icon_color=colors.ink %}
+    </div>
+    {% include "cv/partials/qr.html" with label=" " %}
+  </header>
+  {% include "cv/partials/sections.html" with list=sections %}
+{% endblock %}

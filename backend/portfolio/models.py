@@ -1,7 +1,10 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import F
+from django.utils.text import slugify
 
+from .cv_options import TEMPLATES as CV_TEMPLATES
+from .cv_options import validate_content, validate_design
 from .site_settings import validate_settings
 from .utils import OwnerUploadTo, generate_unique_slug
 
@@ -489,3 +492,46 @@ class Contact(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class CV(models.Model):
+    """One version of the owner's CV: a template plus design and content choices (see cv_options.py).
+
+    The content itself comes from the profile; a CV only chooses, orders and overrides it.
+    """
+
+    owner = owner_field("cvs")
+    name = models.CharField(max_length=120, help_text='For you, e.g. "General" or "Backend roles"')
+    slug = models.SlugField(blank=True, help_text="Public link: /api/u/<username>/cv/<slug>.pdf")
+    template = models.CharField(
+        max_length=20, choices=[(t, t.title()) for t in CV_TEMPLATES], default=CV_TEMPLATES[0]
+    )
+    design = models.JSONField(default=dict, blank=True, validators=[validate_design])
+    content = models.JSONField(default=dict, blank=True, validators=[validate_content])
+    photo = models.ImageField(upload_to=OwnerUploadTo("cv"), blank=True, null=True)
+    is_default = models.BooleanField(default=False, help_text="The CV behind the portfolio's Download PDF button")
+    is_public = models.BooleanField(default=True, help_text="Anyone with the link can download it")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "CV"
+        ordering = ["-is_default", "name", "id"]
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "slug"], name="unique_cv_slug_per_owner"),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_unique_slug(self, self.name if slugify(self.name) else "cv")
+        # The first CV is the default; making one the default unsets the others
+        if not self.is_default and not CV.objects.filter(owner_id=self.owner_id, is_default=True).exclude(pk=self.pk).exists():
+            self.is_default = True
+        if self.is_default:
+            self.is_public = True  # it backs the portfolio's public Download PDF button
+        super().save(*args, **kwargs)
+        if self.is_default:
+            CV.objects.filter(owner_id=self.owner_id, is_default=True).exclude(pk=self.pk).update(is_default=False)
+
+    def __str__(self):
+        return self.name

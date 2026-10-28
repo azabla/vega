@@ -2,6 +2,7 @@ import {
   Award,
   Briefcase,
   ExternalLink,
+  FileText,
   FolderKanban,
   GraduationCap,
   Inbox,
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/dashboard/appearance", label: "Appearance", icon: Palette },
+  { to: "/dashboard/cv", label: "CV & résumé", icon: FileText },
   { heading: "Profile" },
   { to: "/dashboard/profile", label: "Profile", icon: UserRound },
   { to: "/dashboard/about", label: "About & services", icon: Info },
@@ -115,7 +117,8 @@ export const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useAppLook();
-  const wide = location.pathname.startsWith("/dashboard/appearance");
+  // editors with a live preview, and the CV gallery
+  const wide = /^\/dashboard\/(appearance|cv)/.test(location.pathname);
 
   // Each page starts at the top
   useEffect(() => {

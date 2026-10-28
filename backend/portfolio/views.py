@@ -11,7 +11,7 @@ from django.utils.http import content_disposition_header
 from django.utils.text import slugify
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -20,6 +20,7 @@ from .models import (
     Category,
     Certificate,
     Contact,
+    CV,
     Education,
     Experience,
     Language,
@@ -32,6 +33,7 @@ from .serializers import (
     CategorySerializer,
     CertificateSerializer,
     ContactSerializer,
+    CVLinkSerializer,
     EducationSerializer,
     ExperienceSerializer,
     LanguageSerializer,
@@ -192,17 +194,34 @@ class FileView(PortfolioOwnerMixin, APIView):
 
 
 class CVPDFView(FileView):
-    """The CV as a PDF, built from the profile. 404 when the owner turned the résumé page off."""
+    """
+    A CV as a PDF, built from the profile: the default one at cv.pdf, any public
+    version at cv/<slug>.pdf. 404 when the owner turned the résumé page off.
+    """
 
     throttle_scope = "cv"
 
-    def get(self, request, username):
+    def get(self, request, username, slug=None):
         portfolio = self.get_portfolio()
         if portfolio.settings.get("pages", {}).get("resume") is False:
             raise Http404("This portfolio has no résumé.")
-        pdf = render_cv_pdf(portfolio, portfolio_url(request, portfolio.owner.username))
+        cv = get_object_or_404(CV, owner=portfolio.owner, slug=slug, is_public=True) if slug else None
+        pdf = render_cv_pdf(portfolio, portfolio_url(request, portfolio.owner.username), cv)
         name = slugify(portfolio.name) or portfolio.owner.username
-        return self.file_response(pdf, "application/pdf", f"{name}-cv.pdf")
+        return self.file_response(pdf, "application/pdf", f"{name}-{slug or 'cv'}.pdf")
+
+
+class CVListView(PortfolioOwnerMixin, ListAPIView):
+    """The owner's public CV versions, for "Download PDF" choices on the résumé page."""
+
+    serializer_class = CVLinkSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        portfolio = get_object_or_404(Portfolio, owner=self.get_owner())
+        if portfolio.settings.get("pages", {}).get("resume") is False:
+            return CV.objects.none()
+        return CV.objects.filter(owner=self.get_owner(), is_public=True)
 
 
 class QRCodeView(FileView):

@@ -1,0 +1,14 @@
+{% for p in d %}
+  <article class="entry">
+    <div class="entry-main">
+      <div class="entry-head">
+        <h3>{{ p.title }}{% if p.org %}<span class="org"> · {{ p.org }}</span>{% endif %}</h3>
+        {% if p.when %}<p class="when">{{ p.when }}</p>{% endif %}
+      </div>
+      {% if p.body %}<div class="body">{{ p.body }}</div>{% endif %}
+      {% if p.skills or p.link %}
+        <p class="tags">{{ p.skills|join:" · " }}{% if p.skills and p.link %} · {% endif %}{% if p.link %}<a class="link" href="{{ p.link }}">{{ p.link_label }}</a>{% endif %}</p>
+      {% endif %}
+    </div>
+  </article>
+{% endfor %}

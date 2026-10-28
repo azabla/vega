@@ -11,6 +11,7 @@ from .models import (
     Service,
     Skill,
     Contact,
+    CV,
     Experience,
     Category,
     Project,
@@ -345,3 +346,11 @@ class ContactSerializer(serializers.ModelSerializer):
         model = Contact
         exclude = ["owner"]
         read_only_fields = ["created_at"]
+
+
+class CVLinkSerializer(serializers.ModelSerializer):
+    """A public CV version: download it at /api/u/<username>/cv/<slug>.pdf."""
+
+    class Meta:
+        model = CV
+        fields = ["name", "slug", "template", "is_default", "updated_at"]

@@ -17,6 +17,7 @@ One document per piece of work, in the order it was done.
 | 09 | [CI/CD](09-ci-cd.md) | GitHub Actions: backend tests, lint, build and image checks on every push/PR; auto-deploy of `main` to the VPS |
 | 10 | [Appearance & UI polish](10-appearance-and-ui-polish.md) | Design system fully wired in; owners pick theme, fonts, layouts, sections and pages at `/dashboard/appearance` with a live preview |
 | 11 | [CV PDF & QR code](11-cv-pdf-and-qr.md) | Server-generated CV PDF (`/api/u/<username>/cv.pdf`, WeasyPrint) and a QR code to the portfolio, on `/resume` and the dashboard |
+| 12 | [CV builder](12-cv-builder.md) | CV versions with 9 templates, colours, fonts, photo, section order/renames, chosen entries and custom sections, edited at `/dashboard/cv` with a live preview |
 
 ## Quick start
 

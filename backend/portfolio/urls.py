@@ -7,6 +7,7 @@ from .views import (
     CategoryViewSet,
     CertificateViewSet,
     ContactViewSet,
+    CVListView,
     CVPDFView,
     EducationViewSet,
     LanguageViewSet,
@@ -53,15 +54,19 @@ me_router.register(r"certificates", me.MyCertificateViewSet, basename="my-certif
 me_router.register(r"languages", me.MyLanguageViewSet, basename="my-languages")
 me_router.register(r"testimonials", me.MyTestimonialViewSet, basename="my-testimonials")
 me_router.register(r"messages", me.MyMessageViewSet, basename="my-messages")
+me_router.register(r"cvs", me.MyCVViewSet, basename="my-cvs")
 
 urlpatterns = [
     path("testview/", TestView, name="testview"),
     path("me/profile/", me.MyProfileView.as_view(), name="my-profile"),
     path("me/about/", me.MyAboutView.as_view(), name="my-about"),
+    path("me/cvs/preview/", me.MyCVPreviewView.as_view(), name="my-cv-preview"),
     path("me/", include(me_router.urls)),
     path("u/<str:username>/profile/", ProfileAPIView.as_view(), name="profile"),
     path("u/<str:username>/about/", AboutAPIView.as_view(), name="about"),
     path("u/<str:username>/cv.pdf", CVPDFView.as_view(), name="cv-pdf"),
+    path("u/<str:username>/cv/<slug:slug>.pdf", CVPDFView.as_view(), name="cv-version-pdf"),
+    path("u/<str:username>/cvs/", CVListView.as_view(), name="cv-list"),
     re_path(r"^u/(?P<username>[^/]+)/qr\.(?P<kind>svg|png)$", QRCodeView.as_view(), name="qr-code"),
     path("u/<str:username>/", include(public_router.urls)),
 ]

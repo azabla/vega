@@ -1,8 +1,9 @@
-import { ArrowDown, ArrowUp, Check, ExternalLink, Eye, EyeOff, Laptop, Loader2, Moon, RotateCcw, Smartphone, Sun } from "lucide-react";
+import { ArrowDown, ArrowUp, ExternalLink, Eye, EyeOff, Laptop, Loader2, Moon, RotateCcw, Smartphone, Sun } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "@/api/axios";
 import { useAuth } from "@/auth/context";
 import { Button } from "@/components/ui/button";
+import { Choices, Switch } from "@/dashboard/components/Choices";
 import { ListSkeleton, LoadError, PageHeader, Panel } from "@/dashboard/components/Page";
 import { parseApiError } from "@/dashboard/lib/records";
 import { useResource } from "@/dashboard/lib/useResource";
@@ -122,32 +123,6 @@ const PAGE_LABELS = {
   contact: "Contact",
 };
 
-/** Radio group drawn as tiles; native radios keep arrow-key navigation. */
-const Choices = ({ name, value, onChange, options, columns = "grid-cols-2", render }) => (
-  <div className={cn("grid gap-2", columns)} role="radiogroup">
-    {options.map((o) => {
-      const checked = value === o.id;
-      return (
-        <label
-          key={o.id}
-          className={cn(
-            "relative flex cursor-pointer flex-col gap-2 rounded-xl border bg-background p-3 text-sm transition has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary-ink",
-            checked ? "border-primary-ink ring-1 ring-primary-ink" : "hover:border-input"
-          )}
-        >
-          <input type="radio" name={name} checked={checked} onChange={() => onChange(o.id)} className="sr-only" />
-          {render(o, checked)}
-          {checked && (
-            <span className="absolute top-2 right-2 flex size-5 items-center justify-center rounded-full bg-primary-ink text-background">
-              <Check className="size-3" strokeWidth={3} />
-            </span>
-          )}
-        </label>
-      );
-    })}
-  </div>
-);
-
 const Sketch = ({ option }) => (
   <>
     <span className="block h-12 rounded-lg border bg-card p-2 text-foreground">{option.sketch}</span>
@@ -156,19 +131,6 @@ const Sketch = ({ option }) => (
       <span className="block text-xs leading-5 text-muted-foreground">{option.hint}</span>
     </span>
   </>
-);
-
-const Switch = ({ checked, onChange, label }) => (
-  <button
-    type="button"
-    role="switch"
-    aria-checked={checked}
-    aria-label={label}
-    onClick={() => onChange(!checked)}
-    className={cn("relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition", checked ? "border-primary-ink bg-primary-ink" : "bg-muted")}
-  >
-    <span className={cn("absolute size-[1.125rem] rounded-full bg-background shadow transition-transform", checked ? "translate-x-[1.3rem]" : "translate-x-0.5")} />
-  </button>
 );
 
 /** The real site in an iframe, fed the unsaved draft over postMessage. */
