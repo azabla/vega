@@ -1,0 +1,7 @@
+{% if design.skills_style == "tags" %}
+  <ul class="chips">{% for name in d.all %}<li>{{ name }}</li>{% endfor %}</ul>
+{% else %}
+  <dl class="skill-groups">
+    {% for category, names in d.groups.items %}<dt>{{ category }}</dt><dd>{{ names|join:", " }}</dd>{% endfor %}
+  </dl>
+{% endif %}

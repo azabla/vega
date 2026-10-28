@@ -1,0 +1,44 @@
+{% extends "cv/base.html" %}
+{% comment %}Executive: a deep accent sidebar with white text, uppercase name, ruled section titles.{% endcomment %}
+{% block page %}
+  margin-left: 0;
+  background: linear-gradient(to right, {{ colors.deep }} 66mm, #ffffff 66mm) no-repeat;
+  background-origin: border-box;
+  @bottom-left { content: none; }
+{% endblock %}
+{% block style %}
+  aside { float: left; width: 48mm; padding: 0 6mm 0 12mm; color: #ffffff; }
+  main { margin-left: 76mm; }
+  aside .photo { margin: 0 auto 6mm; border: 0.8mm solid #ffffff; }
+  aside .contact { color: #ffffff; margin-bottom: 3mm; word-break: break-all; }
+  aside .sec-title {
+    font-size: {{ m.tiny }}pt; font-weight: 650; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #ffffff; border-bottom: 0.6pt solid {{ colors.on_deep_muted }}; padding-bottom: 1mm; margin-bottom: 2.5mm;
+  }
+  aside .skill-groups { display: block; }
+  aside .skill-groups dd, aside .plain .sub { color: {{ colors.on_deep_muted }}; margin-bottom: 2mm; }
+  aside .chips li { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
+  aside .qr { margin-top: 7mm; color: {{ colors.on_deep_muted }}; }
+  aside .qr img { background: #ffffff; padding: 1.2mm; }
+  main > header h1 { text-transform: uppercase; letter-spacing: 0.04em; font-size: {{ m.h1 }}pt; }
+  main > header .headline { color: {{ colors.ink }}; letter-spacing: 0.06em; text-transform: uppercase; font-size: {{ m.small }}pt; margin-top: 2mm; }
+  main .sec-title {
+    font-size: {{ m.small }}pt; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: {{ colors.ink }}; border-bottom: 1pt solid {{ colors.accent }}; padding-bottom: 1mm; margin-bottom: 3mm;
+  }
+{% endblock %}
+{% block body %}
+  <aside>
+    {% include "cv/partials/photo.html" with size="34mm" %}
+    {% include "cv/partials/contact.html" with icon_color="#ffffff" stacked=True %}
+    {% include "cv/partials/sections.html" with list=side_sections %}
+    {% include "cv/partials/qr.html" %}
+  </aside>
+  <main>
+    <header>
+      <h1>{{ name }}</h1>
+      {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
+    </header>
+    {% include "cv/partials/sections.html" with list=main_sections %}
+  </main>
+{% endblock %}

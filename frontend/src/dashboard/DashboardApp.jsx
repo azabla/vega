@@ -13,12 +13,18 @@ import {
   TestimonialsPage,
 } from "@/dashboard/pages/ProfilePages";
 import { AppearancePage } from "@/dashboard/pages/AppearancePage";
+import { CVEditorPage, CVListPage } from "@/dashboard/pages/CVPages";
 import { ProjectEditorPage, ProjectsPage } from "@/dashboard/pages/ProjectPages";
 
 // A fresh editor per project, so state never leaks between projects
 const ProjectEditorRoute = () => {
   const { id } = useParams();
   return <ProjectEditorPage key={id} />;
+};
+
+const CVEditorRoute = () => {
+  const { id } = useParams();
+  return <CVEditorPage key={id} />;
 };
 
 // Mounted at /dashboard/* and lazy-loaded, so portfolio visitors never download it
@@ -29,6 +35,8 @@ export default function DashboardApp() {
         <Route element={<DashboardLayout />}>
           <Route index element={<OverviewPage />} />
           <Route path="appearance" element={<AppearancePage />} />
+          <Route path="cv" element={<CVListPage />} />
+          <Route path="cv/:id" element={<CVEditorRoute />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="skills" element={<SkillsPage />} />

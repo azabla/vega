@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, Copy, ExternalLink, Inbox, Mail, Trash2 } from "lucide-react";
+import { CheckCircle2, Circle, Copy, ExternalLink, FileDown, Inbox, Mail, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "@/api/axios";
@@ -14,6 +14,8 @@ import { parseApiError } from "@/dashboard/lib/records";
 import { useResource } from "@/dashboard/lib/useResource";
 import { toast } from "@/hooks/use-toast";
 import { authAPI } from "@/services/authAPI";
+import { portfolioFiles } from "@/services/portfolioAPI";
+import { resolveSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
 const dateTime = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" });
@@ -62,6 +64,8 @@ export const OverviewPage = () => {
   const done = list.filter((s) => s.done).length;
   const percent = Math.round((done / list.length) * 100);
   const publicUrl = `${window.location.origin}/u/${user.username}`;
+  // the CV PDF 404s while the Résumé page is switched off
+  const hasCv = Boolean(profile.data) && resolveSettings(profile.data.settings).pages.resume;
 
   const copyLink = async () => {
     try {
@@ -88,20 +92,52 @@ export const OverviewPage = () => {
 
       <div className="flex flex-col gap-6">
         <Panel>
-          <p className="text-sm font-medium">Your portfolio</p>
-          <p className="mt-1 truncate font-mono text-sm text-muted-foreground">{publicUrl}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <a
-              href={`/u/${user.username}`}
-              target="_blank"
-              rel="noreferrer"
-              className={cn(buttonVariants({ size: "lg" }), "px-3.5")}
-            >
-              <ExternalLink /> Open
-            </a>
-            <Button type="button" variant="outline" size="lg" className="px-3.5" onClick={copyLink}>
-              <Copy /> Copy link
-            </Button>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Your portfolio</p>
+              <p className="mt-1 truncate font-mono text-sm text-muted-foreground">{publicUrl}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <a
+                  href={`/u/${user.username}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(buttonVariants({ size: "lg" }), "px-3.5")}
+                >
+                  <ExternalLink /> Open
+                </a>
+                <Button type="button" variant="outline" size="lg" className="px-3.5" onClick={copyLink}>
+                  <Copy /> Copy link
+                </Button>
+                {hasCv && (
+                  <Button href={portfolioFiles.cv(user.username, { download: true })} variant="outline" size="lg" className="px-3.5">
+                    <FileDown /> CV (PDF)
+                  </Button>
+                )}
+              </div>
+            </div>
+            <figure className="flex shrink-0 items-center gap-4 sm:flex-col sm:gap-2">
+              <img
+                src={portfolioFiles.qr(user.username)}
+                alt={`QR code that opens ${publicUrl}`}
+                width={112}
+                height={112}
+                className="size-28 rounded-lg border"
+              />
+              <figcaption className="flex flex-col gap-1 text-xs text-muted-foreground sm:items-center">
+                <span>Scan to open your portfolio</span>
+                <span className="flex gap-3">
+                  {["png", "svg"].map((kind) => (
+                    <a
+                      key={kind}
+                      href={portfolioFiles.qr(user.username, kind, { download: true })}
+                      className="font-medium text-foreground underline underline-offset-4 hover:text-primary-ink"
+                    >
+                      {kind.toUpperCase()}
+                    </a>
+                  ))}
+                </span>
+              </figcaption>
+            </figure>
           </div>
         </Panel>
 

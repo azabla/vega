@@ -5,16 +5,26 @@ A logged-in user creates, edits and deletes their own portfolio content.
 Every queryset is filtered to request.user, so other users' objects return 404.
 """
 
-from rest_framework import generics, mixins, viewsets
+from django.db import transaction
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.utils.http import content_disposition_header
+from django.utils.text import slugify
+from rest_framework import generics, mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from . import manage_serializers as s
+from .cv import portfolio_url, preview_pages, render_cv_pdf
 from .models import (
     About,
     AboutPhoto,
     Category,
     Certificate,
     Contact,
+    CV,
     Education,
     Experience,
     Language,
@@ -206,3 +216,73 @@ class MyMessageViewSet(
 
     def get_queryset(self):
         return Contact.objects.filter(owner=self.request.user)
+
+
+class MyCVViewSet(OwnedViewSet):
+    """The owner's CV versions. Each one picks a template, design and content from the profile."""
+
+    model = CV
+    serializer_class = s.MyCVSerializer
+
+    def perform_content_negotiation(self, request, force=False):
+        # pdf/ answers any Accept header; errors still come back as JSON
+        return super().perform_content_negotiation(request, force=True)
+
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        was_default = instance.is_default
+        instance.delete()
+        successor = CV.objects.filter(owner=self.request.user).first()
+        if was_default and successor:
+            successor.is_default = True
+            successor.save()
+
+    @action(detail=True, methods=["post"])
+    def duplicate(self, request, pk=None):
+        original = self.get_object()
+        copy = CV.objects.create(
+            owner=request.user,
+            name=f"{original.name} (copy)"[:120],
+            template=original.template,
+            design=original.design,
+            content=original.content,
+            photo=original.photo.name or None,
+            is_default=False,
+            is_public=original.is_public,
+        )
+        return Response(self.get_serializer(copy).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["get"])
+    def pdf(self, request, pk=None):
+        """Download any of the owner's CVs, public or not."""
+        cv = self.get_object()
+        portfolio = get_or_create_portfolio(request.user)
+        pdf = render_cv_pdf(portfolio, portfolio_url(request, request.user.username), cv)
+        response = HttpResponse(pdf, content_type="application/pdf")
+        name = f"{slugify(portfolio.name) or request.user.username}-{cv.slug}.pdf"
+        response["Content-Disposition"] = content_disposition_header(True, name)
+        return response
+
+
+class MyCVPreviewView(APIView):
+    """POST a draft (template, design, content) and get its pages back as images."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_scope = "cv_preview"
+
+    def post(self, request):
+        serializer = s.CVPreviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        draft = serializer.validated_data
+        saved = draft.get("id") and get_object_or_404(CV, pk=draft["id"], owner=request.user)
+        cv = CV(
+            owner=request.user,
+            name=saved.name if saved else "Preview",
+            template=draft.get("template", CV._meta.get_field("template").default),
+            design=draft.get("design", {}),
+            content=draft.get("content", {}),
+            photo=saved.photo if saved else None,
+        )
+        portfolio = get_or_create_portfolio(request.user)
+        pdf = render_cv_pdf(portfolio, portfolio_url(request, request.user.username), cv)
+        return Response(preview_pages(pdf))

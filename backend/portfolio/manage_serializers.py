@@ -13,6 +13,7 @@ from .models import (
     AboutPhoto,
     Category,
     Certificate,
+    CV,
     Education,
     Contact,
     Experience,
@@ -274,3 +275,23 @@ class MyMessageSerializer(serializers.ModelSerializer):
         model = Contact
         fields = ["id", "name", "email", "subject", "message", "created_at"]
         read_only_fields = fields
+
+
+class MyCVSerializer(SluggedModelSerializer):
+    class Meta:
+        model = CV
+        fields = [
+            "id", "owner", "name", "slug", "template", "design", "content", "photo",
+            "is_default", "is_public", "created_at", "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+
+class CVPreviewSerializer(serializers.ModelSerializer):
+    """An unsaved draft for the editor's live preview; `id` reuses that CV's photo."""
+
+    id = serializers.IntegerField(required=False, allow_null=True)
+
+    class Meta:
+        model = CV
+        fields = ["id", "template", "design", "content"]

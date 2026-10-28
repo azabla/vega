@@ -1,0 +1,5 @@
+<ul class="plain">
+  {% for c in d %}
+    <li>{% if c.link %}<a href="{{ c.link }}">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %} <span class="sub">· {{ c.issuer }}{% if c.when %}, {{ c.when }}{% endif %}</span></li>
+  {% endfor %}
+</ul>

@@ -1,0 +1,27 @@
+{% extends "cv/base.html" %}
+{% comment %}Elegant: centred header and section titles between hairlines; best with a serif pairing.{% endcomment %}
+{% block style %}
+  header { text-align: center; position: relative; padding-bottom: 2mm; }
+  header .photo { margin: 0 auto 4mm; }
+  header h1 { font-size: {{ m.h1 }}pt; }
+  header .headline { text-transform: uppercase; letter-spacing: 0.16em; font-size: {{ m.small }}pt; color: {{ colors.ink }}; margin-top: 2.5mm; }
+  header .contact { margin-top: 3.5mm; }
+  header .contact li { margin: 0.6mm 2.2mm; }
+  header .qr { position: absolute; top: 0; right: 0; width: 19mm; }
+  .sec-title { display: flex; align-items: center; gap: 3mm; margin-bottom: 3mm; }
+  .sec-title::before, .sec-title::after { content: ""; flex: 1; border-top: 0.6pt solid {{ colors.line }}; }
+  .sec-title span {
+    font-family: "CV Heading", "CV Ethiopic", serif; font-weight: {{ fonts.heading_weight }};
+    font-size: {{ m.headline }}pt; letter-spacing: 0.04em; color: {{ colors.ink }};
+  }
+{% endblock %}
+{% block body %}
+  <header>
+    {% include "cv/partials/photo.html" with size="26mm" %}
+    <h1>{{ name }}</h1>
+    {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
+    {% include "cv/partials/contact.html" with icon_color=colors.ink %}
+    {% include "cv/partials/qr.html" with label=" " %}
+  </header>
+  {% include "cv/partials/sections.html" with list=sections %}
+{% endblock %}

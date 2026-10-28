@@ -1,0 +1,37 @@
+{% extends "cv/base.html" %}
+{% comment %}Timeline: dates in a left gutter, entries on a vertical accent line.{% endcomment %}
+{% block style %}
+  header { display: flex; align-items: center; padding-bottom: 4mm; }
+  header .photo { margin-right: 5mm; }
+  header .who { flex: 1; min-width: 0; }
+  header h1 { color: {{ colors.ink }}; }
+  header .contact { margin-top: 2.5mm; }
+  header .qr { flex: none; width: 20mm; margin-left: 5mm; }
+  .sec { margin-left: 30mm; }
+  .sec-title { font-size: {{ m.small }}pt; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: {{ colors.ink }}; margin-bottom: 2.5mm; }
+  .sec-experience .entry, .sec-education .entry, .sec-volunteering .entry, .sec-projects .entry {
+    position: relative; padding-left: 5mm; border-left: 0.9pt solid {{ colors.line }};
+    padding-bottom: {{ m.entry_gap }}mm; margin-top: 0;
+  }
+  .sec .entry::before {
+    content: ""; position: absolute; left: -1.55mm; top: 1.1mm; width: 2.4mm; height: 2.4mm;
+    border-radius: 50%; background: #ffffff; border: 0.9pt solid {{ colors.accent }};
+  }
+  .sec .entry:first-child::before { background: {{ colors.accent }}; }
+  .sec .when { position: absolute; left: -30mm; top: 0; width: 25mm; margin: 0; text-align: right; }
+  .entry.with-logo { display: block; }
+  .entry .logo { float: right; margin: 0 0 1mm 3mm; }
+  .sec-certificates .plain, .sec-languages .plain, .sec-skills .chips { padding-left: 0; }
+{% endblock %}
+{% block body %}
+  <header>
+    {% include "cv/partials/photo.html" with size="24mm" %}
+    <div class="who">
+      <h1>{{ name }}</h1>
+      {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
+      {% include "cv/partials/contact.html" with icon_color=colors.ink %}
+    </div>
+    {% include "cv/partials/qr.html" %}
+  </header>
+  {% include "cv/partials/sections.html" with list=sections %}
+{% endblock %}

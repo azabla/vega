@@ -1,0 +1,7 @@
+{% comment %}Renders `list` (sections from cv/context.py). The title's <span> lets templates style it.{% endcomment %}
+{% for s in list %}
+  <section class="sec sec-{{ s.kind }}">
+    <h2 class="sec-title"><span>{{ s.title }}</span></h2>
+    {% include s.partial with d=s.data %}
+  </section>
+{% endfor %}

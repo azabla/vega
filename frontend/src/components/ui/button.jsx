@@ -40,7 +40,7 @@ const buttonVariants = cva(
   }
 )
 
-const isExternal = (href) => /^(https?:|mailto:|tel:|\/\/)/.test(href) || /\/media\//.test(href);
+const isExternal = (href) => /^(https?:|mailto:|tel:|\/\/)/.test(href) || /\/(media|api)\//.test(href);
 
 /** `href` turns the button into a router link, or a plain link for external URLs and files. */
 function Button({

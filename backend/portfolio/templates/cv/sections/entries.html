@@ -1,0 +1,12 @@
+{% for e in d %}
+  <article class="entry{% if e.logo %} with-logo{% endif %}">
+    {% if e.logo %}<img class="logo" src="{{ e.logo }}" alt="">{% endif %}
+    <div class="entry-main">
+      <div class="entry-head">
+        <h3>{{ e.title }}{% if e.org %}<span class="org"> · {{ e.org }}</span>{% endif %}</h3>
+        {% if e.when %}<p class="when">{{ e.when }}</p>{% endif %}
+      </div>
+      {% if e.body %}<div class="body">{{ e.body }}</div>{% endif %}
+    </div>
+  </article>
+{% endfor %}

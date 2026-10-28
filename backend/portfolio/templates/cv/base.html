@@ -1,0 +1,100 @@
+<!doctype html>
+{% comment %}
+  Shared skeleton for every CV template (portfolio/cv/). A template extends this,
+  adds its CSS in {% block style %} and its layout in {% block body %}.
+  Values in the CSS (sizes in pt/mm, colours) are computed in portfolio/cv/style.py.
+{% endcomment %}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ name }} — CV</title>
+  <meta name="author" content="{{ name }}">
+  <meta name="generator" content="Vega">
+  <style>
+    @font-face { font-family: "CV Heading"; src: url("{{ fonts.heading }}"); font-weight: 100 900; }
+    @font-face { font-family: "CV Body"; src: url("{{ fonts.body }}"); font-weight: 100 900; }
+    @font-face { font-family: "CV Body"; src: url("{{ fonts.body_italic }}"); font-weight: 100 900; font-style: italic; }
+    @font-face { font-family: "CV Ethiopic"; src: url("noto-sans-ethiopic-ethiopic-wght-normal.woff2"); font-weight: 100 900; }
+
+    @page {
+      size: {{ paper }};
+      margin: {{ m.margin }}mm {{ m.margin }}mm {{ m.margin|add:2 }}mm;
+      @bottom-left { content: string(cv-name); }
+      @bottom-right { content: "Page " counter(page) " of " counter(pages); }
+      @bottom-left, @bottom-right { font: {{ m.tiny }}pt "CV Body", "CV Ethiopic", sans-serif; color: #6b6b6b; }
+      {% block page %}{% endblock %}
+    }
+    @page :first { @bottom-left { content: none; } }
+
+    html { font: {{ m.base }}pt/{{ m.line }} "CV Body", "CV Ethiopic", sans-serif; color: #1a1a1a; }
+    body { margin: 0; }
+    h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; }
+    a { color: inherit; text-decoration: none; }
+    strong { font-weight: 650; }
+
+    h1 {
+      font-family: "CV Heading", "CV Ethiopic", serif;
+      font-weight: {{ fonts.heading_weight }};
+      letter-spacing: {{ fonts.heading_tracking }};
+      font-size: {{ m.h1 }}pt; line-height: 1.08;
+      string-set: cv-name content();
+    }
+    .headline { margin-top: 1.5mm; font-size: {{ m.headline }}pt; color: #474747; }
+
+    .contact { padding: 0; list-style: none; font-size: {{ m.small }}pt; color: #4a4a4a; }
+    .contact li { display: inline-block; margin: 0.6mm 4.5mm 0.6mm 0; white-space: nowrap; }
+    .contact svg { width: 1.05em; height: 1.05em; vertical-align: -0.17em; margin-right: 1.2mm; }
+    .contact.stacked li { display: block; margin: 0 0 1.6mm; white-space: normal; }
+
+    .photo { display: block; object-fit: cover; }
+    .photo.circle { border-radius: 50%; }
+    .photo.rounded { border-radius: 3mm; }
+
+    .qr { display: block; text-align: center; font-size: {{ m.tiny }}pt; color: #6b6b6b; }
+    .qr img { display: block; width: 19mm; height: 19mm; margin: 0 auto 1.2mm; }
+
+    .sec { margin-top: {{ m.section_gap }}mm; }
+    .sec-title { break-after: avoid; }
+
+    .entry + .entry { margin-top: {{ m.entry_gap }}mm; }
+    .entry.with-logo { display: flex; }
+    .entry .logo { flex: none; width: 8mm; height: 8mm; object-fit: contain; margin: 0.4mm 3mm 0 0; }
+    .entry-main { flex: 1; min-width: 0; }
+    .entry-head { display: flex; justify-content: space-between; align-items: baseline; break-after: avoid; }
+    h3 { flex: 1; min-width: 0; font-size: {{ m.h3 }}pt; font-weight: 600; }
+    h3 .org { font-weight: 400; color: #4f4f4f; }
+    .when { flex: none; margin-left: 4mm; font-size: {{ m.small }}pt; color: #666; font-variant-numeric: tabular-nums; }
+
+    .body { margin-top: 0.8mm; color: #3d3d3d; }
+    .body p + p, .body p + ul, .body ul + p { margin-top: 1.2mm; }
+    .body ul { padding-left: 4.2mm; }
+    .body li { break-inside: avoid; }
+    .body li + li { margin-top: {{ m.item_gap }}mm; }
+    .body p, .body li { orphans: 2; widows: 2; }
+    .body a, .link { color: {{ colors.ink }}; }
+    .link { font-size: {{ m.small }}pt; }
+
+    .tags { margin-top: 0.8mm; font-size: {{ m.tiny }}pt; color: #666; }
+    .chips { padding: 0; list-style: none; }
+    .chips li {
+      display: inline-block; margin: 0 1.2mm 1.4mm 0; padding: 0.5mm 2.4mm;
+      border-radius: 3mm; background: {{ colors.tint }}; color: #1f1f1f; font-size: {{ m.small }}pt;
+    }
+    .skill-groups { display: grid; grid-template-columns: 30mm 1fr; gap: 1.2mm 5mm; }
+    .skill-groups dt { font-weight: 600; }
+    .skill-groups dd { color: #3d3d3d; }
+    .skill-groups.stacked { display: block; }
+    .skill-groups.stacked dd { margin-bottom: 2mm; }
+
+    .plain { padding: 0; list-style: none; }
+    .plain li { break-inside: avoid; }
+    .plain li + li { margin-top: 1.2mm; }
+    .plain .sub { color: #5a5a5a; }
+
+    {% block style %}{% endblock %}
+  </style>
+</head>
+<body class="tpl-{{ template }}">
+  {% block body %}{% endblock %}
+</body>
+</html>

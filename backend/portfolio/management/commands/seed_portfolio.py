@@ -12,6 +12,8 @@ Safe to run repeatedly:
 - services, principles, experience, education, certificates and testimonials
   are replaced only when the file contains that section
 - profile "settings" (theme, layout, ...) are validated like the owner API
+- "cvs" (CV versions: name, template, design, content, is_default) replace the
+  user's CVs when the file contains that section; design and content are validated
 --reset first deletes all of the user's portfolio content (not the account).
 """
 
@@ -26,6 +28,7 @@ from portfolio.models import (
     About,
     Category,
     Certificate,
+    CV,
     Education,
     Experience,
     Language,
@@ -90,6 +93,8 @@ class Command(BaseCommand):
                 self.seed_project(user, project)
             if "testimonials" in data:
                 self.seed_testimonials(user, data["testimonials"])
+            if "cvs" in data:
+                self.seed_cvs(user, data["cvs"])
 
         self.stdout.write(self.style.SUCCESS(
             f"Seeded {user.username}: {Skill.objects.filter(owner=user).count()} skills, "
@@ -98,7 +103,7 @@ class Command(BaseCommand):
 
     def reset(self, user):
         for model in (
-            Testimonial, Project, Skill, Category, Experience, Education, Certificate, Language, About,
+            CV, Testimonial, Project, Skill, Category, Experience, Education, Certificate, Language, About,
         ):
             model.objects.filter(owner=user).delete()
 
@@ -206,3 +211,13 @@ class Command(BaseCommand):
                 raise CommandError(f"Testimonial from {item.get('name')}: no project '{slug}'.")
             item.setdefault("order", i)
             Testimonial.objects.create(owner=user, project=project, **item)
+
+    def seed_cvs(self, user, items):
+        CV.objects.filter(owner=user).delete()
+        for item in items:
+            cv = CV(owner=user, **item)
+            try:
+                cv.full_clean(exclude=["owner", "slug", "photo"])
+            except ValidationError as e:
+                raise CommandError(f"Invalid CV {item.get('name')}: {e.message_dict}")
+            cv.save()
