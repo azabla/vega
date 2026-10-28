@@ -7,6 +7,7 @@ import { useAppearance } from "@/hooks/useAppearance";
 import { useProjects } from "@/hooks/usePortfolio";
 import { usePortfolioPath } from "@/hooks/usePortfolioPath";
 import { featuredProjects } from "@/lib/portfolio";
+import { labelsOf } from "@/lib/professions";
 
 /** Projects in the owner's chosen layout: showcase | grid | list. */
 export const ProjectList = ({ projects, layout }) => {
@@ -47,12 +48,13 @@ export const FeaturedProjects = () => {
   if (!loading && !projects.length) return null;
   const featured = featuredProjects(projects ?? [], 3);
   const more = (projects?.length ?? 0) - featured.length;
+  const labels = labelsOf(settings.profession);
 
   return (
     <Section id="projects">
       <SectionHeader
-        eyebrow="Selected work"
-        title="Things I've built"
+        eyebrow={labels.projectsEyebrow}
+        title={labels.projectsHome}
         description="Case studies of the work I'm proudest of: the problem, how I approached it and what changed."
         action={
           settings.pages.projects && (

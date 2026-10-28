@@ -49,6 +49,8 @@ import {
   resolveSections,
   templateOf,
 } from "@/lib/cv";
+import { cvSectionTitle, professionOf } from "@/lib/professions";
+import { resolveSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 import { portfolioFiles } from "@/services/portfolioAPI";
 
@@ -89,9 +91,12 @@ const TemplatePicker = ({ name, value, onChange, columns = "grid-cols-2 sm:grid-
 
 // ---------------------------------------------------------------- list
 
-const NewCvModal = ({ open, onClose, onCreated, count }) => {
+const NewCvModal = ({ open, onClose, onCreated, count, profession }) => {
   const [name, setName] = useState("");
-  const [template, setTemplate] = useState("classic");
+  const [picked, setTemplate] = useState(null);
+  // until the owner picks one, start from the template that suits their profession
+  const suggested = professionOf(profession).cvTemplate;
+  const template = picked ?? suggested;
   const [saving, setSaving] = useState(false);
   const id = useId();
 
@@ -113,7 +118,11 @@ const NewCvModal = ({ open, onClose, onCreated, count }) => {
       open={open}
       onClose={onClose}
       title="New CV"
-      description="Pick a starting template. You can change the template, colours and content at any time."
+      description={
+        profession && profession !== "general"
+          ? `Pick a starting template (suggested for ${professionOf(profession).name}: ${templateOf(suggested).name}). You can change the template, colours and content at any time.`
+          : "Pick a starting template. You can change the template, colours and content at any time."
+      }
       className="sm:max-w-3xl"
       footer={
         <>
@@ -140,6 +149,7 @@ const NewCvModal = ({ open, onClose, onCreated, count }) => {
 
 export const CVListPage = () => {
   const { data, loading, error, reload, mutate } = useResource("/me/cvs/");
+  const profile = useResource("/me/profile/");
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -251,6 +261,7 @@ export const CVListPage = () => {
 
       <NewCvModal
         open={creating}
+        profession={profile.data ? resolveSettings(profile.data.settings).profession : undefined}
         count={data?.length ?? 0}
         onClose={() => setCreating(false)}
         onCreated={(cv) => navigate(`/dashboard/cv/${cv.id}`)}
@@ -392,11 +403,12 @@ const ItemPicker = ({ kind, value, onChange }) => {
   );
 };
 
-const SectionRow = ({ section, index, count, onMove, onChange, onRemove, content, setContent }) => {
+const SectionRow = ({ section, index, count, onMove, onChange, onRemove, content, setContent, profession }) => {
   const [open, setOpen] = useState(isCustomSection(section.id) && !section.body);
   const id = useId();
   const custom = isCustomSection(section.id);
-  const label = section.title || CV_SECTIONS[section.id] || "Custom section";
+  const defaultTitle = cvSectionTitle(profession, section.id) ?? CV_SECTIONS[section.id];
+  const label = section.title || defaultTitle || "Custom section";
 
   return (
     <li className={cn("bg-background", !section.visible && "bg-muted/50")}>
@@ -437,7 +449,7 @@ const SectionRow = ({ section, index, count, onMove, onChange, onRemove, content
               id={`${id}-title`}
               value={section.title}
               maxLength={80}
-              placeholder={CV_SECTIONS[section.id] ?? "e.g. Publications, Awards, References"}
+              placeholder={defaultTitle ?? "e.g. Publications, Awards, References"}
               onChange={(e) => onChange({ title: e.target.value })}
             />
           </div>
@@ -561,6 +573,7 @@ export const CVEditorPage = () => {
   const customCount = sections.filter((s) => isCustomSection(s.id)).length;
   const hidden = new Set(current.content.hide_contact ?? []);
   const contactFields = CONTACT_FIELDS.filter((f) => profile.data?.[f.id]);
+  const profession = profile.data ? resolveSettings(profile.data.settings).profession : "general";
   const publicUrl = portfolioFiles.cv(user.username, { slug: cv.data.slug });
 
   const moveSection = (index, step) => {
@@ -777,6 +790,7 @@ export const CVEditorPage = () => {
                   count={sections.length}
                   content={current.content}
                   setContent={setContent}
+                  profession={profession}
                   onMove={(step) => moveSection(i, step)}
                   onChange={(patch) => setSections(sections.map((x) => (x.id === s.id ? { ...x, ...patch } : x)))}
                   onRemove={() => setSections(sections.filter((x) => x.id !== s.id))}

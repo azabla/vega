@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import (
     About,
     AboutPhoto,
+    Achievement,
     Certificate,
     Education,
     Language,
@@ -326,6 +327,14 @@ class CertificateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Certificate
+        exclude = ["owner"]
+
+
+class AchievementSerializer(serializers.ModelSerializer):
+    kind_display = serializers.CharField(source="get_kind_display", read_only=True)
+
+    class Meta:
+        model = Achievement
         exclude = ["owner"]
 
 

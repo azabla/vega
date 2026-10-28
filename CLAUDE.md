@@ -72,6 +72,7 @@ for numbers, `animate-page-in` on route change. Everything collapses under `pref
 
 JSON validated by `backend/portfolio/site_settings.py`, resolved with defaults by `src/lib/settings.js` (keep both in sync):
 `theme`, `accent`, `font`, `texture`, `mode`, `hero` (bento | classic | minimal), `projects_layout` (showcase | grid | list),
+`profession` (renames sections and suggests a layout/CV template; `lib/professions.js` ↔ `professions.py`, see docs/13),
 `sections` (home order + visibility), `pages` (switch whole pages off → nav link gone, route 404s).
 Read them with `useAppearance()`; never read `profile.settings` directly. Add `?customize` (or `?theme=midnight&font=modern`) to any URL to preview looks without saving.
 Owners edit them at `/dashboard/appearance`, which previews the unsaved draft in an iframe via `postMessage` (`PREVIEW_MESSAGE` in `useAppearance.js`); a new setting needs a control there too.

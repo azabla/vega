@@ -1,14 +1,16 @@
-import { Award, Briefcase, Compass, GraduationCap, Handshake, Images, Languages as LanguagesIcon, MessageSquareQuote, Sparkles, Tags } from "lucide-react";
+import { Award, Briefcase, Compass, GraduationCap, Handshake, Images, Languages as LanguagesIcon, MessageSquareQuote, Sparkles, Tags, Trophy } from "lucide-react";
 import { Tag } from "@/components/ui/Tag";
 import { ObjectForm } from "@/dashboard/components/ObjectForm";
 import { PageHeader, Panel } from "@/dashboard/components/Page";
 import { ResourceManager } from "@/dashboard/components/ResourceManager";
 import {
+  ACHIEVEMENT_KINDS,
   EDUCATION_LEVELS,
   EMPLOYMENT_TYPES,
   LANGUAGE_LEVELS,
   aboutFields,
   aboutPhotoFields,
+  achievementFields,
   categoryFields,
   certificateFields,
   educationFields,
@@ -231,6 +233,28 @@ export const CertificatesPage = () => {
     </>
   );
 };
+
+export const AchievementsPage = () => (
+  <>
+    <PageHeader
+      title="Awards & publications"
+      description="Awards, publications, exhibitions, talks, grants and scholarships. They get their own page and résumé section once you add one."
+    />
+    <ResourceManager
+      endpoint="/me/achievements/"
+      fields={achievementFields}
+      noun="Entry"
+      emptyIcon={Trophy}
+      emptyText="For example: a best-thesis award, a paper, a group exhibition or a conference talk."
+      sort={byOrder()}
+      describe={(a) => ({
+        title: a.title,
+        subtitle: [a.issuer, formatMonthYear(a.date)].filter(Boolean).join(" · "),
+        meta: <Tag>{labelOf(ACHIEVEMENT_KINDS, a.kind)}</Tag>,
+      })}
+    />
+  </>
+);
 
 export const LanguagesPage = () => (
   <>

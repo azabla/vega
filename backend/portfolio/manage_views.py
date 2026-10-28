@@ -22,6 +22,7 @@ from .models import (
     About,
     AboutPhoto,
     Category,
+    Achievement,
     Certificate,
     Contact,
     CV,
@@ -196,6 +197,11 @@ class MyLanguageViewSet(OwnedViewSet):
 class MyCertificateViewSet(OwnedViewSet):
     model = Certificate
     serializer_class = s.MyCertificateSerializer
+
+
+class MyAchievementViewSet(OwnedViewSet):
+    model = Achievement
+    serializer_class = s.MyAchievementSerializer
 
 
 class MyTestimonialViewSet(OwnedViewSet):

@@ -14,6 +14,7 @@ export const useEducation = () => useList(portfolioAPI.getEducation);
 export const useSkills = () => useList(portfolioAPI.getSkills);
 export const useCertificates = () => useList(portfolioAPI.getCertificates);
 export const useLanguages = () => useList(portfolioAPI.getLanguages);
+export const useAchievements = () => useList(portfolioAPI.getAchievements);
 export const useTestimonials = () => useList(portfolioAPI.getTestimonials);
 export const useCVs = () => useList(portfolioAPI.getCVs);
 

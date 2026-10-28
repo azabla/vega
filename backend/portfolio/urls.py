@@ -4,6 +4,7 @@ from rest_framework.routers import SimpleRouter
 from . import manage_views as me
 from .views import (
     AboutAPIView,
+    AchievementViewSet,
     CategoryViewSet,
     CertificateViewSet,
     ContactViewSet,
@@ -28,6 +29,7 @@ public_router.register(r"experience", ExperienceViewSet, basename="experience")
 public_router.register(r"education", EducationViewSet, basename="education")
 public_router.register(r"certificates", CertificateViewSet, basename="certificates")
 public_router.register(r"languages", LanguageViewSet, basename="languages")
+public_router.register(r"achievements", AchievementViewSet, basename="achievements")
 public_router.register(r"testimonials", TestimonialViewSet, basename="testimonials")
 public_router.register(r"contact", ContactViewSet, basename="contact")
 public_router.register(r"projects", ProjectViewSet, basename="projects")
@@ -52,6 +54,7 @@ me_router.register(r"experience", me.MyExperienceViewSet, basename="my-experienc
 me_router.register(r"education", me.MyEducationViewSet, basename="my-education")
 me_router.register(r"certificates", me.MyCertificateViewSet, basename="my-certificates")
 me_router.register(r"languages", me.MyLanguageViewSet, basename="my-languages")
+me_router.register(r"achievements", me.MyAchievementViewSet, basename="my-achievements")
 me_router.register(r"testimonials", me.MyTestimonialViewSet, basename="my-testimonials")
 me_router.register(r"messages", me.MyMessageViewSet, basename="my-messages")
 me_router.register(r"cvs", me.MyCVViewSet, basename="my-cvs")

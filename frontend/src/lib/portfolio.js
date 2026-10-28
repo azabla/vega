@@ -70,3 +70,19 @@ export const timelineFromEducation = (item) => ({
     description: [item.grade, item.description].filter(Boolean).join("\n"),
     skills: [],
 });
+
+// Awards, publications, exhibitions…: kinds in a fixed order, and the plural used as a group title
+export const ACHIEVEMENT_KINDS = [
+    { id: "publication", name: "Publications", one: "publication" },
+    { id: "award", name: "Awards", one: "award" },
+    { id: "exhibition", name: "Exhibitions", one: "exhibition" },
+    { id: "talk", name: "Talks", one: "talk" },
+    { id: "grant", name: "Grants & scholarships", one: "grant" },
+    { id: "other", name: "Other", one: "other item" },
+];
+
+/** [{kind, name, items}] for the kinds this owner has, in ACHIEVEMENT_KINDS order. */
+export const groupAchievements = (achievements) =>
+    ACHIEVEMENT_KINDS.map((k) => ({ kind: k.id, name: k.name, one: k.one, items: achievements.filter((a) => a.kind === k.id) })).filter(
+        (g) => g.items.length > 0
+    );

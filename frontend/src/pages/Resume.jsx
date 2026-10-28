@@ -3,11 +3,13 @@ import { PortfolioLayout } from "@/components/PortfolioLayout";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAbout, useCVs, useCertificates, useEducation, useExperience, useLanguages, useProjects, useSkills } from "@/hooks/usePortfolio";
+import { useAppearance } from "@/hooks/useAppearance";
+import { useAbout, useAchievements, useCVs, useCertificates, useEducation, useExperience, useLanguages, useProjects, useSkills } from "@/hooks/usePortfolio";
 import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
 import { useProfile } from "@/hooks/useProfile";
 import { bulletsOf, formatMonthYear, formatYearRange } from "@/lib/format";
 import { featuredProjects } from "@/lib/portfolio";
+import { labelsOf } from "@/lib/professions";
 import { resumeFileOf, socialLinksOf } from "@/lib/profile";
 import { portfolioFiles } from "@/services/portfolioAPI";
 
@@ -48,7 +50,7 @@ const Description = ({ text }) => {
 };
 
 /** The résumé document: the same data as the site, laid out for reading and printing. */
-const ResumeDocument = ({ profile, about, experience, education, projects, skills, certificates, languages }) => {
+const ResumeDocument = ({ profile, about, labels, experience, education, projects, skills, certificates, languages, achievements }) => {
   const contact = [
     profile.email && { label: profile.email, href: `mailto:${profile.email}` },
     profile.phone && { label: profile.phone, href: `tel:${profile.phone.replace(/\s/g, "")}` },
@@ -138,6 +140,16 @@ const ResumeDocument = ({ profile, about, experience, education, projects, skill
         </Block>
       )}
 
+      {achievements.length > 0 && (
+        <Block title={labels.achievements}>
+          {achievements.map((a) => (
+            <Entry key={a.id} title={a.title} org={a.issuer} when={formatMonthYear(a.date)}>
+              <Description text={[a.authors, a.description].filter(Boolean).join("\n")} />
+            </Entry>
+          ))}
+        </Block>
+      )}
+
       {(certificates.length > 0 || languages.length > 0) && (
         <div className="grid gap-6 sm:grid-cols-2 print:grid-cols-2">
           {certificates.length > 0 && (
@@ -179,7 +191,9 @@ export const Resume = () => {
     skills: useSkills(),
     certificates: useCertificates(),
     languages: useLanguages(),
+    achievements: useAchievements(),
   };
+  const { settings } = useAppearance();
   const ready = !loading && Object.values(data).every((d) => !d.loading);
   const file = resumeFileOf(profile, about);
   // other public versions the owner made (the default one is "Download PDF")
@@ -233,6 +247,7 @@ export const Resume = () => {
           <ResumeDocument
             profile={profile}
             about={about}
+            labels={labelsOf(settings.profession)}
             {...Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v.data ?? []]))}
           />
         )}

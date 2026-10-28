@@ -15,6 +15,7 @@ const ProjectDetail = page(() => import("./pages/ProjectDetail"), "ProjectDetail
 const Experience = page(() => import("./pages/Experience"), "Experience")
 const Skills = page(() => import("./pages/Skills"), "Skills")
 const About = page(() => import("./pages/About"), "About")
+const Achievements = page(() => import("./pages/Achievements"), "Achievements")
 const Resume = page(() => import("./pages/Resume"), "Resume")
 const Contact = page(() => import("./pages/Contact"), "Contact")
 const DashboardApp = lazy(() => import("./dashboard/DashboardApp"))
@@ -26,6 +27,7 @@ const PORTFOLIO_ROUTES = [
   ["projects/:slug", <ProjectDetail />, "projects"],
   ["experience", <Experience />, "experience"],
   ["skills", <Skills />, "skills"],
+  ["achievements", <Achievements />, "achievements"],
   ["about", <About />, "about"],
   ["resume", <Resume />, "resume"],
   ["contact", <Contact />, "contact"],

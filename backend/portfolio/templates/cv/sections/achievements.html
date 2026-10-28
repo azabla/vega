@@ -1,0 +1,13 @@
+{% for a in d %}
+  <article class="entry">
+    <div class="entry-main">
+      <div class="entry-head">
+        <h3>{{ a.title }}{% if a.org %}<span class="org"> · {{ a.org }}</span>{% endif %}</h3>
+        {% if a.when %}<p class="when">{{ a.when }}</p>{% endif %}
+      </div>
+      {% if a.authors %}<p class="tags">{{ a.authors }}</p>{% endif %}
+      {% if a.body %}<div class="body">{{ a.body }}</div>{% endif %}
+      {% if a.link %}<p class="tags"><a class="link" href="{{ a.link }}">{{ a.link_label }}</a></p>{% endif %}
+    </div>
+  </article>
+{% endfor %}

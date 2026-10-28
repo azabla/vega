@@ -1,8 +1,10 @@
-// Top-level pages, in nav order. `page` matches a key in settings.pages.
+// Top-level pages, in nav order. `page` matches a key in settings.pages; `labelKey` names a
+// word the owner's profession can change (lib/professions.js).
 export const NAV_PAGES = [
-    { page: "projects", label: "Work", path: "/projects" },
+    { page: "projects", label: "Work", labelKey: "projectsNav", path: "/projects" },
     { page: "experience", label: "Experience", path: "/experience" },
     { page: "skills", label: "Skills", path: "/skills" },
+    { page: "achievements", label: "Awards", labelKey: "achievementsNav", path: "/achievements" },
     { page: "about", label: "About", path: "/about" },
     { page: "resume", label: "Résumé", path: "/resume" },
 ];

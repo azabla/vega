@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/dashboard/DashboardLayout";
 import { AccountPage, MessagesPage, OverviewPage } from "@/dashboard/pages/AccountPages";
 import {
   AboutPage,
+  AchievementsPage,
   CertificatesPage,
   EducationPage,
   ExperiencePage,
@@ -45,6 +46,7 @@ export default function DashboardApp() {
           <Route path="experience" element={<ExperiencePage />} />
           <Route path="education" element={<EducationPage />} />
           <Route path="certificates" element={<CertificatesPage />} />
+          <Route path="achievements" element={<AchievementsPage />} />
           <Route path="languages" element={<LanguagesPage />} />
           <Route path="testimonials" element={<TestimonialsPage />} />
           <Route path="messages" element={<MessagesPage />} />

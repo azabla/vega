@@ -12,6 +12,7 @@ from .models import (
     About,
     AboutPhoto,
     Category,
+    Achievement,
     Certificate,
     CV,
     Education,
@@ -228,6 +229,12 @@ class MyLanguageSerializer(OwnedModelSerializer):
     class Meta:
         model = Language
         fields = ["id", "owner", "name", "proficiency", "order"]
+
+
+class MyAchievementSerializer(OwnedModelSerializer):
+    class Meta:
+        model = Achievement
+        fields = ["id", "owner", "kind", "title", "issuer", "authors", "date", "url", "description", "image", "order"]
 
 
 class MyCertificateSerializer(OwnedModelSerializer):

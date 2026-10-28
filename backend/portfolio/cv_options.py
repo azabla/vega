@@ -74,16 +74,22 @@ SECTIONS = {
     "education": "Education",
     "volunteering": "Volunteering",
     "certificates": "Certificates",
+    "achievements": "Awards & publications",
     "languages": "Languages",
 }
 DEFAULT_ORDER = list(SECTIONS)
 # Research and student CVs lead with education
 TEMPLATE_ORDER = {
-    "academic": ["summary", "education", "experience", "projects", "certificates", "skills", "languages", "volunteering"],
+    "academic": [
+        "summary", "education", "achievements", "experience", "projects", "certificates", "skills", "languages",
+        "volunteering",
+    ],
 }
 CUSTOM_ID = re.compile(r"^custom-[a-z0-9]{1,16}$")
 MAX_CUSTOM = 10
-ITEM_KINDS = ["experience", "projects", "education", "volunteering", "certificates", "skills", "languages"]
+ITEM_KINDS = [
+    "experience", "projects", "education", "volunteering", "certificates", "achievements", "skills", "languages",
+]
 CONTACT_FIELDS = ["email", "phone", "location", "github", "linkedin", "telegram", "website"]
 LIMITS = {"headline": 220, "summary": 4000, "title": 80, "body": 6000}
 

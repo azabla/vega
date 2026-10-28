@@ -15,7 +15,7 @@
     "timezone": "Africa/Addis_Ababa",
     "currently_learning": "Rust for WebAssembly, and Amharic typography",
     "booking_url": "https://cal.com/",
-    "settings": {"theme": "warm", "font": "editorial", "hero": "bento", "projects_layout": "showcase"}
+    "settings": {"theme": "warm", "font": "editorial", "hero": "bento", "projects_layout": "showcase", "profession": "developer"}
   },
   "about": {
     "heading": "About me",
@@ -107,6 +107,11 @@
   "certificates": [
     {"name": "Professional Scrum Master I", "issuer": "Scrum.org", "issue_date": "2022-04-01", "skills": ["Product discovery"]},
     {"name": "Web Accessibility Specialist", "issuer": "IAAP", "issue_date": "2023-10-01", "skills": ["React"]}
+  ],
+  "achievements": [
+    {"kind": "award", "title": "Finalist, Africa Prize for Engineering Innovation", "issuer": "Royal Academy of Engineering", "date": "2023-06-01", "description": "For Tena Booking: clinic scheduling that works on low-end tablets and in Amharic."},
+    {"kind": "talk", "title": "Designing for low bandwidth", "issuer": "DevFest Addis", "date": "2022-11-01", "url": "https://example.com/talks/low-bandwidth"},
+    {"kind": "publication", "title": "Attendance that survives the network", "issuer": "Undergraduate thesis, Addis Ababa Institute of Technology", "authors": "Girma, H.", "date": "2019-07-01", "description": "Offline-first data collection for rural schools: design, a field study with three schools, and results."}
   ],
   "projects": [
     {
@@ -251,8 +256,8 @@
   ],
   "cvs": [
     {"name": "General", "template": "modern", "is_default": true, "design": {"accent": "#0f766e", "font": "editorial", "photo": "profile", "skills_style": "tags"}},
-    {"name": "Product roles", "template": "creative", "design": {"accent": "#c2410c", "font": "modern", "dates": "month"}, "content": {"headline": "Product engineer — discovery to delivery", "sections": [{"id": "summary"}, {"id": "experience"}, {"id": "projects", "title": "Case studies"}, {"id": "skills"}, {"id": "custom-awards", "title": "Recognition", "body": "- **Finalist**, Africa Prize for Engineering Innovation (2023)\n- Speaker, *DevFest Addis* — designing for low bandwidth (2022)"}, {"id": "education"}, {"id": "languages"}, {"id": "volunteering", "visible": false}, {"id": "certificates", "visible": false}], "hide_contact": ["telegram"]}},
-    {"name": "Academic", "template": "academic", "is_public": false, "design": {"font": "classic", "accent": "#7c2d12", "photo": "none", "qr": false}, "content": {"sections": [{"id": "summary"}, {"id": "education"}, {"id": "custom-research", "title": "Research", "body": "Offline-first data collection for rural schools: design, field study with 3 schools and results.\n\n- Girma, H. *Attendance that survives the network*. Undergraduate thesis, AAiT, 2019."}, {"id": "experience"}, {"id": "projects"}, {"id": "certificates"}, {"id": "languages"}]}},
+    {"name": "Product roles", "template": "creative", "design": {"accent": "#c2410c", "font": "modern", "dates": "month"}, "content": {"headline": "Product engineer — discovery to delivery", "sections": [{"id": "summary"}, {"id": "experience"}, {"id": "projects", "title": "Case studies"}, {"id": "skills"}, {"id": "achievements", "title": "Recognition"}, {"id": "education"}, {"id": "languages"}, {"id": "volunteering", "visible": false}, {"id": "certificates", "visible": false}], "hide_contact": ["telegram"]}},
+    {"name": "Academic", "template": "academic", "is_public": false, "design": {"font": "classic", "accent": "#7c2d12", "photo": "none", "qr": false}, "content": {"sections": [{"id": "summary"}, {"id": "education"}, {"id": "achievements"}, {"id": "custom-research", "title": "Research interests", "body": "Offline-first systems, low-bandwidth interfaces and **Amharic typography** on the web."}, {"id": "experience"}, {"id": "projects"}, {"id": "certificates"}, {"id": "languages"}]}},
     {"name": "One page", "template": "compact", "design": {"size": "small", "spacing": "compact", "font": "plain", "photo": "none", "accent": "#1d4ed8"}}
   ]
 }

@@ -12,6 +12,7 @@ Every key is optional; the frontend fills in the defaults below
       "mode": "system",              # visitors' first view: system | light | dark
       "hero": "bento",               # bento | classic | minimal
       "projects_layout": "showcase", # showcase | grid | list
+      "profession": "general",       # general | developer | designer | architect | photographer | student | researcher
       "sections": [                  # home page sections, in order
         {"id": "about", "visible": true}, ...
       ],
@@ -21,6 +22,8 @@ Every key is optional; the frontend fills in the defaults below
 
 from django.core.exceptions import ValidationError
 
+from .professions import PROFESSIONS
+
 CHOICES = {
     "theme": ["minimal", "warm", "midnight", "mono"],
     "accent": ["lime", "violet"],
@@ -29,9 +32,10 @@ CHOICES = {
     "mode": ["system", "light", "dark"],
     "hero": ["bento", "classic", "minimal"],
     "projects_layout": ["showcase", "grid", "list"],
+    "profession": list(PROFESSIONS),
 }
-HOME_SECTIONS = ["about", "projects", "experience", "skills", "testimonials", "contact"]
-PAGES = ["about", "experience", "projects", "skills", "resume", "contact"]
+HOME_SECTIONS = ["about", "projects", "experience", "education", "skills", "achievements", "testimonials", "contact"]
+PAGES = ["about", "experience", "projects", "skills", "achievements", "resume", "contact"]
 
 
 def validate_settings(value):

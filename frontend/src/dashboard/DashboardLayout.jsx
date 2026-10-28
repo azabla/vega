@@ -15,6 +15,7 @@ import {
   Palette,
   Settings,
   Sparkles,
+  Trophy,
   UserRound,
   X,
 } from "lucide-react";
@@ -38,6 +39,7 @@ const NAV = [
   { to: "/dashboard/experience", label: "Experience", icon: Briefcase },
   { to: "/dashboard/education", label: "Education", icon: GraduationCap },
   { to: "/dashboard/certificates", label: "Certificates", icon: Award },
+  { to: "/dashboard/achievements", label: "Awards & publications", icon: Trophy },
   { to: "/dashboard/languages", label: "Languages", icon: Languages },
   { to: "/dashboard/testimonials", label: "Testimonials", icon: MessageSquareQuote },
   { heading: "Account" },

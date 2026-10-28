@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import (
+    Achievement,
     Category,
     Certificate,
     Contact,
@@ -30,6 +31,7 @@ from .models import (
 )
 from .serializers import (
     AboutSerializer,
+    AchievementSerializer,
     CategorySerializer,
     CertificateSerializer,
     ContactSerializer,
@@ -152,6 +154,13 @@ class CertificateViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return Certificate.objects.filter(owner=self.get_owner()).prefetch_related("skills__category")
+
+
+class AchievementViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):
+    serializer_class = AchievementSerializer
+
+    def get_queryset(self):
+        return Achievement.objects.filter(owner=self.get_owner())
 
 
 class TestimonialViewSet(PortfolioOwnerMixin, viewsets.ReadOnlyModelViewSet):

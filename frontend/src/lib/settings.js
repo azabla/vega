@@ -1,6 +1,8 @@
 // Portfolio.settings defaults and options.
 // Keep in sync with backend/portfolio/site_settings.py.
 
+import { PROFESSIONS } from "@/lib/professions";
+
 export const THEMES = [
   { id: "warm", name: "Warm", swatch: ["#f7f1e8", "#3b2a20", "#a84b2a"] },
   { id: "minimal", name: "Minimal", swatch: ["#ffffff", "#111113", "#2350d8"] },
@@ -29,11 +31,15 @@ export const HOME_SECTIONS = [
   { id: "projects", name: "Featured projects" },
   { id: "experience", name: "Experience" },
   { id: "skills", name: "Skills" },
+  { id: "achievements", name: "Awards & publications" },
+  { id: "education", name: "Education" },
   { id: "testimonials", name: "Testimonials" },
   { id: "contact", name: "Contact" },
 ];
+// Sections that start hidden until the owner (or a profession preset) turns them on
+const HIDDEN_BY_DEFAULT = ["education"];
 
-export const PAGES = ["about", "experience", "projects", "skills", "resume", "contact"];
+export const PAGES = ["about", "experience", "projects", "skills", "achievements", "resume", "contact"];
 
 export const DEFAULT_SETTINGS = {
   theme: "warm",
@@ -43,6 +49,7 @@ export const DEFAULT_SETTINGS = {
   mode: "system",
   hero: "bento",
   projects_layout: "showcase",
+  profession: "general",
 };
 
 const pick = (value, allowed, fallback) => (allowed.includes(value) ? value : fallback);
@@ -57,7 +64,7 @@ export const resolveSettings = (raw) => {
   const stored = (Array.isArray(s.sections) ? s.sections : []).filter((x) => known.includes(x?.id));
   const sections = [
     ...stored.map((x) => ({ id: x.id, visible: x.visible !== false })),
-    ...known.filter((id) => !stored.some((x) => x.id === id)).map((id) => ({ id, visible: true })),
+    ...known.filter((id) => !stored.some((x) => x.id === id)).map((id) => ({ id, visible: !HIDDEN_BY_DEFAULT.includes(id) })),
   ];
 
   const pages = Object.fromEntries(PAGES.map((p) => [p, s.pages?.[p] !== false]));
@@ -70,6 +77,7 @@ export const resolveSettings = (raw) => {
     mode: pick(s.mode, ["system", "light", "dark"], THEME_MODE[theme] ?? "system"),
     hero: pick(s.hero, ["bento", "classic", "minimal"], DEFAULT_SETTINGS.hero),
     projects_layout: pick(s.projects_layout, ["showcase", "grid", "list"], DEFAULT_SETTINGS.projects_layout),
+    profession: pick(s.profession, PROFESSIONS.map((p) => p.id), DEFAULT_SETTINGS.profession),
     sections,
     pages,
   };

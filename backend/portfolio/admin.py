@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import (
     About,
     AboutPhoto,
+    Achievement,
     Principle,
     ProjectMetric,
     Testimonial,
@@ -74,6 +75,13 @@ class LanguageAdmin(OwnedAdmin):
 class CertificateAdmin(OwnedAdmin):
     list_display = ["name", "issuer", "owner", "issue_date"]
     filter_horizontal = ["skills"]
+
+
+@admin.register(Achievement)
+class AchievementAdmin(OwnedAdmin):
+    list_display = ["title", "kind", "issuer", "owner", "date"]
+    list_filter = ["owner", "kind"]
+    search_fields = ["title", "issuer"]
 
 
 @admin.register(CV)

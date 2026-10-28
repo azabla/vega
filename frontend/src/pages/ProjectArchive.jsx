@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/ui/Section";
 import { useAppearance } from "@/hooks/useAppearance";
 import { useProjects } from "@/hooks/usePortfolio";
 import { pluralize } from "@/lib/format";
+import { labelsOf } from "@/lib/professions";
 import { cn } from "@/lib/utils";
 
 const TOP_SKILLS = 8;
@@ -63,13 +64,14 @@ export const ProjectArchive = () => {
     setCategory(null);
     setSkill(null);
   };
+  const labels = labelsOf(settings.profession);
   const shownSkills = allSkills ? skills : skills.slice(0, TOP_SKILLS);
 
   return (
-    <PortfolioLayout title="Projects" meta={{ description: "Case studies: the problem, the approach and what changed." }}>
+    <PortfolioLayout title={labels.projectsPage} meta={{ description: "Case studies: the problem, the approach and what changed." }}>
       <PageHeader
-        eyebrow="Work"
-        title="Projects"
+        eyebrow={labels.projectsNav}
+        title={labels.projectsPage}
         description={
           projects?.length
             ? `${pluralize(projects.length, "project")}, from production platforms to early experiments. Open one for the full case study.`

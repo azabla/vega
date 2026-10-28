@@ -13,6 +13,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 from ..cv_options import SECTIONS, resolve_design, resolve_sections
 from ..models import About, Experience, Project, Skill
+from ..professions import profession_of, section_title
 from . import style
 from .icons import icon
 from .text import plain_inline, rich
@@ -169,12 +170,25 @@ def build_context(portfolio, cv, url, qr_uri):
             }
             for c in pick(items, "certificates", list(owner.certificates.all()))
         ],
+        "achievements": [
+            {
+                "title": a.title,
+                "org": a.issuer,
+                "when": format_date(a.date, "M Y" if months else "Y") if a.date else "",
+                "authors": a.authors,
+                "body": rich(a.description),
+                "link": a.url,
+                "link_label": bare_url(a.url),
+            }
+            for a in pick(items, "achievements", list(owner.achievements.all()))
+        ],
         "languages": [
             {"name": lang.name, "level": lang.get_proficiency_display()}
             for lang in pick(items, "languages", list(owner.languages.all()))
         ],
     }
 
+    profession = profession_of(portfolio)
     sections = []
     for s in resolve_sections(cv.template, content.get("sections")):
         if not s["visible"]:
@@ -184,7 +198,7 @@ def build_context(portfolio, cv, url, qr_uri):
             if not data[sid]:
                 continue
             kind, body = sid, data[sid]
-            title = s["title"] or SECTIONS[sid]
+            title = s["title"] or section_title(profession, sid, SECTIONS[sid])
         else:
             body = rich(s.get("body", ""))
             if not body:

@@ -10,6 +10,7 @@ import { useResource } from "@/dashboard/lib/useResource";
 import { toast } from "@/hooks/use-toast";
 import { PREVIEW_MESSAGE } from "@/hooks/useAppearance";
 import { clearPortfolioCache } from "@/hooks/usePortfolioData";
+import { PROFESSIONS, labelsOf, professionPreset } from "@/lib/professions";
 import { ACCENTS, DEFAULT_SETTINGS, FONTS, HOME_SECTIONS, PAGES, THEMES, resolveSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
@@ -118,6 +119,7 @@ const PAGE_LABELS = {
   projects: "Projects",
   experience: "Experience",
   skills: "Skills",
+  achievements: "Awards & publications",
   about: "About",
   resume: "Résumé",
   contact: "Contact",
@@ -221,7 +223,12 @@ export const AppearancePage = () => {
   if (profile.loading) return <ListSkeleton rows={5} />;
   if (profile.error) return <LoadError onRetry={profile.reload} />;
 
-  const sectionName = Object.fromEntries(HOME_SECTIONS.map((s) => [s.id, s.name]));
+  const labels = labelsOf(current.profession);
+  const sectionName = {
+    ...Object.fromEntries(HOME_SECTIONS.map((s) => [s.id, s.name])),
+    projects: `Featured ${labels.projectsPage.toLowerCase()}`,
+    achievements: labels.achievements,
+  };
 
   return (
     <>
@@ -256,6 +263,25 @@ export const AppearancePage = () => {
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
         <div className={cn("flex flex-col gap-5 pb-24", tab === "preview" && "hidden lg:flex")}>
+          <Panel title="Profession" description="Names your sections the way your field does, and sets up the home page to match. You can change everything below afterwards.">
+            <Choices
+              name="profession"
+              value={current.profession}
+              onChange={(profession) => set(professionPreset(profession))}
+              options={PROFESSIONS}
+              columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
+              render={(p) => (
+                <span className="flex items-start gap-3 pr-6">
+                  <p.icon className="mt-0.5 size-4 shrink-0 text-primary-ink" aria-hidden />
+                  <span className="min-w-0">
+                    <span className="block font-medium">{p.name}</span>
+                    <span className="block text-xs leading-5 text-muted-foreground">{p.hint}</span>
+                  </span>
+                </span>
+              )}
+            />
+          </Panel>
+
           <Panel title="Theme" description="Colours for light and dark mode.">
             <Choices
               name="theme"
@@ -400,7 +426,7 @@ export const AppearancePage = () => {
               type="button"
               variant="ghost"
               className="mt-4 -ml-2 px-2 text-muted-foreground"
-              onClick={() => setDraft(resolveSettings({ ...DEFAULT_SETTINGS }))}
+              onClick={() => setDraft(resolveSettings({ ...DEFAULT_SETTINGS, ...professionPreset(current.profession) }))}
             >
               <RotateCcw /> Restore the default look
             </Button>

@@ -1,6 +1,8 @@
 import { PortfolioLayout } from "@/components/PortfolioLayout";
 import { AboutTeaser } from "@/components/home/AboutTeaser";
+import { AchievementsPreview } from "@/components/home/AchievementsPreview";
 import { ContactCTA } from "@/components/home/ContactCTA";
+import { EducationPreview } from "@/components/home/EducationPreview";
 import { ExperiencePreview } from "@/components/home/ExperiencePreview";
 import { FeaturedProjects } from "@/components/home/FeaturedProjects";
 import { Hero } from "@/components/home/Hero";
@@ -14,7 +16,9 @@ const SECTIONS = {
   about: AboutTeaser,
   projects: FeaturedProjects,
   experience: ExperiencePreview,
+  education: EducationPreview,
   skills: SkillsPreview,
+  achievements: AchievementsPreview,
   testimonials: Testimonials,
   contact: ContactCTA,
 };

@@ -104,11 +104,12 @@ export const CV_SECTIONS = {
     education: "Education",
     volunteering: "Volunteering",
     certificates: "Certificates",
+    achievements: "Awards & publications",
     languages: "Languages",
 };
 const DEFAULT_ORDER = Object.keys(CV_SECTIONS);
 const TEMPLATE_ORDER = {
-    academic: ["summary", "education", "experience", "projects", "certificates", "skills", "languages", "volunteering"],
+    academic: ["summary", "education", "achievements", "experience", "projects", "certificates", "skills", "languages", "volunteering"],
 };
 export const MAX_CUSTOM_SECTIONS = 10;
 
@@ -134,6 +135,7 @@ export const CV_ITEM_SOURCES = {
     projects: { endpoint: "/me/projects/", label: (p) => p.title, featuredByDefault: true },
     education: { endpoint: "/me/education/", label: (e) => [e.field_of_study, e.institution].filter(Boolean).join(" · ") },
     certificates: { endpoint: "/me/certificates/", label: (c) => c.name },
+    achievements: { endpoint: "/me/achievements/", label: (a) => [a.title, a.issuer].filter(Boolean).join(" · ") },
     skills: { endpoint: "/me/skills/", filter: (s) => s.is_active !== false, label: (s) => s.name },
     languages: { endpoint: "/me/languages/", label: (l) => l.name },
 };

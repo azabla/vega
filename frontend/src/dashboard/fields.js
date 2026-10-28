@@ -35,6 +35,15 @@ export const LANGUAGE_LEVELS = [
     { value: "basic", label: "Basic" },
 ];
 
+export const ACHIEVEMENT_KINDS = [
+    { value: "award", label: "Award" },
+    { value: "publication", label: "Publication" },
+    { value: "exhibition", label: "Exhibition" },
+    { value: "talk", label: "Talk" },
+    { value: "grant", label: "Grant or scholarship" },
+    { value: "other", label: "Other" },
+];
+
 export const AVAILABILITY = [
     { value: "open", label: "Open to work" },
     { value: "freelance", label: "Available for freelance" },
@@ -262,6 +271,32 @@ export const certificateFields = (skills) => [
     { name: "credential_url", label: "Credential URL", type: "url", placeholder: "https://" },
     { name: "file", label: "Certificate file", type: "file", accept: ".pdf,image/*" },
     skillsField(skills, "Skills this certificate proves."),
+    order(),
+];
+
+export const achievementFields = [
+    { name: "kind", label: "Type", type: "select", required: true, default: "award", options: ACHIEVEMENT_KINDS },
+    { name: "title", label: "Title", required: true, maxLength: 300, wide: true, placeholder: "e.g. Best Graduate Thesis Award" },
+    {
+        name: "issuer",
+        label: "From / where",
+        maxLength: 220,
+        placeholder: "e.g. IEEE Access, Addis Fine Art Gallery",
+        help: "Who gave it, or where it was published, shown or presented.",
+    },
+    { name: "date", label: "Date", type: "date" },
+    {
+        name: "authors",
+        label: "Authors",
+        maxLength: 300,
+        wide: true,
+        placeholder: "e.g. Tesfaye, A., Alemu, B.",
+        help: "Everyone, in order, including you.",
+        show: (values) => values.kind === "publication",
+    },
+    { name: "url", label: "Link", type: "url", placeholder: "https://doi.org/…", help: "The paper, article, gallery page or recording." },
+    { name: "description", label: "Details", type: "textarea", rows: 3, help: "Optional. What it was for, or why it matters." },
+    { name: "image", label: "Image", type: "image", help: "Optional. A photo of the work, the event or the award." },
     order(),
 ];
 

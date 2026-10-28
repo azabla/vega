@@ -27,6 +27,7 @@ from django.db import transaction
 from portfolio.models import (
     About,
     Category,
+    Achievement,
     Certificate,
     CV,
     Education,
@@ -86,6 +87,7 @@ class Command(BaseCommand):
                 ("education", Education),
                 ("certificates", Certificate),
                 ("languages", Language),
+                ("achievements", Achievement),
             ):
                 if key in data:
                     self.seed_list(user, model, data[key])
@@ -103,7 +105,8 @@ class Command(BaseCommand):
 
     def reset(self, user):
         for model in (
-            CV, Testimonial, Project, Skill, Category, Experience, Education, Certificate, Language, About,
+            CV, Testimonial, Project, Skill, Category, Experience, Education, Certificate, Language,
+            Achievement, About,
         ):
             model.objects.filter(owner=user).delete()
 

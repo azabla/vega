@@ -8,7 +8,9 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import CV, Category, Certificate, Contact, Education, Experience, Portfolio, Project, Skill
+from .models import (
+    CV, Achievement, Category, Certificate, Contact, Education, Experience, Portfolio, Project, Skill,
+)
 
 User = get_user_model()
 
@@ -626,3 +628,70 @@ class CVVersionTests(APITestCase):
         self.assertEqual(cvs.filter(is_default=True).count(), 1)
         self.assertTrue(cvs.filter(is_public=False).exists())
         self.assertGreaterEqual(cvs.values("template").distinct().count(), 3)
+
+
+class ProfessionTests(APITestCase):
+    """Profession presets (settings.profession) and achievements: awards, publications, exhibitions."""
+
+    def setUp(self):
+        cache.clear()
+        self.alice, self.bob = make_user("alice"), make_user("bob")
+        self.client.force_authenticate(self.alice)
+
+    def test_owner_manages_achievements_and_public_sees_only_theirs(self):
+        res = self.client.post(
+            "/api/me/achievements/",
+            {"kind": "publication", "title": "Offline-first sync", "issuer": "IEEE Access", "authors": "A. Tesfaye, B. Alemu",
+             "date": "2024-03-01", "url": "https://doi.org/10.1/x"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.data)
+        self.assertNotIn("owner", res.data)
+        Achievement.objects.create(owner=self.bob, title="Bob's prize")
+        bad = self.client.post("/api/me/achievements/", {"kind": "medal", "title": "x"}, format="json")
+        self.assertEqual(bad.status_code, status.HTTP_400_BAD_REQUEST)
+
+        public = self.client.get("/api/u/alice/achievements/").data
+        self.assertEqual([a["title"] for a in public], ["Offline-first sync"])
+        self.assertEqual(public[0]["kind_display"], "Publication")
+        self.assertEqual(len(self.client.get("/api/me/achievements/").data), 1)
+        bob_id = Achievement.objects.get(owner=self.bob).pk
+        self.assertEqual(self.client.delete(f"/api/me/achievements/{bob_id}/").status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_profession_setting_is_validated(self):
+        ok = self.client.patch(
+            "/api/me/profile/",
+            {"settings": {"profession": "researcher", "sections": [{"id": "achievements"}, {"id": "education", "visible": True}],
+                          "pages": {"achievements": False}}},
+            format="json",
+        )
+        self.assertEqual(ok.status_code, status.HTTP_200_OK, ok.data)
+        bad = self.client.patch("/api/me/profile/", {"settings": {"profession": "astronaut"}}, format="json")
+        self.assertEqual(bad.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cv_lists_achievements_under_the_profession_title(self):
+        from .cv import cv_context, render_cv_pdf
+
+        Achievement.objects.create(owner=self.alice, kind="publication", title="Paper", issuer="Journal", authors="A. T.")
+        portfolio = Portfolio.objects.get(owner=self.alice)
+        cv = CV(owner=self.alice, name="x", template="academic")
+
+        ctx = cv_context(portfolio, "https://x/u/alice", cv)
+        section = next(s for s in ctx["sections"] if s["id"] == "achievements")
+        self.assertEqual(section["title"], "Awards & publications")
+        self.assertEqual(section["data"][0]["authors"], "A. T.")
+
+        portfolio.settings = {"profession": "researcher"}
+        portfolio.save()
+        ctx = cv_context(portfolio, "https://x/u/alice", cv)
+        self.assertEqual([s["title"] for s in ctx["sections"] if s["id"] == "achievements"], ["Publications & awards"])
+        self.assertTrue(render_cv_pdf(portfolio, "https://x/u/alice", cv).startswith(b"%PDF"))
+
+        # picked one by one like other entries; an owner's rename still wins
+        cv.content = {"items": {"achievements": []}, "sections": [{"id": "achievements", "title": "Papers"}]}
+        self.assertNotIn("achievements", [s["id"] for s in cv_context(portfolio, "https://x/u/alice", cv)["sections"]])
+
+    def test_seed_loads_achievements(self):
+        call_command("seed_portfolio", "portfolio/seed/demo.json", owner="alice", stdout=open("/dev/null", "w"))
+        kinds = set(Achievement.objects.filter(owner=self.alice).values_list("kind", flat=True))
+        self.assertTrue({"award", "publication", "talk"} <= kinds)

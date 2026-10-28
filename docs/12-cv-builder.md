@@ -65,7 +65,7 @@ Adding a template:
 
 ## Seed data
 
-`portfolio/seed/demo.json` now has four versions for the demo persona: General (Modern, default), Product roles (Creative, with a custom "Recognition" section and a renamed section), Academic (private, with a "Research" section) and One page (Compact). `seed_portfolio` replaces a user's CVs when the file has a `cvs` key.
+`portfolio/seed/demo.json` now has four versions for the demo persona: General (Modern, default), Product roles (Creative, with the awards section renamed "Recognition"), Academic (private, with a custom "Research interests" section) and One page (Compact). `seed_portfolio` replaces a user's CVs when the file has a `cvs` key.
 
 ## Checks
 

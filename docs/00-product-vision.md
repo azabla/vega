@@ -36,7 +36,7 @@ Change something once (e.g. add "Backend Developer at XYZ") and it updates the s
 1. **Done:** the owner's own portfolio, built on the master-profile data model (see [05](05-master-profile.md))
 2. **Done:** owner dashboard, mobile-first forms on `/api/me/` (see [08](08-dashboard.md))
 3. **Done:** CV/PDF generation from the profile, plus a QR code ([11](11-cv-pdf-and-qr.md)); CV versions with 9 templates, design and content choices ([12](12-cv-builder.md))
-4. Templates and profession-specific sections, English/Amharic content
+4. **In progress:** profession presets and awards & publications ([13](13-professions.md)); next: English/Amharic content
 5. Public signup, subdomains, custom domains
 6. Career assistant (AI guidance that only rewrites user-provided facts), analytics
 
