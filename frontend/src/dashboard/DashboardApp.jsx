@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { RequireAuth } from "@/auth/guards";
 import { DashboardLayout } from "@/dashboard/DashboardLayout";
@@ -14,8 +15,12 @@ import {
   TestimonialsPage,
 } from "@/dashboard/pages/ProfilePages";
 import { AppearancePage } from "@/dashboard/pages/AppearancePage";
-import { CVEditorPage, CVListPage } from "@/dashboard/pages/CVPages";
+import { CVListPage } from "@/dashboard/pages/CVPages";
+import { ListSkeleton } from "@/dashboard/components/Page";
 import { ProjectEditorPage, ProjectsPage } from "@/dashboard/pages/ProjectPages";
+
+// The CV editor brings the rich-text editor; only load it when it's opened
+const CVEditorPage = lazy(() => import("@/dashboard/pages/CVEditorPage").then((m) => ({ default: m.CVEditorPage })));
 
 // A fresh editor per project, so state never leaks between projects
 const ProjectEditorRoute = () => {
@@ -25,7 +30,11 @@ const ProjectEditorRoute = () => {
 
 const CVEditorRoute = () => {
   const { id } = useParams();
-  return <CVEditorPage key={id} />;
+  return (
+    <Suspense fallback={<ListSkeleton rows={5} />}>
+      <CVEditorPage key={id} />
+    </Suspense>
+  );
 };
 
 // Mounted at /dashboard/* and lazy-loaded, so portfolio visitors never download it

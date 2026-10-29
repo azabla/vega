@@ -15,6 +15,9 @@ FONT_PAIRINGS = {
 }
 BASE_SIZE = {"small": 8.75, "medium": 9.5, "large": 10.5}  # pt
 SPACING = {"compact": 0.7, "normal": 1.0, "relaxed": 1.35}
+MARGINS = {"narrow": 0.75, "normal": 1.0, "wide": 1.3}
+# Sidebar band, page edge to the main column's gutter (mm)
+SIDEBAR_WIDTH = {"narrow": 58, "normal": 68, "wide": 80}
 PAPER = {"a4": "A4", "letter": "letter"}
 
 WHITE = (255, 255, 255)
@@ -81,11 +84,12 @@ def metrics(design):
         "h3": round(base * 1.06, 2),
         "h1": round(base * 2.55, 2),
         "headline": round(base * 1.2, 2),
+        "h2": round(base * 1.45, 2),
         "line": 1.45 if design["spacing"] != "compact" else 1.35,
         "section_gap": round(5 * gap, 2),  # mm
         "entry_gap": round(3 * gap, 2),
         "item_gap": round(0.7 * gap, 2),
-        "margin": round(16 * (0.85 if design["spacing"] == "compact" else 1), 1),
+        "margin": round(16 * (0.85 if design["spacing"] == "compact" else 1) * MARGINS[design["margins"]], 1),
     }
 
 

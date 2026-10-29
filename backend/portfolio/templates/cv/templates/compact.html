@@ -19,8 +19,8 @@
   .entry + .entry { margin-top: 2mm; }
   .skill-groups { grid-template-columns: 26mm 1fr; }
 {% endblock %}
-{% block body %}
-  <header>
+{% block header %}
+  <header id="cv-header">
     {% include "cv/partials/photo.html" with size="19mm" %}
     <div class="who">
       <h1>{{ name }}</h1>
@@ -29,5 +29,4 @@
     </div>
     {% include "cv/partials/qr.html" with label=" " %}
   </header>
-  {% include "cv/partials/sections.html" with list=sections %}
 {% endblock %}

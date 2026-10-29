@@ -20,9 +20,10 @@
   }
   .when { padding: 0.2mm 2mm; border-radius: 2mm; background: {{ colors.tint }}; color: #2a2a2a; }
   .sec:first-of-type { margin-top: 7mm; }
+  body.hdr-center #cv-header.band .qr { top: 5mm; right: {{ m.margin }}mm; }
 {% endblock %}
-{% block body %}
-  <header class="band">
+{% block header %}
+  <header id="cv-header" class="band">
     <div class="who">
       <h1>{{ name }}</h1>
       {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
@@ -31,5 +32,4 @@
     {% include "cv/partials/photo.html" with size="30mm" %}
     {% include "cv/partials/qr.html" with label=" " %}
   </header>
-  {% include "cv/partials/sections.html" with list=sections %}
 {% endblock %}

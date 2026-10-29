@@ -17,6 +17,13 @@ frontend/src/lib/cv.js mirrors these choices and must stay in sync.
       "qr": true,                 # QR code to the portfolio
       "logos": false,             # company logos next to jobs
       "icons": true,              # small icons next to contact details
+      # Layout, on top of any template ("auto" = what the template does)
+      "layout": "auto",           # auto | one (no sidebar) | left | right (sidebar side)
+      "sidebar_width": "normal",  # narrow | normal | wide
+      "sidebar_style": "auto",    # auto | tint | dark | plain
+      "header_align": "auto",     # auto | left | center
+      "heading_style": "auto",    # auto | caps | line | underline | bar | block | serif
+      "margins": "normal",        # narrow | normal | wide
     }
 
     content = {
@@ -25,8 +32,11 @@ frontend/src/lib/cv.js mirrors these choices and must stay in sync.
       "sections": [               # order and visibility; custom sections have a body
         {"id": "summary", "visible": true, "title": ""},
         {"id": "custom-a1", "visible": true, "title": "Publications", "body": "- ..."},
+        # optional per section: "column": "main" | "side" (with a sidebar), "columns": 1 | 2,
+        # "break": true (start on a new page)
       ],
       "items": {"projects": [3, 5]},  # only these entries; a missing key = the default choice
+      "overrides": {"experience": {"12": {"title": "", "body": "- shorter bullets"}}},  # this CV only
       "hide_contact": ["phone"],
     }
 
@@ -37,7 +47,12 @@ import re
 
 from django.core.exceptions import ValidationError
 
-TEMPLATES = ["classic", "modern", "elegant", "compact", "creative", "timeline", "academic", "minimal", "executive"]
+TEMPLATES = [
+    "classic", "modern", "elegant", "compact", "creative", "timeline", "academic", "minimal", "executive", "cards",
+    "swiss",
+]
+# Templates drawn with a sidebar when layout is "auto": side and fill
+TEMPLATE_SIDEBAR = {"modern": ("left", "tint"), "executive": ("left", "dark")}
 
 DESIGN_CHOICES = {
     "font": ["editorial", "modern", "classic", "plain"],
@@ -48,6 +63,12 @@ DESIGN_CHOICES = {
     "photo_shape": ["circle", "rounded", "square"],
     "dates": ["year", "month"],
     "skills_style": ["list", "tags"],
+    "layout": ["auto", "one", "left", "right"],
+    "sidebar_width": ["narrow", "normal", "wide"],
+    "sidebar_style": ["auto", "tint", "dark", "plain"],
+    "header_align": ["auto", "left", "center"],
+    "heading_style": ["auto", "caps", "line", "underline", "bar", "block", "serif"],
+    "margins": ["narrow", "normal", "wide"],
 }
 DESIGN_FLAGS = ["qr", "logos", "icons"]
 DEFAULT_DESIGN = {
@@ -63,6 +84,12 @@ DEFAULT_DESIGN = {
     "qr": True,
     "logos": False,
     "icons": True,
+    "layout": "auto",
+    "sidebar_width": "normal",
+    "sidebar_style": "auto",
+    "header_align": "auto",
+    "heading_style": "auto",
+    "margins": "normal",
 }
 HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -91,7 +118,10 @@ ITEM_KINDS = [
     "experience", "projects", "education", "volunteering", "certificates", "achievements", "skills", "languages",
 ]
 CONTACT_FIELDS = ["email", "phone", "location", "github", "linkedin", "telegram", "website"]
-LIMITS = {"headline": 220, "summary": 4000, "title": 80, "body": 6000}
+LIMITS = {"headline": 220, "summary": 4000, "title": 80, "body": 6000, "entry_title": 220}
+# Entries whose text a CV can rewrite for itself (content["overrides"])
+OVERRIDE_KINDS = ["experience", "volunteering", "projects", "education", "achievements"]
+MAX_OVERRIDES = 100
 
 
 def _fail(message):
@@ -122,7 +152,7 @@ def _text(value, key, limit):
 def validate_content(value):
     if not isinstance(value, dict):
         _fail("Content must be an object.")
-    unknown = set(value) - {"headline", "summary", "sections", "items", "hide_contact"}
+    unknown = set(value) - {"headline", "summary", "sections", "items", "overrides", "hide_contact"}
     if unknown:
         _fail(f"Unknown content options: {', '.join(sorted(unknown))}.")
     for key in ("headline", "summary"):
@@ -143,11 +173,13 @@ def validate_content(value):
         if sid in seen:
             _fail(f"Section {sid} is listed twice.")
         seen.add(sid)
-        allowed = {"id", "visible", "title"} | ({"body"} if custom else set())
+        allowed = {"id", "visible", "title", "column", "columns", "break"} | ({"body"} if custom else set())
         if set(item) - allowed:
             _fail(f"Section {sid} has unknown keys.")
-        if not isinstance(item.get("visible", True), bool):
-            _fail("Section visible must be true or false.")
+        if not isinstance(item.get("visible", True), bool) or not isinstance(item.get("break", False), bool):
+            _fail("Section visible and break must be true or false.")
+        if item.get("column", "main") not in ("main", "side") or item.get("columns", 1) not in (1, 2):
+            _fail("Section column must be main or side, and columns 1 or 2.")
         _text(item.get("title", ""), "Section title", LIMITS["title"])
         if custom:
             _text(item.get("body", ""), "Section text", LIMITS["body"])
@@ -160,6 +192,18 @@ def validate_content(value):
     for ids in items.values():
         if not isinstance(ids, list) or len(ids) > 200 or not all(isinstance(i, int) and not isinstance(i, bool) for i in ids):
             _fail("items lists must contain ids.")
+
+    overrides = value.get("overrides", {})
+    if not isinstance(overrides, dict) or set(overrides) - set(OVERRIDE_KINDS):
+        _fail(f"overrides maps {', '.join(OVERRIDE_KINDS)} to entries.")
+    for entries in overrides.values():
+        if not isinstance(entries, dict) or len(entries) > MAX_OVERRIDES:
+            _fail("Each overrides kind maps entry ids to changes.")
+        for key, change in entries.items():
+            if not str(key).isdigit() or not isinstance(change, dict) or set(change) - {"title", "body"}:
+                _fail("An override changes the title and/or body of one entry.")
+            _text(change.get("title", ""), "Entry title", LIMITS["entry_title"])
+            _text(change.get("body", ""), "Entry text", LIMITS["body"])
 
     hidden = value.get("hide_contact", [])
     if not isinstance(hidden, list) or any(h not in CONTACT_FIELDS for h in hidden):

@@ -19,6 +19,7 @@ One document per piece of work, in the order it was done.
 | 11 | [CV PDF & QR code](11-cv-pdf-and-qr.md) | Server-generated CV PDF (`/api/u/<username>/cv.pdf`, WeasyPrint) and a QR code to the portfolio, on `/resume` and the dashboard |
 | 12 | [CV builder](12-cv-builder.md) | CV versions with 9 templates, colours, fonts, photo, section order/renames, chosen entries and custom sections, edited at `/dashboard/cv` with a live preview |
 | 13 | [Professions, awards & publications](13-professions.md) | Profession presets (labels, home layout, suggested CV template) and an `Achievement` record for awards, publications, exhibitions and talks |
+| 14 | [CV editor: rich text, layouts, click-to-edit](14-cv-editor-and-layouts.md) | WYSIWYG text, per-CV entry rewrites, sidebar/heading/header/margin options on every template, per-section columns and page breaks, drag to reorder, click the preview to edit, undo/redo, Cards and Swiss templates |
 
 ## Quick start
 

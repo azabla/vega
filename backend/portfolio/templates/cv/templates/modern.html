@@ -1,41 +1,10 @@
 {% extends "cv/base.html" %}
-{% comment %}Modern: tinted sidebar (photo, contact, skills, languages, certificates) beside the main column.{% endcomment %}
-{% block page %}
-  margin-left: 0;
-  background: linear-gradient(to right, {{ colors.soft }} 68mm, #ffffff 68mm) no-repeat;
-  background-origin: border-box;
-  @bottom-left { content: none; }
-{% endblock %}
+{% comment %}Modern: tinted sidebar (photo, contact, skills, languages, certificates) beside the main column. The sidebar itself is drawn by base.html (TEMPLATE_SIDEBAR in cv_options.py).{% endcomment %}
 {% block style %}
-  aside { float: left; width: 50mm; padding: 0 6mm 0 12mm; }
-  main { margin-left: 78mm; }
-  aside .photo { margin: 0 auto 5mm; }
-  aside .contact { margin-bottom: 2mm; word-break: break-all; }
-  aside .sec-title, main .sec-title {
+  .main .sec-title {
     font-size: {{ m.tiny }}pt; font-weight: 650; letter-spacing: 0.12em; text-transform: uppercase;
-    color: {{ colors.ink }}; margin-bottom: 2.5mm;
+    color: {{ colors.ink }}; margin-bottom: 3mm;
   }
-  main .sec-title span { padding-bottom: 1mm; border-bottom: 1.4pt solid {{ colors.accent }}; }
-  main .sec-title { margin-bottom: 3mm; }
-  aside .skill-groups { display: block; }
-  aside .skill-groups dd { margin-bottom: 2mm; }
-  aside .chips li { background: #ffffff; }
-  aside .qr { margin-top: 7mm; }
-  main > header { margin-bottom: 1mm; }
-  main > header .headline { color: {{ colors.ink }}; }
-{% endblock %}
-{% block body %}
-  <aside>
-    {% include "cv/partials/photo.html" with size="34mm" %}
-    {% include "cv/partials/contact.html" with icon_color=colors.ink stacked=True %}
-    {% include "cv/partials/sections.html" with list=side_sections %}
-    {% include "cv/partials/qr.html" %}
-  </aside>
-  <main>
-    <header>
-      <h1>{{ name }}</h1>
-      {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
-    </header>
-    {% include "cv/partials/sections.html" with list=main_sections %}
-  </main>
+  .main .sec-title span { padding-bottom: 1mm; border-bottom: 1.4pt solid {{ colors.accent }}; }
+  .main > header .headline, header.std .headline { color: {{ colors.ink }}; }
 {% endblock %}

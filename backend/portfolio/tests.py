@@ -695,3 +695,83 @@ class ProfessionTests(APITestCase):
         call_command("seed_portfolio", "portfolio/seed/demo.json", owner="alice", stdout=open("/dev/null", "w"))
         kinds = set(Achievement.objects.filter(owner=self.alice).values_list("kind", flat=True))
         self.assertTrue({"award", "publication", "talk"} <= kinds)
+
+
+class CVLayoutTests(APITestCase):
+    """Layout options on top of any template, per-section options, entry rewrites and preview regions."""
+
+    def setUp(self):
+        cache.clear()
+        self.alice = make_user("alice")
+        cat = Category.objects.create(owner=self.alice, name="Backend")
+        Skill.objects.create(owner=self.alice, name="Python", category=cat)
+        self.job = Experience.objects.create(
+            owner=self.alice, company="Acme", position="Engineer", start_date="2020-01-01", description="- Long bullet"
+        )
+        self.portfolio = Portfolio.objects.get(owner=self.alice)
+        self.client.force_authenticate(self.alice)
+
+    def test_every_template_renders_with_every_layout(self):
+        from .cv import render_cv_pdf
+        from .cv_options import TEMPLATES
+
+        designs = [
+            {"layout": "left", "sidebar_style": "dark", "heading_style": "bar", "header_align": "center"},
+            {"layout": "right", "sidebar_style": "plain", "sidebar_width": "wide", "heading_style": "serif"},
+            {"layout": "one", "header_align": "left", "heading_style": "block", "margins": "narrow"},
+        ]
+        content = {"sections": [{"id": "experience", "columns": 2, "column": "side"}, {"id": "skills", "break": True}]}
+        for template in TEMPLATES:
+            for design in designs:
+                with self.subTest(template=template, design=design):
+                    cv = CV(owner=self.alice, name="x", template=template, design=design, content=content)
+                    self.assertTrue(render_cv_pdf(self.portfolio, "https://x/u/alice", cv).startswith(b"%PDF"))
+
+    def test_layout_and_section_options_are_validated(self):
+        for bad in (
+            {"design": {"layout": "top"}},
+            {"design": {"heading_style": "comic"}},
+            {"content": {"sections": [{"id": "skills", "column": "left"}]}},
+            {"content": {"sections": [{"id": "skills", "columns": 3}]}},
+            {"content": {"sections": [{"id": "skills", "break": "yes"}]}},
+            {"content": {"overrides": {"skills": {}}}},
+            {"content": {"overrides": {"experience": {"abc": {"body": "x"}}}}},
+            {"content": {"overrides": {"experience": {"1": {"colour": "red"}}}}},
+            {"content": {"overrides": {"experience": {"1": {"body": "x" * 7000}}}}},
+        ):
+            with self.subTest(bad=bad):
+                res = self.client.post("/api/me/cvs/", {"name": "CV", **bad}, format="json")
+                self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST, res.data)
+
+    def test_sidebar_placement_and_entry_rewrites(self):
+        from .cv import cv_context
+
+        cv = CV(
+            owner=self.alice,
+            name="x",
+            template="classic",
+            design={"layout": "right"},
+            content={
+                "sections": [{"id": "experience", "column": "side"}, {"id": "skills", "column": "main", "columns": 2}],
+                "overrides": {"experience": {str(self.job.pk): {"title": "Backend engineer", "body": "**Short**"}}},
+            },
+        )
+        ctx = cv_context(self.portfolio, "https://x/u/alice", cv)
+        self.assertEqual(ctx["side"]["position"], "right")
+        self.assertEqual([s["id"] for s in ctx["side_sections"]], ["experience"])
+        self.assertIn("skills", [s["id"] for s in ctx["main_sections"]])
+        job = ctx["side_sections"][0]["data"][0]
+        self.assertEqual((job["title"], job["body"]), ("Backend engineer", "<p><strong>Short</strong></p>"))
+        # Modern has a sidebar unless the owner asks for one column
+        self.assertIsNotNone(cv_context(self.portfolio, "x", CV(owner=self.alice, template="modern"))["side"])
+        self.assertIsNone(cv_context(self.portfolio, "x", CV(owner=self.alice, template="modern", design={"layout": "one"}))["side"])
+
+    def test_preview_marks_where_each_section_is(self):
+        res = self.client.post(
+            "/api/me/cvs/preview/", {"template": "modern", "content": {"summary": "Hello"}}, format="json"
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        ids = {r["id"] for r in res.data["regions"]}
+        self.assertTrue({"header", "summary", "experience", "skills"} <= ids, ids)
+        for r in res.data["regions"]:
+            self.assertTrue(0 <= r["x"] <= 1 and 0 <= r["y"] <= 1 and 0 < r["w"] <= 1 and 0 < r["h"] <= 1, r)

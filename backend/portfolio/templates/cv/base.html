@@ -1,7 +1,9 @@
 <!doctype html>
 {% comment %}
-  Shared skeleton for every CV template (portfolio/cv/). A template extends this,
-  adds its CSS in {% block style %} and its layout in {% block body %}.
+  Shared skeleton for every CV template (portfolio/cv/). A template extends this, adds its CSS
+  in {% block style %} and its one-column header in {% block header %}. The page body (one column,
+  or sidebar + main per design.layout) and the layout options (heading style, header alignment,
+  section columns/page breaks) are drawn here, after the template's CSS so they win.
   Values in the CSS (sizes in pt/mm, colours) are computed in portfolio/cv/style.py.
 {% endcomment %}
 <html lang="en">
@@ -23,6 +25,13 @@
       @bottom-right { content: "Page " counter(page) " of " counter(pages); }
       @bottom-left, @bottom-right { font: {{ m.tiny }}pt "CV Body", "CV Ethiopic", sans-serif; color: #6b6b6b; }
       {% block page %}{% endblock %}
+      {% if side %}
+        margin-{{ side.position }}: 0;
+        background: {{ side.bg }} no-repeat;
+        background-origin: border-box;
+        {% if side.position == "left" %}@bottom-left { content: none; }{% else %}@bottom-right { content: none; }
+        @bottom-left { content: "Page " counter(page) " of " counter(pages); }{% endif %}
+      {% endif %}
     }
     @page :first { @bottom-left { content: none; } }
 
@@ -55,6 +64,13 @@
 
     .sec { margin-top: {{ m.section_gap }}mm; }
     .sec-title { break-after: avoid; }
+
+    /* Default one-column header (templates may replace it) */
+    header.std { display: flex; align-items: center; padding-bottom: 4mm; }
+    .std .who { flex: 1; min-width: 0; }
+    .std .photo { margin-right: 5mm; }
+    .std .contact { margin-top: 2.5mm; }
+    .std .qr { flex: none; width: 19mm; margin-left: 5mm; }
 
     .entry + .entry { margin-top: {{ m.entry_gap }}mm; }
     .entry.with-logo { display: flex; }
@@ -92,9 +108,126 @@
     .plain .sub { color: #5a5a5a; }
 
     {% block style %}{% endblock %}
+
+    /* ---- Layout options (design.layout, heading_style, header_align, section options).
+       After the template's CSS so they win; see cv/context.py. ---- */
+    .sec-break { break-before: page; }
+    .sec-cols-2 > .sec-body { column-count: 2; column-gap: 7mm; }
+    .sec-cols-2 .entry, .sec-cols-2 li, .sec-cols-2 dd { break-inside: avoid; }
+
+    {% if side %}
+      .side { float: {{ side.position }}; width: {{ side.width }}mm; }
+      .side-left { padding: 0 6mm 0 12mm; }
+      .side-right { padding: 0 12mm 0 6mm; }
+      .main { margin-{{ side.position }}: {{ side.gutter }}mm; }
+      .side .photo { margin: 0 auto 5mm; }
+      .side .contact { margin-bottom: 3mm; word-break: break-all; }
+      .side .qr { margin-top: 7mm; }
+      .side .sec { margin-left: 0; padding-left: 0; border: 0; position: static; }
+      .side .sec-title {
+        position: static; width: auto; display: block; margin: 0 0 2.5mm; padding: 0; border: 0; background: none;
+        font-family: "CV Body", "CV Ethiopic", sans-serif; font-weight: 650; font-size: {{ m.tiny }}pt;
+        letter-spacing: 0.12em; text-transform: uppercase;
+        color: {{ colors.ink }};
+      }
+      .side .sec-title span { border: 0; padding: 0; }
+      .side .sec-title::before, .side .sec-title::after, .side .sec-title span::before { content: none; }
+      .side .skill-groups { display: block; }
+      .side .skill-groups dd { margin-bottom: 2mm; }
+      .side .entry-head { display: block; }
+      .side .when { position: static; margin: 0; width: auto; text-align: left; }
+      .side .entry { padding-left: 0; border: 0; }
+      .side .entry::before { content: none; }
+      .side-tint .chips li { background: #ffffff; }
+      .side-dark { color: #ffffff; }
+      .side-dark .contact { color: #ffffff; }
+      .side-dark .sec-title { color: #ffffff; border-bottom: 0.6pt solid {{ colors.on_deep_muted }}; padding-bottom: 1mm; }
+      .side-dark .skill-groups dd, .side-dark .plain .sub, .side-dark .body, .side-dark .tags,
+      .side-dark .when, .side-dark h3 .org, .side-dark .qr { color: {{ colors.on_deep_muted }}; }
+      .side-dark .chips li { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
+      .side-dark .qr img { background: #ffffff; padding: 1.2mm; }
+      .side-dark .photo { border: 0.8mm solid #ffffff; }
+      .side-dark .body a, .side-dark .link { color: #ffffff; }
+      .main > header.main-header {
+        display: block; position: static; margin: 0 0 1mm; padding: 0; border: 0; background: none; text-align: left;
+      }
+    {% endif %}
+
+    {% if design.heading_style != "auto" %}
+      body.hs .sec-in-main > .sec-title {
+        display: block; margin: 0 0 2.5mm; padding: 0; border: 0; border-radius: 0; background: none;
+        font-family: "CV Body", "CV Ethiopic", sans-serif; font-weight: 650; font-size: {{ m.small }}pt;
+        letter-spacing: 0; text-transform: none;
+        color: {{ colors.ink }};
+      }
+      body.hs .sec-in-main > .sec-title span {
+        border: 0; padding: 0; font-family: inherit; font-weight: inherit; font-size: inherit;
+        letter-spacing: inherit; text-transform: inherit; color: inherit;
+      }
+      body.hs .sec-in-main > .sec-title::before, body.hs .sec-in-main > .sec-title::after,
+      body.hs .sec-in-main > .sec-title span::before { content: none; }
+      body.hs-caps .sec-in-main > .sec-title, body.hs-line .sec-in-main > .sec-title, body.hs-block .sec-in-main > .sec-title {
+        font-size: {{ m.tiny }}pt; letter-spacing: 0.12em; text-transform: uppercase;
+      }
+      body.hs-line .sec-in-main > .sec-title { border-bottom: 0.6pt solid {{ colors.line }}; padding-bottom: 1.2mm; }
+      body.hs-underline .sec-in-main > .sec-title { font-size: {{ m.headline }}pt; }
+      body.hs-underline .sec-in-main > .sec-title span { border-bottom: 1.4pt solid {{ colors.accent }}; padding-bottom: 0.6mm; }
+      body.hs-bar .sec-in-main > .sec-title {
+        font-size: {{ m.headline }}pt; font-weight: 700; color: #1a1a1a;
+        border-left: 1.1mm solid {{ colors.accent }}; padding-left: 2.5mm;
+      }
+      body.hs-block .sec-in-main > .sec-title { background: {{ colors.tint }}; padding: 1.2mm 2.6mm; border-radius: 1.2mm; }
+      body.hs-serif .sec-in-main > .sec-title {
+        font-family: "CV Heading", "CV Ethiopic", serif; font-weight: {{ fonts.heading_weight }};
+        letter-spacing: {{ fonts.heading_tracking }}; font-size: {{ m.h2 }}pt;
+      }
+    {% endif %}
+
+    {% if design.header_align == "center" %}
+      body.hdr-center #cv-header { display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
+      body.hdr-center #cv-header .who { flex: none; width: 100%; }
+      body.hdr-center #cv-header .photo { order: -1; margin: 0 auto 3.5mm; }
+      body.hdr-center #cv-header .contact li { margin: 0.6mm 2.2mm; }
+      body.hdr-center #cv-header .qr { position: absolute; top: 0; right: 0; margin: 0; width: 19mm; }
+    {% elif design.header_align == "left" %}
+      body.hdr-left #cv-header { display: flex; flex-direction: row; align-items: center; text-align: left; position: relative; }
+      body.hdr-left #cv-header .who { flex: 1; min-width: 0; }
+      body.hdr-left #cv-header .photo { order: -1; margin: 0 5mm 0 0; }
+      body.hdr-left #cv-header .contact li { margin: 0.6mm 4.5mm 0.6mm 0; }
+      body.hdr-left #cv-header .qr { position: static; flex: none; margin: 0 0 0 5mm; width: 19mm; }
+    {% endif %}
   </style>
 </head>
-<body class="tpl-{{ template }}">
-  {% block body %}{% endblock %}
+<body class="tpl-{{ template }} {{ body_classes }}">
+  {% if side %}
+    <aside class="side side-{{ side.position }} side-{{ side.fill }}">
+      <div id="cv-contact">
+        {% include "cv/partials/photo.html" with size="34mm" %}
+        {% include "cv/partials/contact.html" with icon_color=side.icon stacked=True %}
+      </div>
+      {% include "cv/partials/sections.html" with list=side_sections area="side" %}
+      {% include "cv/partials/qr.html" %}
+    </aside>
+    <main class="main">
+      <header id="cv-header" class="main-header">
+        <h1>{{ name }}</h1>
+        {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
+      </header>
+      {% include "cv/partials/sections.html" with list=main_sections %}
+    </main>
+  {% else %}
+    {% block header %}
+      <header id="cv-header" class="std">
+        {% include "cv/partials/photo.html" with size="25mm" %}
+        <div class="who">
+          <h1>{{ name }}</h1>
+          {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
+          {% include "cv/partials/contact.html" with icon_color=colors.ink %}
+        </div>
+        {% include "cv/partials/qr.html" %}
+      </header>
+    {% endblock %}
+    {% include "cv/partials/sections.html" with list=sections %}
+  {% endif %}
 </body>
 </html>

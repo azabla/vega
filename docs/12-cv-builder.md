@@ -51,13 +51,13 @@ frontend/src/
 
 How the templates are built:
 - WeasyPrint has no `color-mix()`, so `style.py` computes every shade. Accent text is darkened until it reaches 4.5:1 on white, and sidebar fills until they reach 7:1 with white text. Any accent colour stays readable.
-- Sidebars are a full-height `@page` background (`linear-gradient` with a hard stop, `no-repeat`, `border-box`) plus a floated `<aside>`. Floats split across pages; CSS grid and flex do not, so section-level layouts (Compact, Timeline) use absolute positioning instead.
+- Sidebars are a full-height `@page` background (`linear-gradient` with a hard stop, `no-repeat`, `border-box`) plus a floated `<aside>`, drawn by `base.html` for any template (see [14](14-cv-editor-and-layouts.md)). Floats split across pages; CSS grid and flex do not, so section-level layouts (Compact, Timeline) use absolute positioning instead.
 - Images (photos, company logos) are read from the owner's own uploads, resized with Pillow and embedded as `data:` URIs. The renderer still loads nothing but the bundled fonts and `data:` URIs.
 - Italic body faces are bundled too (Geist, Inter, DM Sans).
 
 Adding a template:
 1. Add its id to `TEMPLATES` in `cv_options.py` and to `CV_TEMPLATES` in `lib/cv.js`.
-2. Create `templates/cv/templates/<id>.html`, extending `cv/base.html`.
+2. Create `templates/cv/templates/<id>.html`, extending `cv/base.html`: its CSS in `{% block style %}`, its one-column header (with `id="cv-header"`) in `{% block header %}`. The body and layout options come from `base.html`.
 3. Add a migration for the new choice.
 4. Run `python manage.py render_cv_thumbnails --owner sample --out ../frontend/src/assets/cv-templates`.
 
@@ -75,6 +75,6 @@ Adding a template:
 
 ## Next
 
-- Drag-and-drop ordering and entry-level edits (e.g. shorter bullets for one CV)
+- ~~Drag-and-drop ordering and entry-level edits~~ (done in [14](14-cv-editor-and-layouts.md))
 - Amharic section labels / a bilingual CV
 - Cache rendered PDFs until the profile or the CV changes

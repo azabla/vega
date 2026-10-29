@@ -13,6 +13,8 @@ export const CV_TEMPLATES = [
     { id: "academic", name: "Academic", hint: "Formal; education first" },
     { id: "minimal", name: "Minimal", hint: "Lots of white space" },
     { id: "executive", name: "Executive", hint: "Dark sidebar, strong headings" },
+    { id: "cards", name: "Cards", hint: "Sections on soft rounded cards" },
+    { id: "swiss", name: "Swiss", hint: "Bold type, numbered sections" },
 ].map((t) => ({ ...t, thumbnail: thumbnailOf(t.id) }));
 
 export const templateOf = (id) => CV_TEMPLATES.find((t) => t.id === id) ?? CV_TEMPLATES[0];
@@ -71,7 +73,58 @@ export const CV_OPTIONS = {
         { id: "list", name: "By category" },
         { id: "tags", name: "Tags" },
     ],
+    layout: [
+        { id: "auto", name: "Template's", hint: "As the template is drawn" },
+        { id: "one", name: "One column", hint: "Everything full width" },
+        { id: "left", name: "Sidebar left", hint: "Contact and skills on the left" },
+        { id: "right", name: "Sidebar right", hint: "Contact and skills on the right" },
+    ],
+    sidebar_width: [
+        { id: "narrow", name: "Narrow" },
+        { id: "normal", name: "Normal" },
+        { id: "wide", name: "Wide" },
+    ],
+    sidebar_style: [
+        { id: "auto", name: "Template's" },
+        { id: "tint", name: "Tinted" },
+        { id: "dark", name: "Dark" },
+        { id: "plain", name: "White" },
+    ],
+    header_align: [
+        { id: "auto", name: "Template's" },
+        { id: "left", name: "Left" },
+        { id: "center", name: "Centred" },
+    ],
+    heading_style: [
+        { id: "auto", name: "Template's" },
+        { id: "caps", name: "Small caps" },
+        { id: "line", name: "Ruled" },
+        { id: "underline", name: "Underlined" },
+        { id: "bar", name: "Side bar" },
+        { id: "block", name: "Filled" },
+        { id: "serif", name: "Large serif" },
+    ],
+    margins: [
+        { id: "narrow", name: "Narrow" },
+        { id: "normal", name: "Normal" },
+        { id: "wide", name: "Wide" },
+    ],
 };
+
+// Templates drawn with a sidebar when layout is "auto" (TEMPLATE_SIDEBAR in cv_options.py)
+const TEMPLATE_SIDEBAR = { modern: "left", executive: "left" };
+// Sections that go in the sidebar unless placed (SIDEBAR_SECTIONS in cv/context.py)
+const SIDEBAR_SECTIONS = ["skills", "languages", "certificates"];
+
+/** "left" | "right" when this CV has a sidebar, else null. */
+export const sidebarOf = (template, design) => {
+    if (design.layout === "one") return null;
+    if (design.layout === "auto") return TEMPLATE_SIDEBAR[template] ?? null;
+    return design.layout;
+};
+
+/** Whether a section sits in the sidebar (when there is one). */
+export const inSidebar = (section) => (section.column ?? (SIDEBAR_SECTIONS.includes(section.id) ? "side" : "main")) === "side";
 
 export const CV_FLAGS = [
     { id: "qr", label: "QR code to your portfolio" },
@@ -92,6 +145,12 @@ export const DEFAULT_DESIGN = {
     qr: true,
     logos: false,
     icons: true,
+    layout: "auto",
+    sidebar_width: "normal",
+    sidebar_style: "auto",
+    header_align: "auto",
+    heading_style: "auto",
+    margins: "normal",
 };
 
 export const resolveDesign = (design) => ({ ...DEFAULT_DESIGN, ...(design ?? {}) });
@@ -129,13 +188,28 @@ export const resolveSections = (template, sections) => {
 export const newCustomSectionId = () => `custom-${Math.random().toString(36).slice(2, 10)}`;
 
 // Sections whose entries can be picked one by one: section id → how to list the owner's records
+// Entries a CV can rewrite for itself (content.overrides)
+export const OVERRIDE_KINDS = ["experience", "volunteering", "projects", "education", "achievements"];
+
+// title/text: what the profile says, for entries a CV can rewrite (OVERRIDE_KINDS in cv_options.py)
+const job = { label: (j) => `${j.position} · ${j.company}`, title: (j) => j.position, text: (j) => j.description };
 export const CV_ITEM_SOURCES = {
-    experience: { endpoint: "/me/experience/", filter: (j) => j.employment_type !== "volunteer", label: (j) => `${j.position} · ${j.company}` },
-    volunteering: { endpoint: "/me/experience/", filter: (j) => j.employment_type === "volunteer", label: (j) => `${j.position} · ${j.company}` },
-    projects: { endpoint: "/me/projects/", label: (p) => p.title, featuredByDefault: true },
-    education: { endpoint: "/me/education/", label: (e) => [e.field_of_study, e.institution].filter(Boolean).join(" · ") },
+    experience: { endpoint: "/me/experience/", filter: (j) => j.employment_type !== "volunteer", ...job },
+    volunteering: { endpoint: "/me/experience/", filter: (j) => j.employment_type === "volunteer", ...job },
+    projects: { endpoint: "/me/projects/", label: (p) => p.title, featuredByDefault: true, title: (p) => p.title, text: (p) => p.summary },
+    education: {
+        endpoint: "/me/education/",
+        label: (e) => [e.field_of_study, e.institution].filter(Boolean).join(" · "),
+        title: (e) => e.field_of_study,
+        text: (e) => [e.grade, e.description].filter(Boolean).join("\n\n"),
+    },
     certificates: { endpoint: "/me/certificates/", label: (c) => c.name },
-    achievements: { endpoint: "/me/achievements/", label: (a) => [a.title, a.issuer].filter(Boolean).join(" · ") },
+    achievements: {
+        endpoint: "/me/achievements/",
+        label: (a) => [a.title, a.issuer].filter(Boolean).join(" · "),
+        title: (a) => a.title,
+        text: (a) => a.description,
+    },
     skills: { endpoint: "/me/skills/", filter: (s) => s.is_active !== false, label: (s) => s.name },
     languages: { endpoint: "/me/languages/", label: (l) => l.name },
 };
@@ -157,4 +231,22 @@ export const CONTACT_FIELDS = [
     { id: "telegram", label: "Telegram" },
 ];
 
-export const FORMATTING_HINT = "Start lines with “- ” for bullets. **bold**, *italic*, [link](https://…)";
+
+// The PDF is always black on white paper; samples of it in the editor use these, not the theme
+export const PAPER = { background: "#ffffff", text: "#1a1a1a", muted: "#5c5c5c" };
+
+const luminance = (hex) => {
+    const [r, g, b] = [1, 3, 5].map((i) => {
+        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+/** The accent darkened until it reads as text on white (4.5:1), like palette()["ink"] in cv/style.py. */
+export const inkOf = (accent) => {
+    let rgb = [1, 3, 5].map((i) => parseInt(accent.slice(i, i + 2), 16));
+    const hex = () => `#${rgb.map((c) => Math.round(c).toString(16).padStart(2, "0")).join("")}`;
+    while (1.05 / (luminance(hex()) + 0.05) < 4.5) rgb = rgb.map((c) => c * 0.92);
+    return hex();
+};

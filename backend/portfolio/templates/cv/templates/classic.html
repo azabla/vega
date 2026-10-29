@@ -9,8 +9,8 @@
   .sec { border-top: 0.6pt solid #dcdcdc; padding-top: 3.5mm; margin-top: {{ m.section_gap }}mm; }
   .sec-title { font-size: {{ m.tiny }}pt; font-weight: 650; letter-spacing: 0.12em; text-transform: uppercase; color: {{ colors.ink }}; margin-bottom: 2.5mm; }
 {% endblock %}
-{% block body %}
-  <header>
+{% block header %}
+  <header id="cv-header">
     {% include "cv/partials/photo.html" with size="25mm" %}
     <div class="who">
       <h1>{{ name }}</h1>
@@ -19,5 +19,4 @@
     </div>
     {% include "cv/partials/qr.html" %}
   </header>
-  {% include "cv/partials/sections.html" with list=sections %}
 {% endblock %}

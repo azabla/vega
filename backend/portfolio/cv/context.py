@@ -11,7 +11,7 @@ from io import BytesIO
 from django.utils.dateformat import format as format_date
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-from ..cv_options import SECTIONS, resolve_design, resolve_sections
+from ..cv_options import SECTIONS, TEMPLATE_SIDEBAR, resolve_design, resolve_sections
 from ..models import About, Experience, Project, Skill
 from ..professions import profession_of, section_title
 from . import style
@@ -19,9 +19,20 @@ from .icons import icon
 from .text import plain_inline, rich
 
 FEATURED_PROJECTS = 4
-# Sections that move to the sidebar in two-column templates
-SIDEBAR_TEMPLATES = {"modern", "executive"}
+# Sections that go in the sidebar (when there is one) unless the owner places them
 SIDEBAR_SECTIONS = {"skills", "languages", "certificates"}
+
+
+def sidebar(template, design):
+    """None for one column, else where the sidebar goes and how it looks."""
+    native = TEMPLATE_SIDEBAR.get(template)
+    layout = design["layout"]
+    if layout == "one" or (layout == "auto" and not native):
+        return None
+    position = native[0] if layout == "auto" else layout
+    fill = design["sidebar_style"] if design["sidebar_style"] != "auto" else (native[1] if native else "tint")
+    band = style.SIDEBAR_WIDTH[design["sidebar_width"]]
+    return {"position": position, "fill": fill, "band": band, "width": band - 18, "gutter": band + 10}
 
 
 def bare_url(url):
@@ -96,14 +107,21 @@ def build_context(portfolio, cv, url, qr_uri):
     design = resolve_design(cv.design)
     content = cv.content or {}
     items = content.get("items", {})
+    overrides = content.get("overrides", {})
     months = design["dates"] == "month"
 
-    def job(j):
+    def edited(kind, obj, title, body):
+        """An entry's title and text, as this CV rewrote them (empty = the profile's)."""
+        change = overrides.get(kind, {}).get(str(obj.pk), {})
+        return change.get("title") or title, rich(change.get("body") or body)
+
+    def job(j, kind):
+        title, body = edited(kind, j, j.position, j.description)
         return {
-            "title": j.position,
+            "title": title,
             "org": ", ".join(filter(None, [j.company, j.location])),
             "when": date_range(j.start_date, j.end_date, j.current, months),
-            "body": rich(j.description),
+            "body": body,
             "logo": image_data_uri(j.company_logo, 120) if design["logos"] else None,
         }
 
@@ -111,6 +129,37 @@ def build_context(portfolio, cv, url, qr_uri):
     volunteer = Experience.EmploymentType.VOLUNTEER
     work = pick(items, "experience", [j for j in jobs if j.employment_type != volunteer])
     volunteering = pick(items, "volunteering", [j for j in jobs if j.employment_type == volunteer])
+
+    def project(p):
+        title, body = edited("projects", p, p.title, p.summary)
+        return {
+            "title": title,
+            "org": p.role,
+            "when": date_range(p.started_on, p.ended_on, False, months),
+            "body": body,
+            "skills": [s.name for s in p.skills.all()],
+            "link": p.live_url or p.github_url,
+            "link_label": bare_url(p.live_url or p.github_url),
+        }
+
+    def school(e):
+        title, body = edited(
+            "education", e, ", ".join(filter(None, [e.get_level_display(), e.field_of_study])),
+            "\n\n".join(filter(None, [e.grade, e.description])),
+        )
+        return {"title": title, "org": e.institution, "when": date_range(e.start_date, e.end_date, e.current, months), "body": body}
+
+    def achievement(a):
+        title, body = edited("achievements", a, a.title, a.description)
+        return {
+            "title": title,
+            "org": a.issuer,
+            "when": format_date(a.date, "M Y" if months else "Y") if a.date else "",
+            "authors": a.authors,
+            "body": body,
+            "link": a.url,
+            "link_label": bare_url(a.url),
+        }
 
     projects = pick(
         items,
@@ -137,30 +186,11 @@ def build_context(portfolio, cv, url, qr_uri):
 
     data = {
         "summary": rich(summary),
-        "experience": [job(j) for j in work],
-        "volunteering": [job(j) for j in volunteering],
-        "projects": [
-            {
-                "title": p.title,
-                "org": p.role,
-                "when": date_range(p.started_on, p.ended_on, False, months),
-                "body": rich(p.summary),
-                "skills": [s.name for s in p.skills.all()],
-                "link": p.live_url or p.github_url,
-                "link_label": bare_url(p.live_url or p.github_url),
-            }
-            for p in projects
-        ],
+        "experience": [job(j, "experience") for j in work],
+        "volunteering": [job(j, "volunteering") for j in volunteering],
+        "projects": [project(p) for p in projects],
         "skills": {"groups": skill_groups, "all": [s.name for s in skills]} if skills else None,
-        "education": [
-            {
-                "title": ", ".join(filter(None, [e.get_level_display(), e.field_of_study])),
-                "org": e.institution,
-                "when": date_range(e.start_date, e.end_date, e.current, months),
-                "body": rich("\n\n".join(filter(None, [e.grade, e.description]))),
-            }
-            for e in pick(items, "education", list(owner.education.all()))
-        ],
+        "education": [school(e) for e in pick(items, "education", list(owner.education.all()))],
         "certificates": [
             {
                 "name": c.name,
@@ -170,18 +200,7 @@ def build_context(portfolio, cv, url, qr_uri):
             }
             for c in pick(items, "certificates", list(owner.certificates.all()))
         ],
-        "achievements": [
-            {
-                "title": a.title,
-                "org": a.issuer,
-                "when": format_date(a.date, "M Y" if months else "Y") if a.date else "",
-                "authors": a.authors,
-                "body": rich(a.description),
-                "link": a.url,
-                "link_label": bare_url(a.url),
-            }
-            for a in pick(items, "achievements", list(owner.achievements.all()))
-        ],
+        "achievements": [achievement(a) for a in pick(items, "achievements", list(owner.achievements.all()))],
         "languages": [
             {"name": lang.name, "level": lang.get_proficiency_display()}
             for lang in pick(items, "languages", list(owner.languages.all()))
@@ -204,9 +223,37 @@ def build_context(portfolio, cv, url, qr_uri):
             if not body:
                 continue
             kind, title = "custom", s["title"] or "More"
-        sections.append({"id": sid, "kind": kind, "title": title, "data": body, "partial": f"cv/sections/{kind}.html"})
+        sections.append({
+            "id": sid,
+            "kind": kind,
+            "title": title,
+            "data": body,
+            "partial": f"cv/sections/{kind}.html",
+            "side": s.get("column", "side" if kind in SIDEBAR_SECTIONS else "main") == "side",
+            "columns": s.get("columns", 1),
+            "page_break": s.get("break", False),
+        })
 
-    sidebar = cv.template in SIDEBAR_TEMPLATES
+    colors = style.palette(design["accent"])
+    side = sidebar(cv.template, design)
+    if side:
+        # @page background: the sidebar band, a hairline for "plain"
+        fill = {"tint": colors["soft"], "dark": colors["deep"]}.get(side["fill"])
+        towards = "to right" if side["position"] == "left" else "to left"
+        band = side["band"]
+        side["bg"] = (
+            f"linear-gradient({towards}, {fill} {band}mm, #ffffff {band}mm)"
+            if fill
+            else f"linear-gradient({towards}, #ffffff {band - 0.3}mm, {colors['line']} {band - 0.3}mm, "
+            f"{colors['line']} {band}mm, #ffffff {band}mm)"
+        )
+        side["icon"] = "#ffffff" if side["fill"] == "dark" else colors["ink"]
+    # Classes that switch on the generic layout rules in base.html
+    body_classes = [
+        f"hs hs-{design['heading_style']}" if design["heading_style"] != "auto" else "",
+        f"hdr-{design['header_align']}" if design["header_align"] != "auto" else "",
+        "with-side" if side else "",
+    ]
     photo_field = {"profile": portfolio.profile_image, "upload": cv.photo}.get(design["photo"])
 
     return {
@@ -217,12 +264,14 @@ def build_context(portfolio, cv, url, qr_uri):
         "contact": contact_items(portfolio, set(content.get("hide_contact", []))),
         "photo": image_data_uri(photo_field, 600),
         "sections": sections,
-        "main_sections": [s for s in sections if not (sidebar and s["kind"] in SIDEBAR_SECTIONS)],
-        "side_sections": [s for s in sections if sidebar and s["kind"] in SIDEBAR_SECTIONS],
+        "main_sections": [s for s in sections if not (side and s["side"])],
+        "side_sections": [s for s in sections if side and s["side"]],
+        "side": side,
+        "body_classes": " ".join(filter(None, body_classes)),
         "url": url,
         "url_label": bare_url(url),
         "qr": qr_uri if design["qr"] else None,
-        "colors": style.palette(design["accent"]),
+        "colors": colors,
         "m": style.metrics(design),
         "fonts": style.fonts(design),
         "paper": style.PAPER[design["paper"]],

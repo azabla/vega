@@ -419,3 +419,29 @@
     display: none;
   }
 }
+
+/* Rich text editor for CV text (dashboard/components/RichTextEditor.jsx) */
+.cv-rich p + p,
+.cv-rich p + ul,
+.cv-rich ul + p {
+  margin-top: 0.5rem;
+}
+.cv-rich ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.cv-rich li + li {
+  margin-top: 0.125rem;
+}
+.cv-rich a {
+  color: var(--primary-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.cv-rich p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}

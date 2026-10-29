@@ -1,0 +1,32 @@
+{% extends "cv/base.html" %}
+{% comment %}Swiss: a heavy accent rule, a large name, numbered section titles in a left column. Best with the Modern pairing.{% endcomment %}
+{% block style %}
+  body { counter-reset: sec; }
+  header { display: flex; align-items: flex-end; border-top: 2.4mm solid {{ colors.accent }}; padding: 6mm 0 6mm; }
+  header .who { flex: 1; min-width: 0; }
+  header h1 { font-size: {{ m.h1 }}pt; line-height: 1; letter-spacing: -0.03em; }
+  header .headline { color: {{ colors.ink }}; margin-top: 2.5mm; }
+  header .contact { margin-top: 3.5mm; }
+  header .photo { order: 2; margin-left: 5mm; }
+  header .qr { order: 3; flex: none; width: 19mm; margin-left: 5mm; }
+  .sec-in-main { counter-increment: sec; }
+  .sec { position: relative; padding: 3mm 0 0 36mm; border-top: 0.9pt solid #1a1a1a; }
+  .sec-title { position: absolute; left: 0; top: 3mm; width: 31mm; font-size: {{ m.h3 }}pt; font-weight: 700; line-height: 1.2; }
+  .sec-title::before {
+    content: counter(sec, decimal-leading-zero); display: block; margin-bottom: 1mm;
+    font-size: {{ m.tiny }}pt; font-weight: 600; letter-spacing: 0.08em; color: {{ colors.ink }};
+  }
+  .main .sec { padding-left: 32mm; }
+  .main .sec-title { width: 28mm; }
+{% endblock %}
+{% block header %}
+  <header id="cv-header">
+    <div class="who">
+      <h1>{{ name }}</h1>
+      {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
+      {% include "cv/partials/contact.html" with icon_color=colors.ink %}
+    </div>
+    {% include "cv/partials/photo.html" with size="24mm" %}
+    {% include "cv/partials/qr.html" %}
+  </header>
+{% endblock %}

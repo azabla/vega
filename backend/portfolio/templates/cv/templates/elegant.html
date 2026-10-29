@@ -15,13 +15,14 @@
     font-size: {{ m.headline }}pt; letter-spacing: 0.04em; color: {{ colors.ink }};
   }
 {% endblock %}
-{% block body %}
-  <header>
+{% block header %}
+  <header id="cv-header">
     {% include "cv/partials/photo.html" with size="26mm" %}
-    <h1>{{ name }}</h1>
-    {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
-    {% include "cv/partials/contact.html" with icon_color=colors.ink %}
+    <div class="who">
+      <h1>{{ name }}</h1>
+      {% if headline %}<p class="headline">{{ headline }}</p>{% endif %}
+      {% include "cv/partials/contact.html" with icon_color=colors.ink %}
+    </div>
     {% include "cv/partials/qr.html" with label=" " %}
   </header>
-  {% include "cv/partials/sections.html" with list=sections %}
 {% endblock %}

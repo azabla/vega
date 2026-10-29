@@ -28,6 +28,8 @@ SHOWCASE = {
     "academic": {"accent": "#1f2937", "font": "classic", "photo": "none"},
     "minimal": {"accent": "#0f766e", "font": "modern"},
     "executive": {"accent": "#1f3a5f"},
+    "cards": {"accent": "#6d28d9", "font": "modern", "skills_style": "tags"},
+    "swiss": {"accent": "#c2410c", "font": "modern", "photo": "none"},
 }
 
 

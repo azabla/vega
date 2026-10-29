@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import manage_serializers as s
-from .cv import portfolio_url, preview_pages, render_cv_pdf
+from .cv import portfolio_url, preview_pages, regions, render_cv_document, render_cv_pdf
 from .models import (
     About,
     AboutPhoto,
@@ -290,5 +290,6 @@ class MyCVPreviewView(APIView):
             photo=saved.photo if saved else None,
         )
         portfolio = get_or_create_portfolio(request.user)
-        pdf = render_cv_pdf(portfolio, portfolio_url(request, request.user.username), cv)
-        return Response(preview_pages(pdf))
+        document = render_cv_document(portfolio, portfolio_url(request, request.user.username), cv)
+        # page images plus where each section sits, so the editor can make them clickable
+        return Response({**preview_pages(document.write_pdf()), "regions": regions(document)})

@@ -17,6 +17,8 @@ from .render import (
     portfolio_url,
     preview_pages,
     qr_bytes,
+    regions,
+    render_cv_document,
     render_cv_pdf,
 )
 from .text import rich
@@ -30,6 +32,8 @@ __all__ = [
     "portfolio_url",
     "preview_pages",
     "qr_bytes",
+    "regions",
+    "render_cv_document",
     "render_cv_pdf",
     "rich",
 ]

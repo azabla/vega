@@ -13,8 +13,8 @@
   }
   h3 .org { display: block; font-style: italic; }
 {% endblock %}
-{% block body %}
-  <header>
+{% block header %}
+  <header id="cv-header">
     {% include "cv/partials/photo.html" with size="24mm" %}
     <div class="who">
       <h1>{{ name }}</h1>
@@ -23,5 +23,4 @@
     </div>
     {% include "cv/partials/qr.html" %}
   </header>
-  {% include "cv/partials/sections.html" with list=sections %}
 {% endblock %}

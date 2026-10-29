@@ -23,8 +23,8 @@
   .entry .logo { float: right; margin: 0 0 1mm 3mm; }
   .sec-certificates .plain, .sec-languages .plain, .sec-skills .chips { padding-left: 0; }
 {% endblock %}
-{% block body %}
-  <header>
+{% block header %}
+  <header id="cv-header">
     {% include "cv/partials/photo.html" with size="24mm" %}
     <div class="who">
       <h1>{{ name }}</h1>
@@ -33,5 +33,4 @@
     </div>
     {% include "cv/partials/qr.html" %}
   </header>
-  {% include "cv/partials/sections.html" with list=sections %}
 {% endblock %}
