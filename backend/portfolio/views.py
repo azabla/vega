@@ -4,6 +4,7 @@ Public, read-only portfolio API: /api/u/<username>/...
 Every view is scoped to the portfolio owner named in the URL.
 """
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
@@ -46,6 +47,7 @@ from .serializers import (
     TestimonialSerializer,
 )
 from .cv import portfolio_url, qr_bytes, render_cv_pdf
+from .domains import resolve_host
 from .services import AboutService, ProjectService
 
 User = get_user_model()
@@ -215,7 +217,7 @@ class CVPDFView(FileView):
         if portfolio.settings.get("pages", {}).get("resume") is False:
             raise Http404("This portfolio has no résumé.")
         cv = get_object_or_404(CV, owner=portfolio.owner, slug=slug, is_public=True) if slug else None
-        pdf = render_cv_pdf(portfolio, portfolio_url(request, portfolio.owner.username), cv)
+        pdf = render_cv_pdf(portfolio, portfolio_url(request, portfolio), cv)
         name = slugify(portfolio.name) or portfolio.owner.username
         return self.file_response(pdf, "application/pdf", f"{name}-{slug or 'cv'}.pdf")
 
@@ -237,10 +239,50 @@ class QRCodeView(FileView):
     """QR code that opens the public portfolio, as SVG (print) or PNG (chat apps)."""
 
     def get(self, request, username, kind):
-        username = self.get_owner().username
+        portfolio = get_object_or_404(Portfolio, owner=self.get_owner())
+        username = portfolio.owner.username
         content_type = "image/svg+xml" if kind == "svg" else "image/png"
-        content = qr_bytes(portfolio_url(request, username), kind)
+        content = qr_bytes(portfolio_url(request, portfolio), kind)
         return self.file_response(content, content_type, f"{username}-qr.{kind}")
+
+
+class SiteResolveView(APIView):
+    """GET /api/sites/resolve/?host=hana.com: which portfolio a host serves (the frontend asks on custom domains)."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        kind, username = resolve_host(request.query_params.get("host", ""))
+        if not kind:
+            raise Http404
+        return Response({"kind": kind, "username": username})
+
+
+class SiteInfoView(APIView):
+    """GET /api/sites/info/: what this site offers, for the landing page."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response({
+            "registration_open": settings.REGISTRATION_OPEN,
+            "subdomains": settings.PORTFOLIO_SUBDOMAINS,
+            "custom_domains": settings.CUSTOM_DOMAINS,
+        })
+
+
+class TLSAllowedView(APIView):
+    """
+    GET /api/sites/tls-allowed/?domain=…: Caddy's on-demand TLS "ask" check. 200 means the
+    domain is ours to serve (the main site, a user's subdomain, a verified custom domain), so
+    Caddy may get a certificate for it; anything else is refused.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        kind, _ = resolve_host(request.query_params.get("domain", ""))
+        return Response(status=status.HTTP_200_OK if kind else status.HTTP_404_NOT_FOUND)
 
 
 @api_view(["GET"])

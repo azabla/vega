@@ -53,6 +53,10 @@ class Portfolio(models.Model):
     booking_url = models.URLField(blank=True, help_text="Calendly-style booking link")
     # Look and layout: theme, font, hero, section order... (see site_settings.py)
     settings = models.JSONField(default=dict, blank=True, validators=[validate_settings])
+    # The owner's own domain (see domains.py). It serves the portfolio once DNS proves they own it.
+    custom_domain = models.CharField(max_length=253, unique=True, null=True, blank=True)
+    domain_token = models.CharField(max_length=40, blank=True, help_text="Value of the _vega TXT record")
+    domain_verified_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     update_at = models.DateTimeField(auto_now=True)
 

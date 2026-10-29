@@ -1,5 +1,7 @@
 # 07 — Deploying to the VPS with Docker (andu.aetechsolution.et)
 
+> Portfolio subdomains, custom domains and the landing page are turned on in `.env.prod`; see [15](15-signup-and-domains.md).
+
 This guide runs Vega in **Docker** on a VPS that already hosts a Laravel site deployed manually (Nginx + PHP-FPM, no Docker). Both keep working side by side:
 
 - The **host Nginx** stays in charge of ports 80/443, the SSL certificates and the Laravel site. You only add one small config file that forwards `andu.aetechsolution.et` to Vega.

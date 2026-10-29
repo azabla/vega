@@ -4,6 +4,7 @@ import {
   ExternalLink,
   FileText,
   FolderKanban,
+  Globe,
   GraduationCap,
   Inbox,
   Info,
@@ -43,6 +44,7 @@ const NAV = [
   { to: "/dashboard/languages", label: "Languages", icon: Languages },
   { to: "/dashboard/testimonials", label: "Testimonials", icon: MessageSquareQuote },
   { heading: "Account" },
+  { to: "/dashboard/domain", label: "Domain", icon: Globe },
   { to: "/dashboard/messages", label: "Messages", icon: Inbox },
   { to: "/dashboard/account", label: "Settings", icon: Settings },
 ];

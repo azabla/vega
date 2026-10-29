@@ -5,6 +5,7 @@ Vega is a portfolio SaaS. One structured **master profile** per user (Django) dr
 work for any user, including one with no data. Product direction: [docs/00-product-vision.md](docs/00-product-vision.md).
 
 - `backend/` — Django REST. Public read API `/api/u/<username>/…`, owner API `/api/me/…`. CVs: `CV` versions (template + `design`/`content` validated by `cv_options.py`, mirrored by `src/lib/cv.js`) rendered by `portfolio/cv/` (WeasyPrint, fonts bundled in `cv_fonts/`, templates in `templates/cv/`; `base.html` draws the body and the layout options for every template); see [docs/12](docs/12-cv-builder.md) and [docs/14](docs/14-cv-editor-and-layouts.md). CV text is stored as light markup and edited with `RichTextEditor` (TipTap). After changing a CV template, re-run `render_cv_thumbnails`.
+- Hosts: the main site (landing page, `/u/<username>`, dashboard), `<username>.<BASE_DOMAIN>` and verified custom domains each serve one portfolio at `/` (`portfolio/domains.py` ↔ `src/lib/site.js`, docs/15). Build portfolio links with `usePortfolioPath()`, and public URLs from the API's `public_url`, never by hand.
 - `frontend/` — React 19 + Vite + Tailwind v4 (CSS-first config in `src/index.css`) + Base UI primitives + Lucide icons.
 - Docs, one per piece of work: [docs/README.md](docs/README.md). The UI system is described in [docs/08-ui-design-system.md](docs/08-ui-design-system.md).
 

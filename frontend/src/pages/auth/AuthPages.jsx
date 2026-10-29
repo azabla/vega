@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { FieldError, FormAlert, Input, Label } from "@/components/ui/form";
 import { parseApiError } from "@/dashboard/lib/records";
+import { portfolioAddress } from "@/lib/site";
 
 const AuthShell = ({ title, description, children, footer }) => (
   <div className="relative flex min-h-dvh flex-col">
@@ -147,7 +148,7 @@ export const Register = () => {
           />
           {!username.error && (
             <p className="text-xs text-muted-foreground">
-              Your portfolio address: <span className="font-mono">/u/{username.value || "username"}</span>
+              Your portfolio address: <span className="font-mono break-all">{portfolioAddress(username.value || "username")}</span>
             </p>
           )}
         </div>

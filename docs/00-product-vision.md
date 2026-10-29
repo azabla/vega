@@ -37,7 +37,7 @@ Change something once (e.g. add "Backend Developer at XYZ") and it updates the s
 2. **Done:** owner dashboard, mobile-first forms on `/api/me/` (see [08](08-dashboard.md))
 3. **Done:** CV/PDF generation from the profile, plus a QR code ([11](11-cv-pdf-and-qr.md)); CV versions with 9 templates, design and content choices ([12](12-cv-builder.md))
 4. **In progress:** profession presets and awards & publications ([13](13-professions.md)); next: English/Amharic content
-5. Public signup, subdomains, custom domains
+5. **Done (behind settings):** landing page with public signup, `<username>.<domain>` portfolios, owners' own domains ([15](15-signup-and-domains.md))
 6. Career assistant (AI guidance that only rewrites user-provided facts), analytics
 
 ## Not now

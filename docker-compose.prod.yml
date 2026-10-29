@@ -29,6 +29,7 @@ services:
     environment:
       DEBUG: "False"
       SITE_URL: https://${DOMAIN}  # portfolio link in QR codes and CV PDFs
+      BASE_DOMAIN: ${DOMAIN}       # <username>.${DOMAIN} once PORTFOLIO_SUBDOMAINS=true (docs/15)
       DATABASE_URL: postgres://vega:${POSTGRES_PASSWORD}@db:5432/vega
     volumes:
       - media:/app/media
@@ -53,7 +54,10 @@ services:
       target: prod
       args:
         VITE_API_URL: /api
-        VITE_PORTFOLIO_USERNAME: ${PORTFOLIO_USERNAME:?set PORTFOLIO_USERNAME in .env.prod}
+        # set: "/" shows this user's portfolio; empty: "/" is the landing page with signup
+        VITE_PORTFOLIO_USERNAME: ${PORTFOLIO_USERNAME:-}
+        VITE_BASE_DOMAIN: ${DOMAIN}
+        VITE_PORTFOLIO_SUBDOMAINS: ${PORTFOLIO_SUBDOMAINS:-false}
     restart: unless-stopped
     ports:
       - "127.0.0.1:${WEB_PORT:-8010}:80"
@@ -64,7 +68,29 @@ services:
       backend:
         condition: service_healthy
 
+  # Optional HTTPS edge for portfolio subdomains and owners' own domains (docs/15). Caddy gets a
+  # certificate per host on first visit, after asking the backend whether the host is ours.
+  # It needs ports 80/443, so it replaces the host Nginx for these domains:
+  #   docker compose -f docker-compose.prod.yml --env-file .env.prod --profile edge up -d
+  edge:
+    image: caddy:2.10-alpine
+    profiles: ["edge"]
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # to reach the host's other sites (see Caddyfile)
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
 volumes:
   pgdata:
   media:
   static:
+  caddy_data:
+  caddy_config:

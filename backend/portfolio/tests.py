@@ -450,7 +450,8 @@ class CVTests(APITestCase):
     def test_qr_code_links_to_portfolio(self):
         from .cv import portfolio_url
 
-        self.assertEqual(portfolio_url(None, "alice"), "https://cv.example.com/u/alice")
+        alice = Portfolio.objects.get(owner__username="alice")
+        self.assertEqual(portfolio_url(None, alice), "https://cv.example.com/u/alice")
         res = self.client.get("/api/u/alice/qr.svg")
         self.assertEqual(res["Content-Type"], "image/svg+xml")
         self.assertIn(b"<svg", res.content)
@@ -775,3 +776,142 @@ class CVLayoutTests(APITestCase):
         self.assertTrue({"header", "summary", "experience", "skills"} <= ids, ids)
         for r in res.data["regions"]:
             self.assertTrue(0 <= r["x"] <= 1 and 0 <= r["y"] <= 1 and 0 < r["w"] <= 1 and 0 < r["h"] <= 1, r)
+
+
+DOMAINS = {
+    "BASE_DOMAIN": "vega.example",
+    "PORTFOLIO_SUBDOMAINS": True,
+    "CUSTOM_DOMAINS": True,
+    "CUSTOM_DOMAIN_TARGET": "domains.vega.example",
+    "CUSTOM_DOMAIN_IP": "203.0.113.7",
+    "SITE_URL": "https://vega.example",
+}
+
+
+@override_settings(**DOMAINS)
+class DomainTests(APITestCase):
+    """Portfolio addresses: subdomains, owners' own domains (DNS-verified), host routing."""
+
+    def setUp(self):
+        cache.clear()
+        self.hana, self.bob = make_user("hana"), make_user("bob")
+        self.client.force_authenticate(self.hana)
+
+    def connect(self, domain="hana.com"):
+        return self.client.put("/api/me/domain/", {"domain": domain}, format="json")
+
+    def verify(self, txt=None, a=()):
+        from unittest import mock
+
+        portfolio = Portfolio.objects.get(owner=self.hana)
+        answers = {
+            (f"_vega.{portfolio.custom_domain}", "TXT"): [txt if txt is not None else portfolio.domain_token],
+            (portfolio.custom_domain, "A"): list(a),
+            ("domains.vega.example", "A"): ["203.0.113.7"],
+        }
+        with mock.patch("portfolio.domains._lookup", side_effect=lambda name, kind: answers.get((name, kind), [])):
+            return self.client.post("/api/me/domain/verify/")
+
+    def test_hosts_resolve_to_the_right_portfolio(self):
+        from .domains import resolve_host
+
+        self.assertEqual(resolve_host("vega.example"), ("root", None))
+        self.assertEqual(resolve_host("WWW.vega.example:443"), ("root", None))
+        self.assertEqual(resolve_host("hana.vega.example"), ("portfolio", "hana"))
+        for host in ("nobody.vega.example", "www.hana.vega.example", "api.vega.example", "hana.com", "evil.example"):
+            with self.subTest(host=host):
+                self.assertEqual(resolve_host(host), (None, None))
+        with override_settings(PORTFOLIO_SUBDOMAINS=False):
+            self.assertEqual(resolve_host("hana.vega.example"), (None, None))
+
+    def test_connect_and_verify_a_domain(self):
+        res = self.connect("https://Hana.com/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK, res.data)
+        self.assertEqual(res.data["domain"], "hana.com")
+        self.assertFalse(res.data["verified"])
+        kinds = {r["type"]: r for r in res.data["records"]}
+        self.assertEqual(kinds["TXT"]["name"], "_vega.hana.com")
+        self.assertTrue(kinds["TXT"]["value"].startswith("vega-verify="))
+        self.assertEqual(kinds["CNAME"]["value"], "domains.vega.example")
+        self.assertEqual(kinds["A"]["value"], "203.0.113.7")
+
+        # not served until verified
+        from .domains import resolve_host
+
+        self.assertEqual(resolve_host("hana.com"), (None, None))
+        wrong = self.verify(txt="vega-verify=someone-else")
+        self.assertFalse(wrong.data["verified"])
+        self.assertEqual(wrong.data["check"], {"owned": False, "points_here": False})
+
+        ok = self.verify(a=["203.0.113.7"])
+        self.assertTrue(ok.data["verified"])
+        self.assertEqual(ok.data["check"], {"owned": True, "points_here": True})
+        self.assertEqual(ok.data["public_url"], "https://hana.com")
+        self.assertEqual(resolve_host("hana.com"), ("portfolio", "hana"))
+        self.assertEqual(self.client.get("/api/sites/resolve/", {"host": "hana.com"}).data, {"kind": "portfolio", "username": "hana"})
+        self.assertEqual(self.client.get("/api/sites/tls-allowed/", {"domain": "hana.com"}).status_code, 200)
+        # the public profile links there, and never shows the verification token
+        profile = self.client.get("/api/u/hana/profile/").data
+        self.assertEqual(profile["public_url"], "https://hana.com")
+        self.assertNotIn("domain_token", profile)
+
+        # changing the domain starts over; removing it falls back to the subdomain
+        self.connect("cv.hana.com")
+        self.assertEqual(resolve_host("hana.com"), (None, None))
+        res = self.client.delete("/api/me/domain/")
+        self.assertIsNone(res.data["domain"])
+        self.assertEqual(res.data["public_url"], "https://hana.vega.example")
+
+    def test_domains_are_checked(self):
+        for bad in ("hana", "not a domain", "bob.vega.example", "vega.example", "-x-.com"):
+            with self.subTest(bad=bad):
+                self.assertEqual(self.connect(bad).status_code, status.HTTP_400_BAD_REQUEST)
+        self.connect("hana.com")
+        self.client.force_authenticate(self.bob)
+        taken = self.connect("hana.com")
+        self.assertEqual(taken.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("another portfolio", taken.data["domain"][0])
+        with override_settings(CUSTOM_DOMAINS=False):
+            self.assertEqual(self.connect("bob.com").status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_tls_is_only_for_our_hosts(self):
+        for domain, code in (
+            ("vega.example", 200),
+            ("hana.vega.example", 200),
+            ("ghost.vega.example", 404),
+            ("random.com", 404),
+            ("", 404),
+        ):
+            with self.subTest(domain=domain):
+                self.assertEqual(self.client.get("/api/sites/tls-allowed/", {"domain": domain}).status_code, code)
+
+    @override_settings(ALLOWED_HOSTS=["*"], CONFIGURED_HOSTS=["vega.example", "testserver"])
+    def test_unknown_hosts_are_refused(self):
+        self.connect("hana.com")
+        self.assertEqual(self.client.get("/api/u/hana/profile/", HTTP_HOST="evil.example").status_code, 400)
+        self.assertEqual(self.client.get("/api/u/hana/profile/", HTTP_HOST="hana.com").status_code, 400)  # unverified
+        self.assertEqual(self.client.get("/api/u/hana/profile/", HTTP_HOST="hana.vega.example").status_code, 200)
+        self.verify()
+        self.assertEqual(self.client.get("/api/u/hana/profile/", HTTP_HOST="hana.com").status_code, 200)
+        self.assertEqual(self.client.get("/api/u/hana/profile/", HTTP_HOST="vega.example").status_code, 200)
+
+    @override_settings(ALLOWED_HOSTS=["*"], CONFIGURED_HOSTS=["vega.example"])
+    def test_caddy_can_ask_from_inside_the_network(self):
+        res = self.client.get("/api/sites/tls-allowed/", {"domain": "hana.vega.example"}, HTTP_HOST="web")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(self.client.get("/api/u/hana/profile/", HTTP_HOST="web").status_code, 400)
+
+    def test_site_info(self):
+        with override_settings(REGISTRATION_OPEN=False):
+            data = self.client.get("/api/sites/info/").data
+        self.assertEqual(data, {"registration_open": False, "subdomains": True, "custom_domains": True})
+
+    def test_qr_code_points_at_the_best_address(self):
+        from .domains import public_url
+
+        portfolio = Portfolio.objects.get(owner=self.hana)
+        self.assertEqual(public_url(portfolio), "https://hana.vega.example")
+        with override_settings(PORTFOLIO_SUBDOMAINS=False):
+            self.assertEqual(public_url(portfolio), "https://vega.example/u/hana")
+        res = self.client.get("/api/u/hana/qr.svg")
+        self.assertEqual(res.status_code, 200)

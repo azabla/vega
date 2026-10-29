@@ -8,6 +8,8 @@ fields only accept objects that belong to the same user.
 
 from rest_framework import serializers
 
+from .domains import public_url
+
 from .models import (
     About,
     AboutPhoto,
@@ -58,11 +60,17 @@ class SluggedModelSerializer(OwnedModelSerializer):
 
 class MyPortfolioSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="owner.username", read_only=True)
+    # The best address of the portfolio (own domain, subdomain or /u/ path; see domains.py)
+    public_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Portfolio
-        exclude = ["owner"]
+        # the domain is managed at /api/me/domain/
+        exclude = ["owner", "custom_domain", "domain_token", "domain_verified_at"]
         read_only_fields = ["created_at", "update_at"]
+
+    def get_public_url(self, portfolio):
+        return public_url(portfolio, self.context.get("request"))
 
 
 class MyServiceSerializer(serializers.ModelSerializer):

@@ -35,8 +35,8 @@ class OwnedAdmin(admin.ModelAdmin):
 
 @admin.register(Portfolio)
 class PortfolioAdmin(OwnedAdmin):
-    list_display = ["name", "owner", "title", "update_at"]
-    search_fields = ["name", "owner__username", "owner__email"]
+    list_display = ["name", "owner", "title", "custom_domain", "domain_verified_at", "update_at"]
+    search_fields = ["name", "owner__username", "owner__email", "custom_domain"]
 
 
 @admin.register(Category)

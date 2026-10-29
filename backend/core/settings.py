@@ -34,6 +34,21 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 # in QR codes and CV PDFs; empty = the API's own host (same-origin deployments).
 SITE_URL = env("SITE_URL", default="")
 
+# Portfolio addresses (portfolio/domains.py, docs/15). Off until DNS and TLS are set up.
+# BASE_DOMAIN: the main site's domain; <username>.<BASE_DOMAIN> serves that user's portfolio.
+BASE_DOMAIN = env("BASE_DOMAIN", default="")
+PORTFOLIO_SUBDOMAINS = env.bool("PORTFOLIO_SUBDOMAINS", default=False)
+# Owners' own domains, verified with a DNS TXT record. Owners point them at
+# CUSTOM_DOMAIN_TARGET (CNAME) or CUSTOM_DOMAIN_IP (A record for a root domain).
+CUSTOM_DOMAINS = env.bool("CUSTOM_DOMAINS", default=False)
+CUSTOM_DOMAIN_TARGET = env("CUSTOM_DOMAIN_TARGET", default="")
+CUSTOM_DOMAIN_IP = env("CUSTOM_DOMAIN_IP", default="")
+if PORTFOLIO_SUBDOMAINS or CUSTOM_DOMAINS:
+    # Hosts are then checked by portfolio.middleware.PortfolioHostsMiddleware: the hosts
+    # listed in ALLOWED_HOSTS, portfolio subdomains and verified custom domains.
+    CONFIGURED_HOSTS = ALLOWED_HOSTS
+    ALLOWED_HOSTS = ["*"]
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
@@ -57,6 +72,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
+    "portfolio.middleware.PortfolioHostsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -116,7 +132,7 @@ REST_FRAMEWORK = {
     # Secure by default: public endpoints opt in with AllowAny
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.ScopedRateThrottle"],
-    "DEFAULT_THROTTLE_RATES": {"auth": "10/minute", "contact": "5/minute", "cv": "20/minute", "cv_preview": "60/minute"},
+    "DEFAULT_THROTTLE_RATES": {"auth": "10/minute", "contact": "5/minute", "cv": "20/minute", "cv_preview": "60/minute", "domain": "10/minute"},
 }
 
 SIMPLE_JWT = {

@@ -12,11 +12,11 @@ from pathlib import Path
 
 import pypdfium2
 import segno
-from django.conf import settings
 from django.template.loader import render_to_string
 from weasyprint import HTML
 from weasyprint.urls import URLFetcher, URLFetchingError
 
+from ..domains import public_url
 from ..models import CV
 from .context import build_context
 
@@ -34,10 +34,9 @@ class _FontsOnlyFetcher(URLFetcher):
         return super().fetch(url, headers)
 
 
-def portfolio_url(request, username):
-    """Public portfolio link: SITE_URL in production, the API's own host otherwise."""
-    base = settings.SITE_URL or request.build_absolute_uri("/")
-    return f"{base.rstrip('/')}/u/{username}"
+def portfolio_url(request, portfolio):
+    """The portfolio's public link for QR codes and PDFs: its own domain, subdomain or /u/ path."""
+    return public_url(portfolio, request)
 
 
 def qr_code(url):

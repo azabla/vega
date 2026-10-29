@@ -5,6 +5,7 @@ A logged-in user creates, edits and deletes their own portfolio content.
 Every queryset is filtered to request.user, so other users' objects return 404.
 """
 
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -16,6 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from . import domains
 from . import manage_serializers as s
 from .cv import portfolio_url, preview_pages, regions, render_cv_document, render_cv_pdf
 from .models import (
@@ -67,6 +69,57 @@ class MyProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return get_or_create_portfolio(self.request.user)
+
+
+class MyDomainView(APIView):
+    """
+    GET/PUT/DELETE /api/me/domain/: the portfolio's addresses and the owner's own domain.
+    PUT {"domain": "hana.com"} connects one (unverified until its DNS TXT record is found).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(domains.domain_state(get_or_create_portfolio(request.user), request))
+
+    def put(self, request):
+        if not settings.CUSTOM_DOMAINS:
+            return Response({"detail": "Custom domains aren't available on this site yet."}, status=status.HTTP_400_BAD_REQUEST)
+        portfolio = get_or_create_portfolio(request.user)
+        try:
+            domain = domains.clean_domain(request.data.get("domain"))
+        except ValueError as e:
+            return Response({"domain": [str(e)]}, status=status.HTTP_400_BAD_REQUEST)
+        if Portfolio.objects.filter(custom_domain=domain).exclude(pk=portfolio.pk).exists():
+            return Response({"domain": ["That domain is connected to another portfolio."]}, status=status.HTTP_400_BAD_REQUEST)
+        if domain != portfolio.custom_domain:
+            domains.forget_domain(portfolio.custom_domain)
+            portfolio.custom_domain = domain
+            portfolio.domain_token = domains.new_token()
+            portfolio.domain_verified_at = None
+            portfolio.save(update_fields=["custom_domain", "domain_token", "domain_verified_at"])
+        return Response(domains.domain_state(portfolio, request))
+
+    def delete(self, request):
+        portfolio = get_or_create_portfolio(request.user)
+        domains.forget_domain(portfolio.custom_domain)
+        portfolio.custom_domain, portfolio.domain_token, portfolio.domain_verified_at = None, "", None
+        portfolio.save(update_fields=["custom_domain", "domain_token", "domain_verified_at"])
+        return Response(domains.domain_state(portfolio, request))
+
+
+class MyDomainVerifyView(APIView):
+    """POST /api/me/domain/verify/: look the DNS records up now."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_scope = "domain"
+
+    def post(self, request):
+        portfolio = get_or_create_portfolio(request.user)
+        if not portfolio.custom_domain:
+            return Response({"detail": "Connect a domain first."}, status=status.HTTP_400_BAD_REQUEST)
+        check = domains.check_domain(portfolio)
+        return Response({**domains.domain_state(portfolio, request), "check": check})
 
 
 class MyAboutView(generics.RetrieveUpdateAPIView):
@@ -263,7 +316,7 @@ class MyCVViewSet(OwnedViewSet):
         """Download any of the owner's CVs, public or not."""
         cv = self.get_object()
         portfolio = get_or_create_portfolio(request.user)
-        pdf = render_cv_pdf(portfolio, portfolio_url(request, request.user.username), cv)
+        pdf = render_cv_pdf(portfolio, portfolio_url(request, portfolio), cv)
         response = HttpResponse(pdf, content_type="application/pdf")
         name = f"{slugify(portfolio.name) or request.user.username}-{cv.slug}.pdf"
         response["Content-Disposition"] = content_disposition_header(True, name)
@@ -290,6 +343,6 @@ class MyCVPreviewView(APIView):
             photo=saved.photo if saved else None,
         )
         portfolio = get_or_create_portfolio(request.user)
-        document = render_cv_document(portfolio, portfolio_url(request, request.user.username), cv)
+        document = render_cv_document(portfolio, portfolio_url(request, portfolio), cv)
         # page images plus where each section sits, so the editor can make them clickable
         return Response({**preview_pages(document.write_pdf()), "regions": regions(document)})

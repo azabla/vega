@@ -13,6 +13,8 @@ RESERVED_USERNAMES = {
     "admin", "api", "auth", "login", "logout", "register", "signup", "signin",
     "dashboard", "settings", "account", "accounts", "static", "media", "about",
     "help", "support", "pricing", "blog", "docs", "terms", "privacy", "www",
+    # also subdomains of the main site (portfolio/domains.py RESERVED_SUBDOMAINS)
+    "app", "mail", "cdn", "domains",
 }
 
 

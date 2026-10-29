@@ -15,6 +15,7 @@ import {
   TestimonialsPage,
 } from "@/dashboard/pages/ProfilePages";
 import { AppearancePage } from "@/dashboard/pages/AppearancePage";
+import { DomainPage } from "@/dashboard/pages/DomainPage";
 import { CVListPage } from "@/dashboard/pages/CVPages";
 import { ListSkeleton } from "@/dashboard/components/Page";
 import { ProjectEditorPage, ProjectsPage } from "@/dashboard/pages/ProjectPages";
@@ -58,6 +59,7 @@ export default function DashboardApp() {
           <Route path="achievements" element={<AchievementsPage />} />
           <Route path="languages" element={<LanguagesPage />} />
           <Route path="testimonials" element={<TestimonialsPage />} />
+          <Route path="domain" element={<DomainPage />} />
           <Route path="messages" element={<MessagesPage />} />
           <Route path="account" element={<AccountPage />} />
         </Route>
