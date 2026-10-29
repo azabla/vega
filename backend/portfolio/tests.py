@@ -315,9 +315,22 @@ class DesignSystemContentTests(APITestCase):
             {"colour": "red"},
             {"sections": [{"id": "about"}, {"id": "about"}]},
             {"pages": {"blog": True}},
+            {"accent_color": "red"},
+            {"accent_color": "#12345"},
+            {"radius": "pill"},
+            {"surface": "glass"},
+            {"nav": "side"},
+            {"hero": "carousel"},
         ):
             res = self.client.patch("/api/me/profile/", {"settings": bad}, format="json")
             self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST, bad)
+
+        newer = {
+            "theme": "sage", "font": "bold", "accent_color": "#0D9488", "radius": "round", "surface": "elevated",
+            "nav": "floating", "hero": "statement",
+        }
+        res = self.client.patch("/api/me/profile/", {"settings": newer}, format="json")
+        self.assertEqual(res.status_code, status.HTTP_200_OK, res.data)
 
     def test_testimonials(self):
         res = self.client.post(

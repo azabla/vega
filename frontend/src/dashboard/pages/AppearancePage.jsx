@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ExternalLink, Eye, EyeOff, Laptop, Loader2, Moon, RotateCcw, Smartphone, Sun } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ExternalLink, Eye, EyeOff, Laptop, Loader2, Moon, RotateCcw, Shuffle, Smartphone, Sun } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "@/api/axios";
 import { useAuth } from "@/auth/context";
@@ -11,7 +11,20 @@ import { toast } from "@/hooks/use-toast";
 import { PREVIEW_MESSAGE } from "@/hooks/useAppearance";
 import { clearPortfolioCache } from "@/hooks/usePortfolioData";
 import { PROFESSIONS, labelsOf, professionPreset } from "@/lib/professions";
-import { ACCENTS, DEFAULT_SETTINGS, FONTS, HOME_SECTIONS, PAGES, THEMES, resolveSettings } from "@/lib/settings";
+import {
+  ACCENTS,
+  ACCENT_COLORS,
+  DEFAULT_SETTINGS,
+  FONTS,
+  HOME_SECTIONS,
+  NAV_STYLES,
+  PAGES,
+  RADII,
+  SURFACES,
+  THEMES,
+  resolveSettings,
+} from "@/lib/settings";
+import { STYLE_PRESETS, presetOf, presetSwatch, surpriseLook } from "@/lib/stylePresets";
 import { cn } from "@/lib/utils";
 
 const TEXTURES = [
@@ -70,6 +83,90 @@ const HEROES = [
     ),
   },
 ];
+
+HEROES.push(
+  {
+    id: "split",
+    name: "Split",
+    hint: "Text beside a tall portrait and featured work",
+    sketch: (
+      <span className="grid h-full grid-cols-2 gap-1.5">
+        <span className="flex flex-col justify-center gap-1">
+          <Bar className="h-2 w-4/5 opacity-60" />
+          <Bar className="h-1 w-full opacity-30" />
+        </span>
+        <Bar className="h-full opacity-40" />
+      </span>
+    ),
+  },
+  {
+    id: "statement",
+    name: "Statement",
+    hint: "Huge name and a ribbon of skills",
+    sketch: (
+      <span className="flex h-full flex-col justify-center gap-1">
+        <Bar className="h-3.5 w-full opacity-60" />
+        <Bar className="h-1 w-1/2 opacity-30" />
+        <span className="mt-0.5 flex gap-1 opacity-30">
+          <Bar className="h-1 flex-1" />
+          <Bar className="h-1 flex-1" />
+          <Bar className="h-1 flex-1" />
+        </span>
+      </span>
+    ),
+  }
+);
+
+// Card styles, drawn small
+const SURFACE_SKETCH = {
+  outline: "border bg-card",
+  elevated: "bg-card shadow-md",
+  filled: "bg-secondary",
+};
+
+/** A preset drawn in its own colours and font: page, a card, the accent, "Aa". */
+const PresetThumb = ({ preset }) => {
+  const c = presetSwatch(preset.look);
+  const family = FONTS.find((f) => f.id === preset.look.font)?.family;
+  const radius = { sharp: "2px", round: "10px" }[preset.look.radius] ?? "6px";
+  return (
+    <span className="block overflow-hidden rounded-lg border" style={{ background: c.page, color: c.text }} aria-hidden>
+      <span className="flex items-center justify-between px-2.5 pt-2">
+        <span className="text-xl leading-none" style={{ fontFamily: family }}>
+          Aa
+        </span>
+        <span className="h-2 w-7 rounded-full" style={{ background: c.accent }} />
+      </span>
+      <span className="m-2 flex h-7 items-center gap-1.5 px-2" style={{ background: c.card, borderRadius: radius, boxShadow: `0 0 0 1px ${c.text}14` }}>
+        <span className="h-1 w-1/2 rounded-full opacity-50" style={{ background: c.text }} />
+        <span className="ml-auto size-2.5 rounded-full" style={{ background: c.accent }} />
+      </span>
+    </span>
+  );
+};
+
+/** Any theme can take an accent colour; empty = the theme's own. */
+const AccentColors = ({ value, theme, onChange }) => {
+  const own = THEMES.find((t) => t.id === theme)?.swatch[2];
+  const custom = value && !ACCENT_COLORS.some((a) => a.color === value);
+  const swatch = (selected) => cn("relative size-9 rounded-full border-2 transition", selected ? "border-foreground" : "border-transparent");
+  return (
+    <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Accent colour">
+      <button type="button" role="radio" aria-checked={!value} aria-label="The theme's own accent" title="Theme's own" onClick={() => onChange("")} className={swatch(!value)} style={{ background: own }}>
+        {!value && <Check className="absolute inset-0 m-auto size-4 text-background mix-blend-difference" />}
+      </button>
+      <span className="mx-1 h-6 w-px bg-border" aria-hidden />
+      {ACCENT_COLORS.map((a) => (
+        <button key={a.color} type="button" role="radio" aria-checked={value === a.color} aria-label={a.name} title={a.name} onClick={() => onChange(a.color)} className={swatch(value === a.color)} style={{ background: a.color }} />
+      ))}
+      <label className={cn("relative flex h-9 cursor-pointer items-center gap-2 rounded-full border bg-background pr-3 pl-1 text-sm has-focus-visible:outline-2 has-focus-visible:outline-primary-ink", custom && "border-foreground")}>
+        <span className="size-7 rounded-full border" style={{ background: value || own }} aria-hidden />
+        Custom
+        <input type="color" value={value || own} onChange={(e) => onChange(e.target.value.toLowerCase())} className="sr-only" />
+      </label>
+    </div>
+  );
+};
 
 const LAYOUTS = [
   {
@@ -263,6 +360,33 @@ export const AppearancePage = () => {
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
         <div className={cn("flex flex-col gap-5 pb-24", tab === "preview" && "hidden lg:flex")}>
+          <Panel
+            title="Start from a style"
+            description="Ready-made looks: colours, fonts, layout and shape in one click. Fine-tune anything below."
+            action={
+              <Button type="button" variant="outline" size="sm" onClick={() => set(surpriseLook(current))}>
+                <Shuffle /> Surprise me
+              </Button>
+            }
+          >
+            <Choices
+              name="style"
+              value={presetOf(current)}
+              onChange={(id) => set(STYLE_PRESETS.find((p) => p.id === id).look)}
+              options={STYLE_PRESETS}
+              columns="grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4"
+              render={(p) => (
+                <>
+                  <PresetThumb preset={p} />
+                  <span className="pr-5">
+                    <span className="block font-medium">{p.name}</span>
+                    <span className="block text-xs leading-4 text-muted-foreground">{p.hint}</span>
+                  </span>
+                </>
+              )}
+            />
+          </Panel>
+
           <Panel title="Profession" description="Names your sections the way your field does, and sets up the home page to match. You can change everything below afterwards.">
             <Choices
               name="profession"
@@ -299,9 +423,16 @@ export const AppearancePage = () => {
                 </>
               )}
             />
-            {current.theme === "midnight" && (
+            <div className="mt-5">
+              <p className="mb-2 text-sm font-medium">Accent colour</p>
+              <AccentColors value={current.accent_color} theme={current.theme} onChange={(accent_color) => set({ accent_color })} />
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                Any colour works: text in the accent is darkened or lightened automatically so it stays readable in light and dark mode.
+              </p>
+            </div>
+            {current.theme === "midnight" && !current.accent_color && (
               <div className="mt-4">
-                <p className="mb-2 text-sm font-medium">Accent</p>
+                <p className="mb-2 text-sm font-medium">Midnight's own accent</p>
                 <Choices
                   name="accent"
                   value={current.accent}
@@ -350,6 +481,68 @@ export const AppearancePage = () => {
               options={LAYOUTS}
               columns="grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3"
               render={(o) => <Sketch option={o} />}
+            />
+          </Panel>
+
+          <Panel title="Shape & style" description="Corners, cards and the navigation bar.">
+            <p className="mb-2 text-sm font-medium">Corners</p>
+            <Choices
+              name="radius"
+              value={current.radius}
+              onChange={(radius) => set({ radius })}
+              options={RADII}
+              columns="grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4"
+              render={(o) => (
+                <span className="flex items-center gap-2 pr-5">
+                  <span
+                    className="size-6 border-2 border-foreground/60 bg-accent"
+                    style={{ borderRadius: { sharp: "3px", soft: "8px", round: "14px" }[o.id] ?? "8px" }}
+                    aria-hidden
+                  />
+                  <span className="font-medium">{o.name}</span>
+                </span>
+              )}
+            />
+            <p className="mt-5 mb-2 text-sm font-medium">Cards</p>
+            <Choices
+              name="surface"
+              value={current.surface}
+              onChange={(surface) => set({ surface })}
+              options={SURFACES}
+              columns="grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3"
+              render={(o) => (
+                <>
+                  <span className="flex h-12 items-center justify-center rounded-lg bg-background p-2" aria-hidden>
+                    <span className={cn("h-full w-4/5 rounded-md", SURFACE_SKETCH[o.id])} />
+                  </span>
+                  <span>
+                    <span className="block font-medium">{o.name}</span>
+                    <span className="block text-xs leading-5 text-muted-foreground">{o.hint}</span>
+                  </span>
+                </>
+              )}
+            />
+            <p className="mt-5 mb-2 text-sm font-medium">Navigation</p>
+            <Choices
+              name="nav"
+              value={current.nav}
+              onChange={(nav) => set({ nav })}
+              options={NAV_STYLES}
+              columns="grid-cols-1 sm:grid-cols-2"
+              render={(o) => (
+                <>
+                  <span className="flex h-12 flex-col rounded-lg border bg-card p-1.5" aria-hidden>
+                    <span className={cn("flex h-3 items-center gap-1 px-1.5", o.id === "floating" ? "mx-3 mt-0.5 rounded-full border" : "border-b")}>
+                      <span className="size-1.5 rounded-full bg-primary" />
+                      <span className="h-0.5 w-6 rounded-full bg-current opacity-30" />
+                    </span>
+                  </span>
+                  <span>
+                    <span className="block font-medium">{o.name}</span>
+                    <span className="block text-xs leading-5 text-muted-foreground">{o.hint}</span>
+                  </span>
+                </>
+              )}
             />
           </Panel>
 

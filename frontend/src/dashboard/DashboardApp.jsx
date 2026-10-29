@@ -16,6 +16,7 @@ import {
 } from "@/dashboard/pages/ProfilePages";
 import { AppearancePage } from "@/dashboard/pages/AppearancePage";
 import { DomainPage } from "@/dashboard/pages/DomainPage";
+import { WelcomePage } from "@/dashboard/pages/WelcomePage";
 import { CVListPage } from "@/dashboard/pages/CVPages";
 import { ListSkeleton } from "@/dashboard/components/Page";
 import { ProjectEditorPage, ProjectsPage } from "@/dashboard/pages/ProjectPages";
@@ -45,6 +46,7 @@ export default function DashboardApp() {
       <Routes>
         <Route element={<DashboardLayout />}>
           <Route index element={<OverviewPage />} />
+          <Route path="welcome" element={<WelcomePage />} />
           <Route path="appearance" element={<AppearancePage />} />
           <Route path="cv" element={<CVListPage />} />
           <Route path="cv/:id" element={<CVEditorRoute />} />

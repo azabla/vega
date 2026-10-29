@@ -80,7 +80,8 @@ const SiteRoutes = () => {
       {ROOT_USERNAME ? rootPortfolioRoutes() : <Route index element={<Landing />} />}
       {userPortfolioRoutes()}
       <Route path="login" element={<GuestOnly><Login /></GuestOnly>} />
-      <Route path="register" element={<GuestOnly><Register /></GuestOnly>} />
+      {/* new accounts start with the guided setup */}
+      <Route path="register" element={<GuestOnly fallback="/dashboard/welcome"><Register /></GuestOnly>} />
       <Route path="dashboard/*" element={<DashboardApp />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

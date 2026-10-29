@@ -27,18 +27,24 @@
         } else {
           var match = path.match(/^\/u\/([^/]+)/);
           var user = match ? decodeURIComponent(match[1]) : "%VITE_PORTFOLIO_USERNAME%";
-          look = parse(get(localStorage, "look:" + String(user).toLowerCase()));
+          // a portfolio at the root of its own host (subdomain, custom domain) is cached per host
+          look = parse(get(localStorage, match ? "look:" + String(user).toLowerCase() : "look-host:" + location.host));
+          if (!match && !look.theme) look = parse(get(localStorage, "look:" + String(user).toLowerCase()));
           var preview = parse(get(sessionStorage, "look-preview"));
           for (var k in preview) look[k] = preview[k];
           if (look.theme) root.dataset.theme = look.theme;
           if (look.accent) root.dataset.accent = look.accent;
           if (look.font) root.dataset.font = look.font;
           if (look.texture) root.dataset.texture = look.texture;
+          if (look.radius) root.dataset.radius = look.radius;
+          if (look.surface) root.dataset.surface = look.surface;
         }
         mode = mode || look.mode || "system";
-        if (mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches)) {
-          root.classList.add("dark");
-        }
+        var dark = mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) root.classList.add("dark");
+        // a custom accent colour: its tokens were computed by src/lib/colors.js on the last visit
+        var vars = look.vars && look.vars[dark ? "dark" : "light"];
+        for (var name in vars || {}) root.style.setProperty(name, vars[name]);
       })();
     </script>
   </head>

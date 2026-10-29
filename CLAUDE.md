@@ -37,7 +37,9 @@ small mono "eyebrow" labels, generous whitespace.
 | `--primary-ink` | Accent as **text, icons, focus ring** — AA on background and card |
 
 Everything else (`secondary`, `accent` tint, `input`, `ring`, `grid-line`, `glow`) is derived with `color-mix`.
-Presets: **warm** (default), **minimal**, **midnight** (+ `data-accent="violet"`), **mono**; each has light and dark.
+Presets: **warm** (default), **minimal**, **midnight** (+ `data-accent="violet"`), **mono**, **sage**, **rose**; each has light and dark.
+An owner's custom accent (`accent_color`) overrides `--primary`/`--primary-foreground`/`--primary-ink` inline, computed contrast-safe by `lib/colors.js`.
+`data-radius` (sharp | soft | round) sets `--radius`; `data-surface` (elevated | filled) restyles `.surface`.
 
 Rules:
 - Use Tailwind token classes: `bg-card`, `text-muted-foreground`, `text-primary-ink`, `bg-accent`, `border`. **Never** raw hex or Tailwind palette colours (`text-emerald-500`) in components.
@@ -47,7 +49,7 @@ Rules:
 
 ### Type, spacing, shape
 
-- Fonts: `font-heading` (display face + its weight/tracking per pairing), `font-sans` body, `font-mono` labels/dates/tags. Pairings: editorial (Instrument Serif + Geist), modern (Space Grotesk + Inter), classic (Fraunces + DM Sans); all fall back to Noto Ethiopic for Amharic.
+- Fonts: `font-heading` (display face + its weight/tracking per pairing), `font-sans` body, `font-mono` labels/dates/tags. Pairings: editorial (Instrument Serif + Geist), modern (Space Grotesk + Inter), classic (Fraunces + DM Sans), bold (Bricolage Grotesque + Inter), elegant (Playfair Display + Manrope); all fall back to Noto Ethiopic for Amharic.
 - Fluid sizes: `text-display` (hero/page titles), `text-h1`, `text-h2` (section titles). Eyebrow: the `eyebrow` utility.
 - Layout: `container` (72rem, 16px gutters on phones), `prose-width` (42rem). Sections use `<Section>` (64px → 112px vertical padding).
 - Cards: `surface` (rounded-2xl, 1px border, `bg-card`); add `surface-hover` when the whole card is clickable.
@@ -72,7 +74,8 @@ for numbers, `animate-page-in` on route change. Everything collapses under `pref
 ## Owner settings (`Portfolio.settings`)
 
 JSON validated by `backend/portfolio/site_settings.py`, resolved with defaults by `src/lib/settings.js` (keep both in sync):
-`theme`, `accent`, `font`, `texture`, `mode`, `hero` (bento | classic | minimal), `projects_layout` (showcase | grid | list),
+`theme`, `accent`, `accent_color` (any theme, "" = the theme's own), `font`, `texture`, `mode`, `hero` (bento | classic | minimal | split | statement), `projects_layout` (showcase | grid | list),
+`radius` (default | sharp | soft | round), `surface` (outline | elevated | filled), `nav` (bar | floating) — one-click combinations in `lib/stylePresets.js` (docs/16),
 `profession` (renames sections and suggests a layout/CV template; `lib/professions.js` ↔ `professions.py`, see docs/13),
 `sections` (home order + visibility), `pages` (switch whole pages off → nav link gone, route 404s).
 Read them with `useAppearance()`; never read `profile.settings` directly. Add `?customize` (or `?theme=midnight&font=modern`) to any URL to preview looks without saving.

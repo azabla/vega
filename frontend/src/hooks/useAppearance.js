@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioUsername } from "@/hooks/usePortfolioUsername";
+import { accentTokens } from "@/lib/colors";
 import { ACCENTS, FONTS, THEMES, THEME_MODE, THEME_TEXTURE, resolveSettings } from "@/lib/settings";
 
 // The look of a page comes from three places, strongest last:
@@ -12,6 +13,23 @@ import { ACCENTS, FONTS, THEMES, THEME_MODE, THEME_TEXTURE, resolveSettings } fr
 const MODE_KEY = "theme"; // "light" | "dark" | "system"; absent = owner's default
 const PREVIEW_KEY = "look-preview";
 const lookKey = (username) => `look:${String(username).toLowerCase()}`;
+// A portfolio at the root of its own host (subdomain, custom domain): index.html can't know the
+// username before the app runs, so the look is also cached per host
+const HOST_LOOK_KEY = `look-host:${window.location.host}`;
+
+const ACCENT_VARS = ["--primary", "--primary-foreground", "--primary-ink"];
+/** Inline accent tokens for a custom accent colour, per mode; null = the theme's own accent. */
+const accentVarsOf = (settings) => {
+  if (!settings.accent_color) return null;
+  const theme = THEMES.find((t) => t.id === settings.theme) ?? THEMES[0];
+  return {
+    light: accentTokens(settings.accent_color, theme.paper.light, false),
+    dark: accentTokens(settings.accent_color, theme.paper.dark, true),
+  };
+};
+const applyAccentVars = (root, vars) =>
+  ACCENT_VARS.forEach((name) => (vars ? root.style.setProperty(name, vars[name]) : root.style.removeProperty(name)));
+const setData = (root, name, value) => (value ? (root.dataset[name] = value) : delete root.dataset[name]);
 
 const storage = {
   get: (key, store = localStorage) => {
@@ -131,13 +149,19 @@ export const useApplyAppearance = () => {
 
   const ownerTexture =
     ownerSettings.texture === "default" ? THEME_TEXTURE[ownerSettings.theme] : ownerSettings.texture;
+  // what index.html applies before the first paint on the next visit
   const ownerLook = JSON.stringify({
     theme: ownerSettings.theme,
     accent: ownerSettings.accent,
     font: ownerSettings.font,
     texture: ownerTexture,
     mode: ownerSettings.mode,
+    radius: ownerSettings.radius === "default" ? null : ownerSettings.radius,
+    surface: ownerSettings.surface === "outline" ? null : ownerSettings.surface,
+    vars: accentVarsOf(ownerSettings),
   });
+  const vars = accentVarsOf(settings);
+  const modeVars = vars && JSON.stringify(isDark ? vars.dark : vars.light);
 
   useEffect(() => {
     // until the profile arrives, keep what index.html applied from the cache
@@ -147,11 +171,17 @@ export const useApplyAppearance = () => {
     root.dataset.accent = settings.accent;
     root.dataset.font = settings.font;
     root.dataset.texture = texture;
+    setData(root, "radius", settings.radius === "default" ? null : settings.radius);
+    setData(root, "surface", settings.surface === "outline" ? null : settings.surface);
+    applyAccentVars(root, modeVars && JSON.parse(modeVars));
     root.removeAttribute("data-app");
     root.classList.toggle("dark", isDark);
     // a dashboard preview must not overwrite the cached saved look
-    if (!embedded) storage.set(lookKey(username), ownerLook);
-  }, [ready, username, settings.theme, settings.accent, settings.font, texture, isDark, ownerLook]);
+    if (!embedded) {
+      storage.set(lookKey(username), ownerLook);
+      if (!window.location.pathname.startsWith("/u/")) storage.set(HOST_LOOK_KEY, ownerLook);
+    }
+  }, [ready, username, settings.theme, settings.accent, settings.font, settings.radius, settings.surface, modeVars, texture, isDark, ownerLook]);
 };
 
 /** Dashboard and login pages: one plain look, with the visitor's light/dark choice. */
@@ -166,6 +196,9 @@ export const useAppLook = () => {
     delete root.dataset.accent;
     delete root.dataset.font;
     delete root.dataset.texture;
+    delete root.dataset.radius;
+    delete root.dataset.surface;
+    applyAccentVars(root, null);
     root.classList.toggle("dark", isDark);
   }, [isDark]);
   return { isDark, toggleDark: () => setMode(isDark ? "light" : "dark") };

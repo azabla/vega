@@ -63,7 +63,8 @@ export const OverviewPage = () => {
   });
   const done = list.filter((s) => s.done).length;
   const percent = Math.round((done / list.length) * 100);
-  const publicUrl = `${window.location.origin}/u/${user.username}`;
+  // the best address: own domain, subdomain or /u/ path (domains.py public_url)
+  const publicUrl = profile.data?.public_url ?? `${window.location.origin}/u/${user.username}`;
   // the CV PDF 404s while the Résumé page is switched off
   const hasCv = Boolean(profile.data) && resolveSettings(profile.data.settings).pages.resume;
 
@@ -91,6 +92,19 @@ export const OverviewPage = () => {
       />
 
       <div className="flex flex-col gap-6">
+        {profile.data && !profile.data.title && (
+          <Panel className="border-primary/40 bg-accent">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-medium">Set up your portfolio in two minutes</p>
+                <p className="text-sm text-muted-foreground">Your field, your headline and photo, and a look. Then share the link.</p>
+              </div>
+              <Button href="/dashboard/welcome" className="self-start sm:self-auto">
+                Start the guided setup
+              </Button>
+            </div>
+          </Panel>
+        )}
         <Panel>
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
@@ -98,7 +112,7 @@ export const OverviewPage = () => {
               <p className="mt-1 truncate font-mono text-sm text-muted-foreground">{publicUrl}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <a
-                  href={`/u/${user.username}`}
+                  href={publicUrl}
                   target="_blank"
                   rel="noreferrer"
                   className={cn(buttonVariants({ size: "lg" }), "px-3.5")}

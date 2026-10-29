@@ -4,6 +4,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { ThemeMenu } from "@/components/ThemeMenu";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAppearance } from "@/hooks/useAppearance";
 import { useNavItems } from "@/hooks/useNavItems";
 import { useProfile } from "@/hooks/useProfile";
 import { openCommandPalette, shortcutLabel } from "@/lib/commandPalette";
@@ -22,6 +23,9 @@ export const Navbar = () => {
   const { profile, loading } = useProfile();
   const { home, items, contact } = useNavItems();
   const { pathname } = useLocation();
+  const { settings } = useAppearance();
+  // settings.nav: "bar" spans the page; "floating" is a rounded bar inset from the edges
+  const floating = settings.nav === "floating";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -47,10 +51,25 @@ export const Navbar = () => {
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color] duration-300",
-        scrolled || open ? "border-b bg-background/80 backdrop-blur-xl" : "border-b border-transparent"
+        floating
+          ? cn("px-3 pt-3", open && "h-dvh bg-background/95 backdrop-blur-xl")
+          : scrolled || open
+            ? "border-b bg-background/80 backdrop-blur-xl"
+            : "border-b border-transparent"
       )}
     >
-      <nav className="container flex h-16 items-center justify-between gap-4" aria-label="Main">
+      <nav
+        className={cn(
+          "flex items-center justify-between gap-4",
+          floating
+            ? cn(
+                "mx-auto h-14 max-w-5xl rounded-full border px-2 pl-3 transition-[background-color,box-shadow] duration-300 sm:px-3",
+                scrolled || open ? "bg-background/80 shadow-lg shadow-foreground/5 backdrop-blur-xl" : "bg-background/60 backdrop-blur-md"
+              )
+            : "container h-16"
+        )}
+        aria-label="Main"
+      >
         <Link to={home} className="flex min-w-0 items-center gap-2.5" aria-label={profile?.name ? `${profile.name}, home` : "Home"}>
           <span className="font-heading flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm text-primary-foreground">
             {loading ? "" : initialsOf(profile?.name)}
@@ -111,7 +130,7 @@ export const Navbar = () => {
       </nav>
 
       {open && (
-        <div id="mobile-menu" className="container h-[calc(100dvh-4rem)] overflow-y-auto pb-10 lg:hidden">
+        <div id="mobile-menu" className={cn("container overflow-y-auto pb-10 lg:hidden", floating ? "h-[calc(100dvh-4.25rem)] pt-2" : "h-[calc(100dvh-4rem)]")}>
           <ul className="flex flex-col border-t pt-4">
             {[{ page: "home", label: "Home", href: home }, ...items, ...(contact ? [contact] : [])].map((item, i) => (
               <li key={item.page} className="animate-fade-up" style={{ animationDelay: `${i * 30}ms` }}>

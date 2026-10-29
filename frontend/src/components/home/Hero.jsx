@@ -5,8 +5,10 @@ import { useProfile } from "@/hooks/useProfile";
 import { HeroBento } from "./HeroBento";
 import { HeroClassic } from "./HeroClassic";
 import { HeroMinimal } from "./HeroMinimal";
+import { HeroSplit } from "./HeroSplit";
+import { HeroStatement } from "./HeroStatement";
 
-const VARIANTS = { bento: HeroBento, classic: HeroClassic, minimal: HeroMinimal };
+const VARIANTS = { bento: HeroBento, classic: HeroClassic, minimal: HeroMinimal, split: HeroSplit, statement: HeroStatement };
 
 const HeroSkeleton = () => (
   <div className="grid auto-rows-[10.5rem] gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-4" role="status" aria-label="Loading">

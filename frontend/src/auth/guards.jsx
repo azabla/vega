@@ -21,16 +21,16 @@ export const RequireAuth = ({ children }) => {
 };
 
 // Only same-site paths, so ?next= can't send someone to another website
-const safeNext = (search) => {
+const safeNext = (search, fallback) => {
   const next = new URLSearchParams(search).get("next");
-  return next && /^\/(?![/\\])/.test(next) ? next : "/dashboard";
+  return next && /^\/(?![/\\])/.test(next) ? next : fallback;
 };
 
-/** Login/register pages: once signed in, continue to ?next= or the dashboard. */
-export const GuestOnly = ({ children }) => {
+/** Login/register pages: once signed in, continue to ?next=, else `fallback` (the dashboard). */
+export const GuestOnly = ({ children, fallback = "/dashboard" }) => {
   const { status } = useAuth();
   const location = useLocation();
   if (status === "loading") return <FullPageSpinner />;
-  if (status === "authenticated") return <Navigate to={safeNext(location.search)} replace />;
+  if (status === "authenticated") return <Navigate to={safeNext(location.search, fallback)} replace />;
   return children;
 };
