@@ -23,11 +23,15 @@ One document per piece of work, in the order it was done.
 | 15 | [Landing page, subdomains & custom domains](15-signup-and-domains.md) | Landing page with signup at the main site, `<username>.<domain>` portfolios, owners' own domains verified by DNS TXT, host routing and checks, Caddy on-demand TLS |
 | 16 | [Styles, accents and guided setup](16-appearance-styles-and-welcome.md) | One-click style presets and "Surprise me", any accent colour on any theme (contrast-safe), Sage/Rose themes, Bold/Elegant fonts, corners, card styles, floating nav, Split/Statement heroes, `/dashboard/welcome` after signup |
 
-## Generate a site from a Word CV
+## Fill a portfolio from a CV
 
-Open **Dashboard → Website studio**, upload a `.doc` or `.docx` up to 5 MB, and review the extracted content. Edit and arrange sections in **Content**, change the layout and typography in **Design**, then preview and download the HTML. **Save draft** keeps one private, editable copy per account. Vega discards the source file after extraction. Review the draft for personal details before sharing it.
+Open **Dashboard → Import CV** and upload a text-based PDF, `.doc`, or `.docx` up to 5 MB. PDFs can have up to 20 pages. Use a Word copy or run text recognition first if the PDF is scanned.
 
-Rebuild the backend image to install Antiword and apply the new migration. For native development, install `antiword` on the backend's PATH to support legacy `.doc` files. The `.docx` reader uses Python's standard library.
+Review your profile, projects, experience, education, skills, certificates, languages, and achievements. Select the entries and profile changes you want. Entries that need details can stay out while you apply the rest. **Apply to portfolio** updates your public portfolio and keeps matching records.
+
+To enable optional AI organization, set `VEGA_OPENAI_API_KEY` on the backend and allow HTTPS access to `api.openai.com`. Use `VEGA_OPENAI_MODEL` to override the default model. The upload form asks for consent before sending extracted CV text to OpenAI. Local extraction and manual review remain available.
+
+For native development, install `antiword` on the backend's PATH to support legacy `.doc` files. The Docker image includes it.
 
 ## Quick start
 

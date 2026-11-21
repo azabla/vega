@@ -11,9 +11,10 @@ def get_owner_id(instance):
 
 def generate_unique_slug(instance, value):
     """Slug that is unique among the same owner's objects of this model."""
-    base = slugify(value)
-    slug = base
     ModelClass = instance.__class__
+    limit = instance._meta.get_field("slug").max_length
+    base = slugify(value) or instance._meta.model_name
+    slug = base[:limit].rstrip("-_")
 
     def taken(candidate):
         qs = ModelClass.objects.filter(slug=candidate, owner_id=instance.owner_id)
@@ -23,7 +24,8 @@ def generate_unique_slug(instance, value):
 
     counter = 1
     while taken(slug):
-        slug = f"{base}-{counter}"
+        suffix = f"-{counter}"
+        slug = base[:limit - len(suffix)].rstrip("-_") + suffix
         counter += 1
     return slug
 

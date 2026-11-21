@@ -115,7 +115,7 @@ export const CVListPage = () => {
         description="Make a version for each kind of job. Every version is built from your profile, so it stays up to date; here you choose the design and what goes on it."
         action={
           <div className="flex flex-wrap gap-2">
-            <Button href="/dashboard/website" variant="outline" size="lg"><FileUp /> Upload Word CV</Button>
+            <Button href="/dashboard/portfolio-import" variant="outline" size="lg"><FileUp /> Import from CV</Button>
             <Button type="button" size="lg" className="px-4" onClick={() => setCreating(true)}>
               <Plus /> New CV
             </Button>

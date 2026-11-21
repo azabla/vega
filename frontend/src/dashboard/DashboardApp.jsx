@@ -16,6 +16,7 @@ import {
 } from "@/dashboard/pages/ProfilePages";
 import { AppearancePage } from "@/dashboard/pages/AppearancePage";
 import { DomainPage } from "@/dashboard/pages/DomainPage";
+import { PortfolioImportPage } from "@/dashboard/pages/PortfolioImportPage";
 import { WebsiteStudioPage } from "@/dashboard/pages/WebsiteStudioPage";
 import { WelcomePage } from "@/dashboard/pages/WelcomePage";
 import { CVListPage } from "@/dashboard/pages/CVPages";
@@ -48,6 +49,7 @@ export default function DashboardApp() {
         <Route element={<DashboardLayout />}>
           <Route index element={<OverviewPage />} />
           <Route path="welcome" element={<WelcomePage />} />
+          <Route path="portfolio-import" element={<PortfolioImportPage />} />
           <Route path="website" element={<WebsiteStudioPage />} />
           <Route path="appearance" element={<AppearancePage />} />
           <Route path="cv" element={<CVListPage />} />

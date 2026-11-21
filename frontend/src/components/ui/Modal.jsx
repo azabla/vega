@@ -20,6 +20,7 @@ export const Modal = ({ open, onClose, title, description, children, footer, cla
   return (
     <dialog
       ref={ref}
+      aria-label={title}
       onClose={onClose}
       onCancel={(e) => {
         e.preventDefault();

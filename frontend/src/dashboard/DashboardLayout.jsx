@@ -17,7 +17,7 @@ import {
   Settings,
   Sparkles,
   Trophy,
-  PanelsTopLeft,
+  FileUp,
   UserRound,
   X,
 } from "lucide-react";
@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/dashboard/appearance", label: "Appearance", icon: Palette },
-  { to: "/dashboard/website", label: "Website studio", icon: PanelsTopLeft },
+  { to: "/dashboard/portfolio-import", label: "Import CV", icon: FileUp },
   { to: "/dashboard/cv", label: "CV & résumé", icon: FileText },
   { heading: "Profile" },
   { to: "/dashboard/profile", label: "Profile", icon: UserRound },
@@ -124,7 +124,7 @@ export const DashboardLayout = () => {
   const location = useLocation();
   useAppLook();
   // editors with a live preview, and the CV gallery
-  const wide = /^\/dashboard\/(appearance|cv)/.test(location.pathname);
+  const wide = /^\/dashboard\/(appearance|cv|portfolio-import)/.test(location.pathname);
 
   // Each page starts at the top
   useEffect(() => {

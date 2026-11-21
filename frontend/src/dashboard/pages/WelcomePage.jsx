@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Briefcase, Camera, Check, Copy, ExternalLink, FileText, FolderKanban, Loader2, Shuffle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Briefcase, Camera, Check, Copy, ExternalLink, FileText, FileUp, FolderKanban, Loader2, Shuffle } from "lucide-react";
 import { useId, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "@/api/axios";
@@ -159,6 +159,10 @@ export const WelcomePage = () => {
           }}
           className="flex flex-col gap-4"
         >
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/35 p-3.5">
+            <p className="text-sm text-muted-foreground">Have a CV? Use it to fill your profile and portfolio entries.</p>
+            <Button href="/dashboard/portfolio-import" variant="outline" size="sm"><FileUp /> Import CV</Button>
+          </div>
           <div className="flex items-center gap-4">
             {p.profile_image ? (
               <img src={p.profile_image} alt="" className="size-20 shrink-0 rounded-full border object-cover" />

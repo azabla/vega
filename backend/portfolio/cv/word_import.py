@@ -32,6 +32,11 @@ ALIASES = {
     "work experience": "Experience",
     "professional experience": "Experience",
     "employment history": "Experience",
+    "career history": "Experience",
+    "relevant experience": "Experience",
+    "volunteer experience": "Volunteering",
+    "volunteering": "Volunteering",
+    "internships": "Internship Experience",
     "internship experience": "Internship Experience",
     "teaching experience": "Teaching Experience",
     "projects": "Projects",
@@ -39,9 +44,25 @@ ALIASES = {
     "semester and final year project": "Projects",
     "skills": "Skills",
     "technical skills": "Technical Skills",
+    "core competencies": "Skills",
+    "key skills": "Skills",
     "relevant coursework": "Relevant Coursework",
     "certifications": "Certifications",
+    "certificates": "Certifications",
+    "licenses and certifications": "Certifications",
+    "licences and certifications": "Certifications",
+    "professional development": "Certifications",
     "awards": "Awards",
+    "awards and honors": "Awards",
+    "honors and awards": "Awards",
+    "awards and honours": "Awards",
+    "achievements": "Achievements",
+    "selected publications": "Publications",
+    "talks": "Talks",
+    "presentations": "Talks",
+    "exhibitions": "Exhibitions",
+    "scholarships": "Grants",
+    "grants": "Grants",
     "publications": "Publications",
     "languages": "Languages",
     "language skills": "Languages",
@@ -188,7 +209,7 @@ def draft_from_text(text):
     flush()
 
     if not header and not sections:
-        raise WordImportError("No usable CV text was found. Try a Word document with selectable text.")
+        raise WordImportError("No usable CV text was found. Try a document with selectable text.")
     name = header[0][:220] if header else ""
     headline = header[1][:220] if len(header) > 1 and len(header[1]) <= 100 else ""
     remaining = header[2 if headline else 1:]

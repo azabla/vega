@@ -2,6 +2,7 @@ from django.urls import include, path, re_path
 from rest_framework.routers import SimpleRouter
 
 from . import manage_views as me
+from .profile_import import PortfolioImportApplyView, PortfolioImportView
 from .website_studio import WebsiteDraftView, WebsiteImportView, WebsitePreviewView
 from .views import (
     AboutAPIView,
@@ -67,6 +68,8 @@ urlpatterns = [
     path("testview/", TestView, name="testview"),
     path("me/profile/", me.MyProfileView.as_view(), name="my-profile"),
     path("me/about/", me.MyAboutView.as_view(), name="my-about"),
+    path("me/portfolio-import/", PortfolioImportView.as_view(), name="portfolio-import"),
+    path("me/portfolio-import/apply/", PortfolioImportApplyView.as_view(), name="portfolio-import-apply"),
     path("me/website-draft/", WebsiteDraftView.as_view(), name="website-draft"),
     path("me/website-draft/import/", WebsiteImportView.as_view(), name="website-import"),
     path("me/website-draft/preview/", WebsitePreviewView.as_view(), name="website-preview"),
