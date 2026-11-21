@@ -1,4 +1,4 @@
-import { Copy, Download, FileText, Loader2, Lock, Plus, Star, Trash2 } from "lucide-react";
+import { Copy, Download, FileText, FileUp, Globe, Loader2, Lock, Plus, Star, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "@/api/axios";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FieldHint, Input, Label } from "@/components/ui/form";
 import { Modal } from "@/components/ui/Modal";
 import { TemplatePicker, TemplateThumb } from "@/dashboard/components/cv/Pickers";
+import { WebsiteExport } from "@/dashboard/components/cv/WebsiteExport";
 import { EmptyState, ListSkeleton, LoadError, PageHeader } from "@/dashboard/components/Page";
 import { downloadCv, toastError } from "@/dashboard/lib/cvActions";
 import { useResource } from "@/dashboard/lib/useResource";
@@ -77,6 +78,7 @@ const NewCvModal = ({ open, onClose, onCreated, count, profession }) => {
 export const CVListPage = () => {
   const { data, loading, error, reload, mutate } = useResource("/me/cvs/");
   const profile = useResource("/me/profile/");
+  const [exporting, setExporting] = useState(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -112,9 +114,12 @@ export const CVListPage = () => {
         title="CV & résumé"
         description="Make a version for each kind of job. Every version is built from your profile, so it stays up to date; here you choose the design and what goes on it."
         action={
-          <Button type="button" size="lg" className="self-start px-4" onClick={() => setCreating(true)}>
-            <Plus /> New CV
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button href="/dashboard/website" variant="outline" size="lg"><FileUp /> Upload Word CV</Button>
+            <Button type="button" size="lg" className="px-4" onClick={() => setCreating(true)}>
+              <Plus /> New CV
+            </Button>
+          </div>
         }
       />
 
@@ -164,6 +169,9 @@ export const CVListPage = () => {
                     )}
                   </p>
                 </div>
+                <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => setExporting(cv)}>
+                  <Globe /> Generate website
+                </Button>
                 <div className="mt-auto flex items-center gap-1.5">
                   <Button href={`/dashboard/cv/${cv.id}`} size="sm">
                     Edit
@@ -185,6 +193,8 @@ export const CVListPage = () => {
           ))}
         </ul>
       )}
+
+      {exporting && <WebsiteExport cv={exporting} onClose={() => setExporting(null)} />}
 
       <NewCvModal
         open={creating}

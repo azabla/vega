@@ -10,7 +10,7 @@ export const Eyebrow = ({ className, children }) => (
 );
 
 export const Section = ({ id, className, children }) => (
-  <section id={id} className={cn("py-16 md:py-28", className)}>
+  <section id={id} className={cn("py-(--portfolio-section-space)", className)}>
     <div className="container">{children}</div>
   </section>
 );

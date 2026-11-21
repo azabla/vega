@@ -364,6 +364,26 @@
 
 /* ---------- Utilities ---------- */
 
+@layer base {
+  :root {
+    --portfolio-section-space: 4rem;
+  }
+
+  :root[data-spacing="compact"] {
+    --portfolio-section-space: 2.5rem;
+  }
+
+  :root[data-spacing="airy"] {
+    --portfolio-section-space: 5rem;
+  }
+
+  @media (min-width: 48rem) {
+    :root { --portfolio-section-space: 7rem; }
+    :root[data-spacing="compact"] { --portfolio-section-space: 4.5rem; }
+    :root[data-spacing="airy"] { --portfolio-section-space: 9rem; }
+  }
+}
+
 @utility container {
   margin-inline: auto;
   width: 100%;

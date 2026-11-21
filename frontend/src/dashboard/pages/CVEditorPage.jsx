@@ -1,4 +1,4 @@
-import { ArrowLeft, Copy, Download, FileText, LayoutTemplate, Loader2, Palette, Plus, Redo2, RotateCcw, Settings2, Type, Undo2 } from "lucide-react";
+import { ArrowLeft, Copy, Download, FileText, Globe, LayoutTemplate, Loader2, Palette, Plus, Redo2, RotateCcw, Settings2, Type, Undo2 } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "@/api/axios";
@@ -11,6 +11,7 @@ import { CvPreview } from "@/dashboard/components/cv/CvPreview";
 import { LayoutPanelBody } from "@/dashboard/components/cv/LayoutPanel";
 import { AccentPicker, Segmented, TemplatePicker } from "@/dashboard/components/cv/Pickers";
 import { SectionList } from "@/dashboard/components/cv/SectionList";
+import { WebsiteExport } from "@/dashboard/components/cv/WebsiteExport";
 import { EmptyState, ListSkeleton, LoadError, PageHeader, Panel } from "@/dashboard/components/Page";
 import { downloadCv, toastError } from "@/dashboard/lib/cvActions";
 import { useCvPreview } from "@/dashboard/lib/useCvPreview";
@@ -64,6 +65,7 @@ export const CVEditorPage = () => {
   const cv = useResource(`/me/cvs/${id}/`);
   const profile = useResource("/me/profile/");
   const history = useHistory();
+  const [exporting, setExporting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [photoVersion, setPhotoVersion] = useState(0);
@@ -189,11 +191,18 @@ export const CVEditorPage = () => {
         title={current.name || "Untitled CV"}
         description="Changes show in the preview right away; click any part of the preview to edit it. Your profile stays the same: this only chooses what this CV shows and how."
         action={
-          <Button type="button" variant="outline" size="lg" className="self-start px-3.5" disabled={dirty} title={dirty ? "Save first" : undefined} onClick={() => downloadCv(cv.data)}>
-            <Download /> Download PDF
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="lg" disabled={dirty} title={dirty ? "Save first" : undefined} onClick={() => downloadCv(cv.data)}>
+              <Download /> Download PDF
+            </Button>
+            <Button type="button" size="lg" disabled={dirty} title={dirty ? "Save first" : undefined} onClick={() => setExporting(true)}>
+              <Globe /> Generate website
+            </Button>
+          </div>
         }
       />
+
+      {exporting && <WebsiteExport cv={cv.data} onClose={() => setExporting(false)} />}
 
       <div className="sticky top-14 z-30 -mx-4 mb-4 flex gap-1 border-b bg-background/90 px-4 py-2 backdrop-blur lg:hidden" role="tablist" aria-label="Edit or preview">
         {[

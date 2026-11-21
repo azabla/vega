@@ -132,7 +132,8 @@ REST_FRAMEWORK = {
     # Secure by default: public endpoints opt in with AllowAny
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.ScopedRateThrottle"],
-    "DEFAULT_THROTTLE_RATES": {"auth": "10/minute", "contact": "5/minute", "cv": "20/minute", "cv_preview": "60/minute", "domain": "10/minute"},
+    "DEFAULT_THROTTLE_RATES": {"auth": "10/minute", "contact": "5/minute", "cv": "20/minute", "cv_preview": "60/minute", "domain": "10/minute",
+                               "website_import": "8/minute", "website_preview": "120/minute"},
 }
 
 SIMPLE_JWT = {

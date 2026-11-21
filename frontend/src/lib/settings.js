@@ -91,6 +91,7 @@ export const DEFAULT_SETTINGS = {
   accent_color: "",
   radius: "default",
   surface: "outline",
+  spacing: "balanced",
   nav: "bar",
 };
 
@@ -121,6 +122,7 @@ export const resolveSettings = (raw) => {
     accent_color: typeof s.accent_color === "string" && /^#[0-9a-f]{6}$/i.test(s.accent_color) ? s.accent_color.toLowerCase() : "",
     radius: pick(s.radius, RADII.map((r) => r.id), DEFAULT_SETTINGS.radius),
     surface: pick(s.surface, SURFACES.map((x) => x.id), DEFAULT_SETTINGS.surface),
+    spacing: pick(s.spacing, ["compact", "balanced", "airy"], DEFAULT_SETTINGS.spacing),
     nav: pick(s.nav, NAV_STYLES.map((n) => n.id), DEFAULT_SETTINGS.nav),
     projects_layout: pick(s.projects_layout, ["showcase", "grid", "list"], DEFAULT_SETTINGS.projects_layout),
     profession: pick(s.profession, PROFESSIONS.map((p) => p.id), DEFAULT_SETTINGS.profession),

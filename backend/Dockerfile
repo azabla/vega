@@ -8,9 +8,10 @@ WORKDIR /app
 
 # Pango/HarfBuzz for WeasyPrint (CV PDFs). The CV's fonts are bundled in
 # portfolio/cv_fonts; DejaVu only covers characters those don't have.
+# Antiword extracts text from legacy Word CVs.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core \
+        libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core antiword \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

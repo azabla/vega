@@ -39,6 +39,7 @@ CHOICES = {
     "hero": ["bento", "classic", "minimal", "split", "statement"],
     "radius": ["default", "sharp", "soft", "round"],
     "surface": ["outline", "elevated", "filled"],
+    "spacing": ["compact", "balanced", "airy"],
     "nav": ["bar", "floating"],
     "projects_layout": ["showcase", "grid", "list"],
     "profession": list(PROFESSIONS),

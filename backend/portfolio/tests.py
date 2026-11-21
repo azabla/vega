@@ -560,6 +560,54 @@ class CVVersionTests(APITestCase):
         self.assertEqual(self.client.get(f"/api/me/cvs/{secret.pk}/pdf/").status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(self.client.get("/api/me/cvs/").data, [])
 
+    def test_website_export_uses_cv_content_and_keeps_contact_opt_in(self):
+        portfolio = Portfolio.objects.get(owner=self.alice)
+        portfolio.phone = "+251 123 456 789"
+        portfolio.save(update_fields=["phone"])
+        self.p2.live_url = "javascript:alert(1)"
+        self.p2.save(update_fields=["live_url"])
+        cv = CV.objects.create(
+            owner=self.alice,
+            name="Website",
+            content={
+                "headline": "Software <engineer>",
+                "summary": "**Welcome** to my work",
+                "sections": [
+                    {"id": "projects", "title": "Selected work"},
+                    {"id": "summary"},
+                    {"id": "skills", "visible": False},
+                ],
+                "items": {"projects": [self.p2.pk]},
+                "overrides": {"projects": {str(self.p2.pk): {"title": "Case study"}}},
+                "hide_contact": ["phone"],
+            },
+        )
+        url = f"/api/me/cvs/{cv.pk}/website/"
+        response = self.client.get(url)
+        self.assertContains(response, "Software &lt;engineer&gt;")
+        self.assertContains(response, "<strong>Welcome</strong>")
+        self.assertContains(response, "<h2>Selected work</h2>")
+        self.assertContains(response, "Case study")
+        self.assertNotContains(response, "<h3>One")
+        self.assertNotContains(response, "Python")
+        self.assertNotContains(response, "javascript:")
+        self.assertNotContains(response, "alice@example.com")
+        self.assertLess(response.content.index(b"<h2>Selected work"), response.content.index(b"<strong>Welcome"))
+        self.assertEqual(response["Content-Type"], "text/html; charset=utf-8")
+        self.assertEqual(response["Cache-Control"], "private, no-store")
+        self.assertIn("alice-website.html", response["Content-Disposition"])
+
+        response = self.client.get(url, {
+            "layout": "cards", "mode": "dark", "accent": "#225588", "include_contact": "true",
+        })
+        self.assertContains(response, 'data-layout="cards" data-mode="dark"')
+        self.assertContains(response, "--accent-fill: #225588")
+        self.assertContains(response, "mailto:alice@example.com")
+        self.assertNotContains(response, "+251")
+        self.assertEqual(self.client.get(url, {"accent": "red"}).status_code, status.HTTP_400_BAD_REQUEST)
+        self.client.force_authenticate(self.bob)
+        self.assertEqual(self.client.get(url).status_code, status.HTTP_404_NOT_FOUND)
+
     def test_duplicate(self):
         cv = CV.objects.create(owner=self.alice, name="Main", template="timeline", design={"accent": "#123456"})
         res = self.client.post(f"/api/me/cvs/{cv.pk}/duplicate/")

@@ -38,6 +38,7 @@
           if (look.texture) root.dataset.texture = look.texture;
           if (look.radius) root.dataset.radius = look.radius;
           if (look.surface) root.dataset.surface = look.surface;
+          if (look.spacing) root.dataset.spacing = look.spacing;
         }
         mode = mode || look.mode || "system";
         var dark = mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);

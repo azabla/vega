@@ -158,6 +158,7 @@ export const useApplyAppearance = () => {
     mode: ownerSettings.mode,
     radius: ownerSettings.radius === "default" ? null : ownerSettings.radius,
     surface: ownerSettings.surface === "outline" ? null : ownerSettings.surface,
+    spacing: ownerSettings.spacing === "balanced" ? null : ownerSettings.spacing,
     vars: accentVarsOf(ownerSettings),
   });
   const vars = accentVarsOf(settings);
@@ -173,6 +174,7 @@ export const useApplyAppearance = () => {
     root.dataset.texture = texture;
     setData(root, "radius", settings.radius === "default" ? null : settings.radius);
     setData(root, "surface", settings.surface === "outline" ? null : settings.surface);
+    setData(root, "spacing", settings.spacing === "balanced" ? null : settings.spacing);
     applyAccentVars(root, modeVars && JSON.parse(modeVars));
     root.removeAttribute("data-app");
     root.classList.toggle("dark", isDark);
@@ -181,7 +183,7 @@ export const useApplyAppearance = () => {
       storage.set(lookKey(username), ownerLook);
       if (!window.location.pathname.startsWith("/u/")) storage.set(HOST_LOOK_KEY, ownerLook);
     }
-  }, [ready, username, settings.theme, settings.accent, settings.font, settings.radius, settings.surface, modeVars, texture, isDark, ownerLook]);
+  }, [ready, username, settings.theme, settings.accent, settings.font, settings.radius, settings.surface, settings.spacing, modeVars, texture, isDark, ownerLook]);
 };
 
 /** Dashboard and login pages: one plain look, with the visitor's light/dark choice. */
@@ -198,6 +200,7 @@ export const useAppLook = () => {
     delete root.dataset.texture;
     delete root.dataset.radius;
     delete root.dataset.surface;
+    delete root.dataset.spacing;
     applyAccentVars(root, null);
     root.classList.toggle("dark", isDark);
   }, [isDark]);

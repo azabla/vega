@@ -1,10 +1,11 @@
-import { ArrowDown, ArrowUp, Check, ExternalLink, Eye, EyeOff, Laptop, Loader2, Moon, RotateCcw, Shuffle, Smartphone, Sun } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ExternalLink, Eye, EyeOff, Laptop, Loader2, Moon, Redo2, RotateCcw, Shuffle, Smartphone, Sun, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "@/api/axios";
 import { useAuth } from "@/auth/context";
 import { Button } from "@/components/ui/button";
 import { Choices, Switch } from "@/dashboard/components/Choices";
 import { ListSkeleton, LoadError, PageHeader, Panel } from "@/dashboard/components/Page";
+import { useHistory } from "@/dashboard/lib/useHistory";
 import { parseApiError } from "@/dashboard/lib/records";
 import { useResource } from "@/dashboard/lib/useResource";
 import { toast } from "@/hooks/use-toast";
@@ -275,7 +276,7 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 export const AppearancePage = () => {
   const { user } = useAuth();
   const profile = useResource("/me/profile/");
-  const [draft, setDraft] = useState(null);
+  const { draft, set: setDraft, undo, redo, reset, canUndo, canRedo } = useHistory();
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState("edit"); // phones: edit | preview
   const [device, setDevice] = useState("phone");
@@ -285,7 +286,7 @@ export const AppearancePage = () => {
   const current = draft ?? saved;
   const dirty = Boolean(draft && saved && !same(draft, saved));
 
-  const set = (patch) => setDraft({ ...current, ...patch });
+  const set = (patch, key) => setDraft({ ...current, ...patch }, key);
   const moveSection = (index, step) => {
     const sections = [...current.sections];
     const [item] = sections.splice(index, 1);
@@ -300,7 +301,7 @@ export const AppearancePage = () => {
       const { data } = await api.patch("/me/profile/", { settings: current });
       profile.mutate(data);
       clearPortfolioCache();
-      setDraft(null);
+      reset();
       toast({ title: "Look saved", description: "Your portfolio uses it now." });
     } catch (error) {
       toast({ variant: "destructive", title: "Couldn't save", description: parseApiError(error).message || "Please try again." });
@@ -359,7 +360,7 @@ export const AppearancePage = () => {
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
-        <div className={cn("flex flex-col gap-5 pb-24", tab === "preview" && "hidden lg:flex")}>
+        <fieldset disabled={saving} className={cn("flex min-w-0 flex-col gap-5 pb-24", tab === "preview" && "hidden lg:flex")}>
           <Panel
             title="Start from a style"
             description="Ready-made looks: colours, fonts, layout and shape in one click. Fine-tune anything below."
@@ -425,7 +426,7 @@ export const AppearancePage = () => {
             />
             <div className="mt-5">
               <p className="mb-2 text-sm font-medium">Accent colour</p>
-              <AccentColors value={current.accent_color} theme={current.theme} onChange={(accent_color) => set({ accent_color })} />
+              <AccentColors value={current.accent_color} theme={current.theme} onChange={(accent_color) => set({ accent_color }, "accent_color")} />
               <p className="mt-2 text-xs leading-5 text-muted-foreground">
                 Any colour works: text in the accent is darkened or lightened automatically so it stays readable in light and dark mode.
               </p>
@@ -473,6 +474,18 @@ export const AppearancePage = () => {
           <Panel title="Home page layout">
             <p className="mb-2 text-sm font-medium">Top of the page</p>
             <Choices name="hero" value={current.hero} onChange={(hero) => set({ hero })} options={HEROES} columns="grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3" render={(o) => <Sketch option={o} />} />
+            <p className="mt-5 mb-2 text-sm font-medium">Section spacing</p>
+            <Choices
+              name="spacing"
+              value={current.spacing}
+              onChange={(spacing) => set({ spacing })}
+              options={[
+                { id: "compact", name: "Compact" },
+                { id: "balanced", name: "Balanced" },
+                { id: "airy", name: "Airy" },
+              ]}
+              render={(option) => <span className="pr-5 font-medium">{option.name}</span>}
+            />
             <p className="mt-5 mb-2 text-sm font-medium">Projects</p>
             <Choices
               name="projects_layout"
@@ -624,7 +637,7 @@ export const AppearancePage = () => {
               <RotateCcw /> Restore the default look
             </Button>
           </Panel>
-        </div>
+        </fieldset>
 
         <div className={cn("lg:sticky lg:top-6", tab === "edit" && "hidden lg:block")}>
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -668,8 +681,14 @@ export const AppearancePage = () => {
             {dirty ? "You have unsaved changes" : "All changes saved"}
           </p>
           <div className="flex shrink-0 gap-2">
+            <Button type="button" variant="ghost" size="icon" disabled={saving || !canUndo} onClick={undo} aria-label="Undo appearance change" title="Undo">
+              <Undo2 />
+            </Button>
+            <Button type="button" variant="ghost" size="icon" disabled={saving || !canRedo} onClick={redo} aria-label="Redo appearance change" title="Redo">
+              <Redo2 />
+            </Button>
             {dirty && (
-              <Button type="button" variant="outline" size="lg" className="px-4" disabled={saving} onClick={() => setDraft(null)}>
+              <Button type="button" variant="outline" size="lg" className="px-4" disabled={saving} onClick={reset}>
                 Discard
               </Button>
             )}

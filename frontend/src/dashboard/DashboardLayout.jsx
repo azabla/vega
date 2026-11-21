@@ -17,6 +17,7 @@ import {
   Settings,
   Sparkles,
   Trophy,
+  PanelsTopLeft,
   UserRound,
   X,
 } from "lucide-react";
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/dashboard/appearance", label: "Appearance", icon: Palette },
+  { to: "/dashboard/website", label: "Website studio", icon: PanelsTopLeft },
   { to: "/dashboard/cv", label: "CV & résumé", icon: FileText },
   { heading: "Profile" },
   { to: "/dashboard/profile", label: "Profile", icon: UserRound },

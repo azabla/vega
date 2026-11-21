@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 from . import domains
 from . import manage_serializers as s
 from .cv import portfolio_url, preview_pages, regions, render_cv_document, render_cv_pdf
+from .cv.website import WebsiteOptionsSerializer, render_cv_website
 from .models import (
     About,
     AboutPhoto,
@@ -310,6 +311,20 @@ class MyCVViewSet(OwnedViewSet):
             is_public=original.is_public,
         )
         return Response(self.get_serializer(copy).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["get"])
+    def website(self, request, pk=None):
+        cv = self.get_object()
+        options = WebsiteOptionsSerializer(data=request.query_params.dict())
+        options.is_valid(raise_exception=True)
+        portfolio = get_or_create_portfolio(request.user)
+        html = render_cv_website(portfolio, cv, options.validated_data)
+        name = f"{slugify(portfolio.name) or request.user.username}-{cv.slug}.html"
+        return HttpResponse(html, headers={
+            "Content-Disposition": content_disposition_header(True, name),
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+        }, content_type="text/html; charset=utf-8")
 
     @action(detail=True, methods=["get"])
     def pdf(self, request, pk=None):

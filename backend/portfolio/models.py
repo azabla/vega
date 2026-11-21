@@ -572,3 +572,10 @@ class CV(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class WebsiteDraft(models.Model):
+    """The owner's private, editable Word-to-website draft."""
+
+    owner = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="website_draft")
+    data = models.JSONField(default=dict)
